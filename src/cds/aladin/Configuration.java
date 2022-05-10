@@ -195,6 +195,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String INFOB      = "InfoBorder";
    protected static String TAPSCHEMADISPLAY = "TapSchemaDisplay";
    protected static String FILTERHDU     = "FilterHDU";
+   protected static String PLANET     = "Planet";
    
    static final private String [] UISCALESTR = {"Automatic","OS method","100%","110%","120%","130%","140%","150%","175%","200%","225%","250%"};
    static final private String [] STROKESTR  = {"Automatic","thin","medium","thick"};
@@ -217,7 +218,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    CMB,CMH,CMV,CMM,CMC,CMF,/*BKGB,BKGH,*/WEBB,WEBH,RELOAD,
    REGB,REGH,/*REGCL,REGMAN,*/APPLY,CLOSE,/*GLUTEST,GLUSTOP,*/BROWSE,FRAMEB,FRAMEALLSKYB,FRAMEH,OPALEVEL,
    PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
-   IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,UPHIDETAPSCHEMA,UPHIDETAPSCHEMAH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,FILTERHDUS,FILTERHDUH,
+   IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,UPHIDETAPSCHEMA,UPHIDETAPSCHEMAH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,FILTERHDUS,FILTERHDUH,PLANETS,PLANETH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
    FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,UISCALE,THEMEHELP,RESTART,
    GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR,GRIDTHICKNESS,INFO,INFOH,INFOFONT,INFOCOLOR,INFOLABELCOLOR,INFOFONTBORDER;
@@ -266,6 +267,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private JComboBox        logChoice;            // Pour l'activation des logs
    private JComboBox        helpChoice;           // Pour l'activation de l'aide des débutants
    private JComboBox        filterHDUChoice;        // Pour le chargement ou non de toutes les extensions FITS
+   private JComboBox        planetChoice;         // Pour le chargement ou non des données planétaires
    //   private JComboBox        tagChoice;           // Pour l'activation du centrage des tags
    private JSlider          transparencyLevel;    // niveau de transparence pour footprints
    private JComboBox        csvChoice;            // Pour la sélection du caractère CSV
@@ -292,6 +294,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    static private Langue lang[];                  // La liste des langues installées
    private Vector remoteLang = null;              // Lal iste des langues connues mais non installées
+   private int previousPlanet=1;                  // Indice de l'activation du mode Planet
    private int previousTheme=0;                   // Indice du thème au démarrage
    private int previousUiScale=0;                   // Indice du facteur d'échelle au démarrage
    private JCheckBox hideTapSchema = null;			//Hide tapschema tables on tap clients or not.
@@ -358,6 +361,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       HELPH = aladin.chaine.getString("UPHELPH");
       FILTERHDUS = aladin.chaine.getString("UPFILTERHDU");
       FILTERHDUH = aladin.chaine.getString("UPFILTERHDUH");
+      PLANETS = aladin.chaine.getString("UPPLANET");
+      PLANETH = aladin.chaine.getString("UPPLANETH");
       SLIDERS = aladin.chaine.getString("UPSLIDERS");
       SLIDERH = aladin.chaine.getString("UPSLIDERH");
       SLIDEREPOCH = aladin.chaine.getString("SLIDEREPOCH");
@@ -1117,6 +1122,19 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return s==null || s.startsWith(ACTIVATED);
    }
 
+   /** Retourne true si les données planétaires doivent être présentes */
+   protected boolean isPlanet() {
+      
+      // Choix selon configuration utilisateur
+      if( Aladin.PLANET==-1 ) {
+         String s = get(PLANET);
+         return s!=null && s.startsWith(ACTIVATED);
+      }
+      
+      // Choix forcé par paramètre sur la ligne de commande (ou BETA)
+      return Aladin.PLANET==1;
+   }
+
    /** Retourne true si le mode Look & Feel est java (et non operating system) */
    public boolean isLookAndFeelJava() {
       String s = get(LOOKANDFEEL);
@@ -1720,6 +1738,17 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       filterHDUChoice.addItem(NOTACTIVATED);
       PropPanel.addCouple(this, p, l, FILTERHDUH, filterHDUChoice, g, c, GridBagConstraints.EAST);
       
+      if( Aladin.PLANET==-1 ) {
+         (l = new JLabel(PLANETS)).setFont(l.getFont().deriveFont(Font.BOLD));
+         planetChoice = new JComboBox();
+         planetChoice.addItem(ACTIVATED);
+         planetChoice.addItem(NOTACTIVATED);
+         planetChoice.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { infoPlanet(); }
+         });
+         PropPanel.addCouple(this, p, l, PLANETH, planetChoice, g, c, GridBagConstraints.EAST);
+      }
+      
       if( Aladin.BETA || Aladin.PROTO ) {
          //tap: display of schema tables
          (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1729,6 +1758,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       }
      
       return p;
+   }
+   
+   // Affichage d'un baratin pour prévenir des contraintes sur les affichages des données planétaires
+   private void infoPlanet() {
+      if( isVisible() ) return;   // La fenêtre n'est pas encore ouverte
+      if( planetChoice.getSelectedIndex()==0 ) aladin.info(this,PLANETH);
    }
 
    // Nettoyage du cache HPX et du cache GLU
@@ -1881,6 +1916,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( helpChoice!=null) helpChoice.setSelectedIndex(isHelp()?0:1);
 
       if( filterHDUChoice!=null) filterHDUChoice.setSelectedIndex( isFilterHDU()?0:1 );
+
+      if( planetChoice!=null) planetChoice.setSelectedIndex( isPlanet()?0:1 );
 
       if( bxEpoch!=null ) bxEpoch.setSelected( isSliderEpoch() );
       if( bxSize!=null )  bxSize.setSelected( isSliderSize() );
@@ -2057,6 +2094,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
       s = get(FILTERHDU);
       if( s!=null && s.equals(ACTIVATED) ) remove(FILTERHDU);
+
+      s = get(PLANET);
+      if( s!=null && s.equals(NOTACTIVATED) ) remove(PLANET);
 
       s = get(LOOKANDFEEL);
       if( s!=null && s.equals(JAVA) ) remove(LOOKANDFEEL);
@@ -2467,10 +2507,18 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          else remove(HELP);
       }
 
-      // Pour l'assistant débutant
+      // Pour le filtrage des extensions FITS
       if( filterHDUChoice!=null ) {
          if( filterHDUChoice.getSelectedIndex()==1 ) set(FILTERHDU,(String)filterHDUChoice.getSelectedItem());
          else remove(FILTERHDU);
+      }
+
+      // Pour le filtrage des données planétaires
+      if( planetChoice!=null ) {
+         int t = planetChoice.getSelectedIndex();
+         if( planetChoice.getSelectedIndex()==0 ) set(PLANET,(String)planetChoice.getSelectedItem());
+         else remove(PLANET);
+         if( t!=previousPlanet ) Aladin.info(this,RESTART);
       }
 
       // Pour le Look & Feel

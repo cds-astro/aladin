@@ -37,6 +37,7 @@ public class PlanSTMocAlgo extends PlanSTMoc {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
+      type = ALLSKYSTMOC;
       this.c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
       String s = getFonction(p1,pList,op,timeOrder);

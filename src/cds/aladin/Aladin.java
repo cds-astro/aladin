@@ -162,6 +162,7 @@ import cds.xml.XMLParser;
  * The stability of these features is not totally guaranteed.
  *
  * @beta <B>New features and performance improvements:</B>
+ * @beta    <LI> Access to planetary data (areas, coverages, catalogues) [available via the user preferences].
  * @beta    <LI> Photometric tool stats improvements (table management from polygons and circles)
  * @beta    <LI> Pixel table generation from arbitrary areas (polygons, circles...) -> See Menu Image -> Pixel extraction...
  * @beta    <LI> Cone search plane improvement: content update
@@ -233,7 +234,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.123";
+   static public final    String VERSION = "v11.125";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -251,7 +252,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean MOCPROTO=false;    // true si on tourne sur un MocServer V2 (support du temps)
    public static boolean MOCLOCAL=false; // true si on tourne sur un MocServer local
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
-   public static boolean BETA=true;  // true si on tourne en mode BETA
+   public static int PLANET=-1;          // 0-sans planeto, 1-avec planeto, -1-selon configuration utilisateur
+   public static boolean BETA=true;        // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
@@ -261,7 +263,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public String LOCATION=null;  // Force Aladin à s'afficher à un emplacement précis (syntaxe: x,y,w,h)
    static boolean SETLOG=false; // true si on a forcé le positionnement du LOG
    
-   static { if( PREMIERE ) BETA=PROTO=false; }
+   static {
+      if( PREMIERE ) BETA=PROTO=false;
+      if( PROTO ) PLANET=1;
+   }
    
 
    static final String ICON              = "icon.gif";
@@ -3157,8 +3162,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( isFullScreen() ) fullScreen.repaint();
       setHelp(false);
       
-      
-      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips 22:47:38.58 +58:02:48.6 0.8deg");   // SH2-142 
+      // Chargement initial
+      if( !command.hasCommand() && command.isSync() ) {
+         if( PLANET==1 ) {
+            directory.showTreePath("Solar system");
+            execAsyncCommand("setconf frame=Planet;get hips(CDS/P/Mars/MOLA-color) 15:07:42.89 +17:45:09.9 120°");
+         }
+         else execAsyncCommand("get hips 20:59:46.08 +43:39:43.5 0.8deg");
+//         else execAsyncCommand("get hips 22:47:38.58 +58:02:48.6 1deg");   // SH2-142 
+      }
 //      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips NGC 2244 1.2deg");
    }
 
@@ -3301,7 +3313,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
             "* "+COPYRIGHT+"\n \n" +
 //            "* Copyright: Université de Strasbourg/CNRS - developed by the Centre de Données de Strasbourg "
 //            + "from the Observatoire astronomique de Strasbourg\n  \n" +
-            "Portions of the code (HiPS & MOCs) have been developed in the framework of ASTERICS project (2015-2018)." +
+            "Portions of the code (planetary data support) have been developed in the framework of Europlanet/VESPA project (2019-2023)." +
+            "HiPS & MOCs have been developed in the framework of ASTERICS project (2015-2018)." +
             "Progressive catalogs, PM facility, have been developed in the framework of GAIA CU9 (2012-2022)." +
             "The outreach mode has been developed in the framework of EuroVO AIDA & ICE projects (2008-2012)." +
             "WCS in JPEG, extended SIA, IDL bridge, FoV advanced integration, Fits cubes, Xmatcher by ellipses, SAMP " +
@@ -6362,6 +6375,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //               "       -[no]outreach: with/without outreach mode\n"+
                "       -[no]log: with/without anonymous statistic reports\n"+
                "       -[no]beta: with/without new features in beta test\n"+
+               "       -[no]planet: with/without planetary data\n"+
 //               "       -[no]proto: with/without prototype features for demonstrations and tests\n"+
                "       -old: obsoleted facilities re-activated (without any warranty)\n"+
                "       -trace: trace mode for debugging purpose\n"+
@@ -6546,7 +6560,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }
          else if( args[i].equals("-debug") )       { levelTrace=4; lastArg=i+1; }
          else if( args[i].equals("-beta") )        { BETA=true; lastArg=i+1; }
-         else if( args[i].equals("-mocproto") )     { MOCPROTO=true; lastArg=i+1; }
+         else if( args[i].equals("-planet") )      { PLANET=1; lastArg=i+1; }
+         else if( args[i].equals("-mocproto") )    { MOCPROTO=true; lastArg=i+1; }
          else if( args[i].equals("-moclocal") )    { MOCLOCAL=true; lastArg=i+1; }
          else if( args[i].equals("-nolog") )       { Default.LOG=false; SETLOG=true; lastArg=i+1; }
          else if( args[i].equals("-log") )         { Default.LOG=true; SETLOG=true; lastArg=i+1; }
@@ -6556,6 +6571,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-noproto") )     { PROTO=BETA=false; lastArg=i+1; }
          else if( args[i].equals("-nooutreach") )  { /* OUTREACH=false; setOUTREACH=true;  */lastArg=i+1; }
          else if( args[i].equals("-nogui") || args[i].equals("-script")) { NOGUI=true; BOOKMARKS=false; NOHUB=true; NOPLUGIN=true; lastArg=i+1; }
+         else if( args[i].equals("-noplanet") )    { PLANET=0; lastArg=i+1; }
          else if( args[i].equals("-local") )       { NETWORK=false; lastArg=i+1; }
          else if( args[i].equals("-cds") )         { CDS=true; lastArg=i+1; }
          else if( args[i].equals("-nobanner") )    { BANNER=false; lastArg=i+1; }
@@ -7199,7 +7215,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void uncompatibleFrameWarning(String body1, String body2) {
       String error = calque.select.getMessage();
       if( error!=null ) return;
-      if( Plot.PROJBODY.equals(body1) || Plot.PROJBODY.equals(body1)) return;
+      if( Plot.PROJBODY.equalsIgnoreCase(body1) || Plot.PROJBODY.equalsIgnoreCase(body1)) return;
       if( body1==null ) body1="?";
       if( body2==null ) body2="?";
       calque.select.setMessageError("You are probably using uncompatible spacial references ("+body1+" vs "+body2+"). "

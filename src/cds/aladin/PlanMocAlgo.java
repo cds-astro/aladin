@@ -64,6 +64,7 @@ public class PlanMocAlgo extends PlanMoc {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
+      type = ALLSKYMOC;
       this.c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
       String s = getFonction(p1,pList,op,order);
@@ -75,7 +76,7 @@ public class PlanMocAlgo extends PlanMoc {
 //      for( int j=0; j<3; j++ ) {
 //         long t0 = System.currentTimeMillis();
          try {
-            moc = p1.getMoc().clone();
+            moc = p1.getMoc().getSpaceMoc().clone();
 
             if( op==COMPLEMENT ) moc = ((SMoc)moc).complement();
             else if( op==COPY ) ((SMoc)moc).setMocOrder(order);

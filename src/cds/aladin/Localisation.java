@@ -367,7 +367,7 @@ public class Localisation extends MyBox  {
    protected JComboBox createSimpleChoice() {
 //      return new JComboBox(REPERE);
       JComboBox c = new JComboBox();
-      int n = Aladin.BETA ? REPERE.length : REPERE.length-2;
+      int n = aladin.configuration.isPlanet() ? REPERE.length : REPERE.length-2;
       for( int i=0; i<n; i++ ) c.addItem(REPERE[i]);
       return c;
       
@@ -382,7 +382,7 @@ public class Localisation extends MyBox  {
       c.setPrototypeDisplayValue(new Integer(100000));
       c.setMaximumRowCount(REPERE.length);
       c.setFont(Aladin.PLAIN);
-      int n = Aladin.BETA ? REPERE.length : REPERE.length-2;
+      int n = aladin.configuration.isPlanet() ? REPERE.length : REPERE.length-2;
       for( int i=0; i<n; i++ ) c.addItem(REPERE[i]);
       //      else for( int i=0; i<REPERE.length-1; i++ ) c.addItem(REPERE[i]);
       c.setSelectedIndex(ICRS);

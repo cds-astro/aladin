@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -55,6 +56,7 @@ public class FrameMocOperation extends FrameRGBBlink {
    private ButtonGroup cbgOp;	         // Les checkBox des opérations possibles
    private JRadioButton rUnion,rInter,rSub,rDiff,rComp,rCopy;
    private JRadioButton rFree,rLessThan,rRedSpace,rRedTime,rRedBoth;
+   protected JCheckBox mocCheckSpace,mocCheckTime;
    protected JComboBox mocTimeOrder,mocSpaceOrder;
    private JTextField maxMB;
    private JSlider sliderAcc;
@@ -63,7 +65,7 @@ public class FrameMocOperation extends FrameRGBBlink {
    static String SSPACE = "Space";
    static String SBOTH = "Both";
    static String IFTOOBIG = "if too big, reduce the resolution in:";
-   static String TARGETRES = "Target resolution";
+   static String TARGETRES = "Target MOC parameters";
    static String TARGETSIZE = "Target size";
    static String SFREE = "unlimited";
    static String SLESSTHAN = "less than";
@@ -184,13 +186,26 @@ public class FrameMocOperation extends FrameRGBBlink {
 //      g.setConstraints(pp,c);
 //      p.add(pp);
       
+      
       PropPanel.addSectionTitle(p, new JLabel(TARGETRES), g, c);
       c.gridwidth=GridBagConstraints.REMAINDER;
       pp=new JPanel();
-      pp.add( new JLabel(SSPACE+" "));
+      JCheckBox cb1;
+      cb1=mocCheckSpace = new JCheckBox(SSPACE+" ");
+      cb1.setSelected(true);
+      cb1.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { adjustWidgets(); }
+      });
+      cb1=mocCheckTime = new JCheckBox(STIME+" ");
+      cb1.setSelected(true);
+      cb1.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { adjustWidgets(); }
+      });
+      pp.add( mocCheckSpace );
       mocSpaceOrder = getComboSpaceRes();
       pp.add(mocSpaceOrder);
-      pp.add( new JLabel("    "+STIME+" "));
+      pp.add( new JLabel("    ") );
+      pp.add( mocCheckTime );
       mocTimeOrder = getComboTimeRes();
       pp.add(mocTimeOrder);
       g.setConstraints(pp,c);
@@ -262,6 +277,14 @@ public class FrameMocOperation extends FrameRGBBlink {
             mocSpaceOrder.getSelectedIndex()+FrameMocGenImg.FIRSTORDER_S : -1; 
    }
    
+   protected boolean getTimeMoc() {
+      return mocCheckTime.isEnabled() && mocCheckTime.isSelected();
+   }
+   
+   protected boolean getSpaceMoc() {
+      return mocCheckSpace.isEnabled() && mocCheckSpace.isSelected();
+   }
+   
    protected long getSizeMax() throws Exception { 
       if( !maxMB.isEnabled() || rFree.isSelected() ) return -1;
       try {
@@ -293,8 +316,10 @@ public class FrameMocOperation extends FrameRGBBlink {
          String label = s.substring(0,3)+" "+pList[0].label+(pList.length==1?""
                :pList[1].label+(pList.length==2?"":"..."));
          
-         int spaceOrder = getSpaceOrder();
-         int timeOrder = getTimeOrder();
+         boolean space = getSpaceMoc();
+         boolean time = getTimeMoc();
+         int spaceOrder = space ? getSpaceOrder() : -1;
+         int timeOrder = time ? getTimeOrder() : -1;
          long sizeMax = getSizeMax();
          String maxPriority = getMaxPriority();
          
@@ -305,7 +330,7 @@ public class FrameMocOperation extends FrameRGBBlink {
             if( oSpace!=-1 && oSpace!=spaceOrder ) paramOrd=" -order="+spaceOrder;
             if( oTime!=-1 && oTime!=timeOrder ) paramOrd=" -order="+timeOrder;
          } else {
-            if( oTime!=timeOrder && oSpace!=spaceOrder ) paramOrd= " -order="+spaceOrder+"/"+timeOrder;
+            if( oTime!=timeOrder || oSpace!=spaceOrder ) paramOrd= " -order="+spaceOrder+"/"+timeOrder;
          }
          
          String paramSize="";
@@ -373,7 +398,9 @@ public class FrameMocOperation extends FrameRGBBlink {
       boolean setSpaceOrder=false;
       
       int oSpace = getMinSpaceOrder(pList);
-      if( oSpace!=-1 ) {
+      mocCheckSpace.setEnabled(oSpace!=-1);
+//      if(oSpace==-1) mocCheckSpace.setSelected(false);
+      if( oSpace!=-1 && mocCheckSpace.isEnabled() && mocCheckSpace.isSelected() ) {
          space=true;
          if( initSpaceOrder==-1 ) {
             initSpaceOrder=oSpace;
@@ -381,7 +408,9 @@ public class FrameMocOperation extends FrameRGBBlink {
          }
       }
       int oTime = getMinTimeOrder(pList);
-      if( oTime!=-1 ) {
+      mocCheckTime.setEnabled(oTime!=-1);
+//      if(oTime==-1) mocCheckTime.setSelected(false);
+      if( oTime!=-1 && mocCheckTime.isEnabled() && mocCheckTime.isSelected() ) {
          time=true;
          if( initTimeOrder==-1 ) {
             initTimeOrder=oTime;
@@ -439,6 +468,7 @@ public class FrameMocOperation extends FrameRGBBlink {
       if( rRedSpace!=null ) rRedSpace.setEnabled( reduce && space );
       if( rRedTime!=null ) rRedTime.setEnabled( reduce && time );
       if( rRedBoth!=null ) rRedBoth.setEnabled( reduce && space && time );
-     
+      
+      submitBtn.setEnabled( time || space );
    };
 }

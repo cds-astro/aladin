@@ -355,10 +355,10 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       status.setForeground( Color.blue );
 
       // Les serveurs Images par programme
-      if( Aladin.NETWORK ) { 
-         aladinServer = new ServerAladin(aladin);
-         if( Aladin.OLD ) sv.addElement(aladinServer);
-      }
+//      if( Aladin.NETWORK ) { 
+//         aladinServer = new ServerAladin(aladin);
+//         if( Aladin.OLD ) sv.addElement(aladinServer);
+//      }
 
       // Les serveurs Images via GLU
       if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.IMAGE);

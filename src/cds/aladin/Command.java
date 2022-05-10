@@ -2528,8 +2528,8 @@ public final class Command implements Runnable {
    protected String execCmocCmd(String param, String label) {
       try {
 
-         int firstOrder = -1;
-         int secondOrder = -1;
+         int firstOrder = -2;    // -2 = Non spécifié  , -1 = disparition de la dimension physique
+         int secondOrder = -2;   // -2 = Non spécifié  , -1 = disparition de la dimension physique
          double radius = 0;
          double duration=0;
          boolean fov = false;
@@ -2618,8 +2618,9 @@ public final class Command implements Runnable {
             }
          }
          
-         // Time MOC sur catalogues ?
+         // TMOC
          if( mode==1 ) {
+            // Time MOC sur catalogues ?
             if( type==Plan.CATALOG || type==Plan.ALLSKYCAT ) {
                a.calque.newPlanTMoc(label, p, firstOrder, duration);
                a.calque.repaintAll();
@@ -2630,8 +2631,9 @@ public final class Command implements Runnable {
             }
          }
 
-         // Space Time MOC sur catalogues ?
+         // STMOC
          if( mode==2 ) {
+            // Space Time MOC sur catalogues ?
             if( type==Plan.CATALOG || type==Plan.ALLSKYCAT ) {
                a.calque.newPlanSTMoc(label, p, firstOrder, secondOrder, duration, radius, fov);
                a.calque.repaintAll();
@@ -2658,8 +2660,8 @@ public final class Command implements Runnable {
             
             // Opérations sur les MOCs
             if( command!=-1 ) {
-               boolean flagCheckSpaceOrder = firstOrder == -1;
-               boolean flagCheckTimeOrder = secondOrder == -1;
+               boolean flagCheckSpaceOrder = firstOrder == -2;
+               boolean flagCheckTimeOrder = secondOrder == -2;
                PlanMoc[] pList = new PlanMoc[p.length];
                int spMoc=-1,tMoc=-1;
                for( int j = 0; j < p.length; j++ ) {
@@ -2689,7 +2691,7 @@ public final class Command implements Runnable {
 
             // Pour des catalogues ou des images
          } else {
-            if( firstOrder == -1 ) firstOrder = 13;
+            if( firstOrder == -2 ) firstOrder = 13;
             a.calque.newPlanMoc(label, p, firstOrder, radius, pixMin, pixMax, Double.NaN, fov);
          }
          a.calque.repaintAll();

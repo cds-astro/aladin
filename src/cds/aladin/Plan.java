@@ -107,7 +107,7 @@ public class Plan implements Runnable {
       "Tool","Aperture","Folder","Filter",
       "Image FoV","In progress","ImageHuge",
       "HipsImage","HipsPolarisation","HipsCatalog",
-      "MOC","CubeColor","HipsFinder","HipsCube","TMOC","STMOC","RGBdyn"
+      "SMOC","CubeColor","HipsFinder","HipsCube","TMOC","STMOC","RGBdyn"
    };
 
    protected String id=null;     // Identification unique du plan (ex: CDS/I/231...)
@@ -1713,6 +1713,7 @@ public class Plan implements Runnable {
       // S'agit-il bien du même corps céleste
       if( v.getProj().isUncompatibleBody( projd ) ) {
          setDebugFlag(NOTSAMEBODY, true);
+         System.err.println("isCompatibleWith => Ref="+v.pref.label+"/"+v.pref.body+" plan="+label+"/"+body);
          return false;
       } else setDebugFlag(NOTSAMEBODY, false);
 

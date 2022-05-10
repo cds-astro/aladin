@@ -46,7 +46,7 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class BuilderLint extends Builder {
    
-   public static int TIMEOUT = 20000;   // timeout de 20s sur les connections réseaux
+   public static int TIMEOUT = 60000;   // timeout de 20s sur les connections réseaux
    
    private String path;         // path (ou préfixe URL) du HiPS à valider
    private boolean flagRemote;  // true s'il s'agit d'un HiPS distant

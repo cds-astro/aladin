@@ -693,8 +693,11 @@ public final class Projection {
    protected int isUncompatibleBody1( Projection p ) {
       if( !isOk(p) ) return 0;
       
+      // Pas d'affichage des données planétaires => jamais d'incompatibilité sur les corps
+      if( !Aladin.aladin.configuration.isPlanet() ) return 1;
+      
       // Toujours compatible pour un plot (time ou scatterplot)
-      if( Plot.PROJBODY.equals(body) || Plot.PROJBODY.equals(p.body) ) return 1;
+      if( Plot.PROJBODY.equalsIgnoreCase(body) || Plot.PROJBODY.equalsIgnoreCase(p.body) ) return 1;
 
       // Inconnu => on ne sait pas la compatibilité
       if( body==null || p.body==null ) return -1;

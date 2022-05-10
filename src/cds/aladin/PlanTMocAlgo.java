@@ -37,6 +37,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
+      type = ALLSKYTMOC;
       this.c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
       String s = getFonction(p1,pList,op,order);
@@ -46,7 +47,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       aladin.trace(3,"TMOC computation: "+Plan.Tp[type]+" => "+s);
       
       try {
-         moc = p1.getMoc().clone();
+         moc = p1.getMoc().getTimeMoc().clone();
          if( op==PlanMocAlgo.COMPLEMENT ) moc = moc.complement();
          else if( op==PlanMocAlgo.COPY ) ((TMoc)moc).setMocOrder(order);
          else {

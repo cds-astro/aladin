@@ -1769,7 +1769,9 @@ UPHELP Wizard
 UPHELPH Switch on/off the beginner help. Help new Aladin users to discover progressively the Aladin graphical interface.
 UPFILTERHDU FITS HDU filtering
 UPFILTERHDUH If activated, only usefull FITS extensions (images, tables) will be loaded, otherwise useless tables (technical reduction information, without coordinates, ...) will be ignored
-#UPTAGCENTER	Centered tag
+UPPLANET Planetary data (test)
+UPPLANETH Activation of planetary data (surfaces, catalogues, coverages). WARNING, the display of planetary data depends on the evolution of the IVOA standards associated with the planets. At present, they do not always allow to effectively differentiate planetary data from celestial data. Access to planetary data is therefore provided "as is", with no guarantee of a consistent display (celestial and/or planetary).
+Translated with www.DeepL.com/Translator (free version)#UPTAGCENTER	Centered tag
 #UPTAGCENTERH Activate this selector to automatically center tags ("Tag" tool button) on the barycentre of the closest object.
 UPSLIDERS	Control sliders
 UPSLIDERH	Add or remove interface control sliders
@@ -1885,6 +1887,8 @@ UPHELP.fr Assistant
 UPHELPH.fr Active/désactive l'assistant pour les débutatns. Celui-ci permet aux nouveaux utilisateurs d'Aaldin de se familiariser avec l'interface graphique
 UPFILTERHDU.fr Filtrage des HDU FITS
 UPFILTERHDUH.fr Si le filtrage HDU est activé les extensions des fichiers FITS (HDU) techniques (information de réduction de données, sans coordonnées célestes...) seront ignorées.
+UPPLANET.fr Données planétaires (test)
+UPPLANETH.fr Activation des données planétaires (surfaces, catalogues, couvertures). ATTENTION, l'affichage des données planétaires est tributaire de l'évolution des standards IVOA associés aux planètes. Actuellement, ils ne permettent pas toujours de différencier efficacement les données planétaires des données célestes. L'accès aux données planétaires est donc fourni "en l'état", sans garantie d'une affichage toujours cohérent (céleste et/ou planètes).
 #UPTAGCENTER.fr	Marque centrée
 #UPTAGCENTERH.fr Activez ce sélecteur afin de contraindre l'outil de marquage (Outil "Marq") à se centrer automatiquement sur le barycentre de l'objet le plus proche
 UPSLIDERS.fr	Contrôles

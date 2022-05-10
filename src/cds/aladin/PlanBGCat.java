@@ -366,6 +366,7 @@ public class PlanBGCat extends PlanBG {
    private int hashSrc() {
       int hash=0;
       Iterator<Obj> it = iterator();
+      if( it==null ) return hash;
       while( it.hasNext() ) {
          Obj obj = it.next();
          hash += 31*obj.hashCode();

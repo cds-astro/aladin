@@ -21,6 +21,7 @@
 
 package cds.allsky;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.StringTokenizer;
 import java.util.TimeZone;
 
 import cds.aladin.Aladin;
+import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
@@ -50,8 +52,21 @@ public class HipsLint {
       
       context.info("Starting HipsLint "+SDF.format(new Date())+" (based on Aladin "+Aladin.VERSION+")...");
       context.info(Context.getTitle("CHECKING HiPSserver ["+hipsListUrl+"]",'='));
-      InputStreamReader in = new InputStreamReader( Util.openAnyStream(hipsListUrl,false,false,BuilderLint.TIMEOUT), "UTF-8");
       
+      // On charge la totalité de la HipsList (bug Renaud)
+      MyInputStream mis = null;
+      byte [] buf;
+      try {
+         mis = Util.openAnyStream(hipsListUrl,false,false,BuilderLint.TIMEOUT);
+         buf = mis.readFully();
+         mis.close();
+         mis=null;
+      } catch( Exception e ) {
+         context.error("Lint[5.1] HiPSList not available or timeout-"+(BuilderLint.TIMEOUT/1000)+"s)");
+         return;
+      } finally { if( mis!=null ) mis.close(); }
+      
+      InputStreamReader in = new InputStreamReader( new ByteArrayInputStream(buf), "UTF-8");
       while( mocServerReading ) {
          
          try {

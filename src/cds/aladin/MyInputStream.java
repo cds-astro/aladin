@@ -1479,7 +1479,7 @@ public class MyInputStream extends FilterInputStream {
       if( flagIPAC ) {
          try { substitute(IPACDeb,IPACFin-IPACDeb,bufLigne[0]); }
          catch( Exception e ) { }
-         Aladin.trace(3,"IPAC detected");
+         Aladin.trace(6,"IPAC detected");
          return 4;
 
       }
@@ -1488,7 +1488,7 @@ public class MyInputStream extends FilterInputStream {
       if( findSep>=0 ) {
          char c = (char)findSep;
          setSepCSV(c);
-         Aladin.trace(3,"CSV detected with ["+c+"] as delimitor");
+         Aladin.trace(6,"CSV detected with ["+c+"] as delimitor");
 
          // On teste s'il n'y aurait pas une ligne header en commentaire juste avant
          // a la CSV VizieR mode queryCat
@@ -1497,7 +1497,7 @@ public class MyInputStream extends FilterInputStream {
             for( int i=1; i<buf1.length; i++ ) buf1[i]=bufLigne[i-1];
             buf1[0]=firstLine;
             if( analyseCSV(buf1,buf1.length)>=0 ) {
-               Aladin.trace(3,"First line is certainly a \"comment header\" a la CSV VizieR => remove #");
+               Aladin.trace(6,"First line is certainly a \"comment header\" a la CSV VizieR => remove #");
                try { substitute(firstLinePos,1,""); }
                catch( Exception e ) { }
             }
@@ -1515,7 +1515,7 @@ public class MyInputStream extends FilterInputStream {
          if( TableParser.countColumn(bufLigne[0],new char[] { ' ' })>1 ) {
             try { substitute(sextraDeb,sextraFin-sextraDeb,translateSextraHeader( new String(cache,sextraDeb,sextraFin))); }
             catch( Exception e ) { }
-            Aladin.trace(3,"Sextractor ASCII detected");
+            Aladin.trace(6,"Sextractor ASCII detected");
             return 3;
          }
       }
@@ -1527,7 +1527,7 @@ public class MyInputStream extends FilterInputStream {
          else if( m!=n ) return 0;
       }
 
-      Aladin.trace(3,"BSD detected (aligned column with blanks");
+      Aladin.trace(6,"BSD detected (aligned column with blanks");
       return 2;
    }
 

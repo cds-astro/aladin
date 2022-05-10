@@ -2250,7 +2250,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       // Ajustement local des propriétés
       try {
-         propAdjust(id, prop);
+         if( !propAdjust(id, prop) ) return;
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          return;
@@ -2294,9 +2294,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    
    
    /**
-    * Ajustement des propriétés, notamment pour ajouter le bon client_category s'il s'agit d'un catalogue
+    * Ajustement des propriétés
+    * @return true si on doit garder l'enregsitrement
     */
-   private void propAdjust(String id, MyProperties prop) {
+   private boolean propAdjust(String id, MyProperties prop) {
       
       // Insertion de la date de publication de l'article de référence
       String bib = prop.get("bib_reference");
@@ -2320,7 +2321,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( category==null ) {
          category = DirectorySort.OTHERS;
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
+         
+      // Suppression des données Planéto si on n'est pas en mode Planéto
+      } else {
+         if( category.startsWith("Solar sys") ) {
+            if( !aladin.configuration.isPlanet() ) return false;
+         }
       }
+      
       
       boolean local = prop.getProperty("PROP_ORIGIN") != null;
 
@@ -2332,6 +2340,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       
       // Génération de la clé de tri
       directorySort.setInternalSortKey(id,prop);
+      
+      return true;
    }
    
    // POURRA ETRE SUPPRIME POUR LA V12 - PF 31 janvier 2020

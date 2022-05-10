@@ -2083,8 +2083,8 @@ public class Calque extends JPanel implements Runnable {
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      if( pList[0] instanceof PlanSTMoc ) plan[n] = pa = new PlanSTMocAlgo(aladin,label,pList,op,spaceOrder,timeOrder,maxSize,maxPriority);
-      else if( pList[0] instanceof PlanTMoc ) plan[n] = pa = new PlanTMocAlgo(aladin,label,pList,op,timeOrder,maxSize);
+      if( spaceOrder>=0 && timeOrder>=0 && pList[0] instanceof PlanSTMoc ) plan[n] = pa = new PlanSTMocAlgo(aladin,label,pList,op,spaceOrder,timeOrder,maxSize,maxPriority);
+      else if( spaceOrder==-1 ) plan[n] = pa = new PlanTMocAlgo(aladin,label,pList,op,timeOrder,maxSize);
       else plan[n] = pa = new PlanMocAlgo(aladin,label,pList,op,spaceOrder,maxSize);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);

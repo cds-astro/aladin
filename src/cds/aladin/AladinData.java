@@ -456,6 +456,7 @@ public class AladinData {
    public double[] getCoord(double x, double y) throws AladinException {
       testImage();
       if( !Projection.isOk(plan.projd) ) throw new AladinException(ERR006);
+      Coord coo = new Coord();
       coo.x = x-0.5; coo.y = y-0.5;
       coo.y = ((PlanImage)plan).naxis2 - coo.y ;
       plan.projd.getCoord(coo);
@@ -471,10 +472,11 @@ public class AladinData {
     */
    public double [] getXY(double ra, double dec) throws AladinException {
       if( !Projection.isOk(plan.projd) ) throw new AladinException(ERR006);
+      Coord coo = new Coord();
       coo.al = ra; coo.del = dec;
       plan.projd.getXY(coo);
       coo.y = ((PlanImage)plan).naxis2 - coo.y;
-      return new double[]{coo.x,coo.y};
+      return new double[]{coo.x+0.5,coo.y+0.5};
    }
 
    // ********************** OVERLAY PLANE METHODS ****************************** //
@@ -675,9 +677,6 @@ public class AladinData {
 
    // Plane reference
    protected Plan plan;
-
-   // pre-allocation
-   private final Coord coo = new Coord();
 
    // current source plane "legende" (see setName())
    private Legende leg=null;
