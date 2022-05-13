@@ -605,6 +605,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       status = "Re-sampling (at the nearest pixel):";
       progress = "computing...";
       objet = p.objet;
+      body = p.body;
       if( label==null ) label= "RGB img";
       setLabel(label);
       co = p.co;

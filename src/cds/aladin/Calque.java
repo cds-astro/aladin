@@ -3170,7 +3170,7 @@ public class Calque extends JPanel implements Runnable {
       Plan pref = getPlanRef();
       p.projd = pref==null || !Projection.isOk(pref.projd)? null :
          new Projection("Myproj",Projection.WCS,pref.projd.alphai,pref.projd.deltai,
-               90*60,250,250,500,0,false,Calib.AIT,Calib.FK5);
+               90*60,250,250,500,0,false,Calib.AIT,Calib.FK5,pref);
       if( pref!=null ) p.setBody( pref.getBody());
       suiteNew(p);
       aladin.command.resetPreviousDrawing();
@@ -3433,7 +3433,10 @@ public class Calque extends JPanel implements Runnable {
       if( inStack ) {
          p.pcat.createDefaultProj();
          p.setActivated(true);
-         if(aladin.calque.getPlanRef()!=null) p.objet = aladin.calque.getPlanRef().objet;
+         if(aladin.calque.getPlanRef()!=null) {
+            p.objet = aladin.calque.getPlanRef().objet;
+            p.body = aladin.calque.getPlanRef().body;
+         }
          
 //         if( Aladin.PROTO) {
             TapManager.getInstance(aladin).updateAddUploadPlans(p);
@@ -3634,6 +3637,7 @@ public class Calque extends JPanel implements Runnable {
             p1.co=p.co;
             p1.param=p.param;
             p1.objet=p.objet;
+            p1.body=p.body;
             p1.pcat.nbTable=1;
             p1.sourceType=p.sourceType;
             p1.fullSource=p.fullSource;

@@ -234,7 +234,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.125";
+   static public final    String VERSION = "v11.126";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4530,17 +4530,21 @@ DropTargetListener, DragSourceListener, DragGestureListener
          return -1;
       }
       
-      // Affectation du body courant si non céleste
-      Plan p = calque.getPlanRef();
-      if( p!=null ) {
-         String body = p.getBody();
-         if( !"sky".equals(body) ) moc.setSpaceSys( body );
-      }
-      
       int n = calque.newPlanMOC(moc,"Moc reg",null);
       
+      PlanMoc pmoc = ((PlanMoc)calque.plan[n]);
+      
       // Affichage à la densité max du MOC immédiatement
-      ((PlanMoc)calque.plan[n]).setGapOrder(PlanBGCat.MAXGAPORDER);
+      pmoc.setGapOrder(PlanBGCat.MAXGAPORDER);
+      
+      // Mise à jour du body
+      Plan pref = calque.getPlanRef();
+      if( pref!=null ) {
+         String body = pref.getBody();
+         pmoc.setBody(body);
+         if( !Plan.BODYSKY.equals(body) ) moc.setSpaceSys( body );
+      }
+      
       return n;
    }
    

@@ -294,7 +294,7 @@ public class PlanImageBlink extends PlanImage {
          String originalHeaderFits = headerFits.getOriginalHeaderFits();
          if( m==PERM1 ) originalHeaderFits = modifCalib(originalHeaderFits,new String[] { "2-3","3-2" });
          else if( m==PERM2 ) originalHeaderFits = modifCalib(originalHeaderFits,new String[] { "1-3","3-1" });
-         Projection proj = new Projection(Projection.WCS,new Calib( new HeaderFits(originalHeaderFits) ));
+         Projection proj = new Projection(Projection.WCS,new Calib( new HeaderFits(originalHeaderFits) ),this);
          setNewProjD(proj);
          setHasSpecificCalib();
       } catch( Exception e ) {

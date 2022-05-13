@@ -813,7 +813,7 @@ public class AladinData {
    // Create a new projection associated to the plane
    private void setCalib() {
       try {
-         Projection proj = new Projection(Projection.WCS,new Calib(((PlanImage)plan).headerFits.getHeaderFits()));
+         Projection proj = new Projection(Projection.WCS,new Calib(((PlanImage)plan).headerFits.getHeaderFits()),plan);
          plan.setNewProjD(proj);
          plan.setHasSpecificCalib();
          repaint();

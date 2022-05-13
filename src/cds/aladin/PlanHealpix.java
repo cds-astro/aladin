@@ -431,7 +431,7 @@ public class PlanHealpix extends PlanBG {
       }
 
       Projection p =  new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,
-            longAsc, defaultProjType,Calib.FK5);
+            longAsc, defaultProjType,Calib.FK5,this);
 
       p.frame = getCurrentFrameDrawing();
 //      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;

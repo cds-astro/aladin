@@ -262,18 +262,9 @@ public class VOToolDescription extends JPanel {
       this.dir.setText(t);
       aladin.frameVOTool.apply.setEnabled(hasBeenChanged());
    }
-
-   protected boolean hasBeenChanged() {
-      if( hasBeenChanged1() ) {
-         System.out.println("J'y suis");
-         return hasBeenChanged1();
-      }
-      return false;
-   }
-
    
    /** Retourne true si le formulaire a changé par rapport à son contenu initial */
-   protected boolean hasBeenChanged1() {
+   protected boolean hasBeenChanged() {
       if( vo==null ) return false;
       if( editable && name.getText().trim().length()>0 ) return true;
       if( vo.isActivated()!=state.isSelected() ) return true;

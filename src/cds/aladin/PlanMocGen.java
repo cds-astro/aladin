@@ -332,7 +332,7 @@ public class PlanMocGen extends PlanMoc {
       
       try {
          // Affectation du système de référence planéto le cas échéant
-         String sys = p.projd.body;
+         String sys = p.body;
          if( sys!=null ) moc.setSpaceSys( sys );
 
          // Conversion en ICRS si nécessaire
@@ -559,7 +559,7 @@ public class PlanMocGen extends PlanMoc {
          ((SMoc)moc).bufferOff();
 
          // Affectation du système de référence planéto le cas échéant
-         String sys = p.projd.body;
+         String sys = p.body;
          if( sys!=null ) moc.setSpaceSys( sys );
          
          // Conversion en ICRS si nécessaire
@@ -866,9 +866,8 @@ public class PlanMocGen extends PlanMoc {
          
          // Initialisation du body de référence
          String body = p[0].getBody();
-         if( projd!=null ) projd.setBody(body);
          setBody(body);
-         if( body!=null && body.equals("sky") ) body="C";
+         if( body!=null && body.equals(Plan.BODYSKY) ) body="C";
          moc.setSpaceSys(body);
          
          for( Plan p1 : p ) {

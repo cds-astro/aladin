@@ -73,6 +73,7 @@ public class PlanBGRgb extends PlanBG {
       maxOrder = a.maxOrder;
       flagNoTarget=a.flagNoTarget;
       objet = a.objet;
+      body = a.objet;
       frameOrigin=a.frameOrigin;
       specificProj = a.specificProj;
       setNewProjD( a.projd.copy() );

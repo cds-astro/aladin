@@ -1200,8 +1200,8 @@ public class Save extends JFrame implements ActionListener {
       append(CR+"     activated=\""+p.active+"\"");
       if( p.label!=null )      append(CR+"     label=\""+XMLParser.XMLEncode(p.label)+"\"");
       if( p.objet!=null )      append(CR+"     object=\""+XMLParser.XMLEncode(p.objet)+"\"");
-      if( p.param!=null )      append(CR+"     param=\""+XMLParser.XMLEncode(p.param)+"\"");
       if( p.body!=null )       append(CR+"     body=\""+XMLParser.XMLEncode(p.body)+"\"");
+      if( p.param!=null )      append(CR+"     param=\""+XMLParser.XMLEncode(p.param)+"\"");
 
       if( p.type==Plan.FILTER )
          if( ((PlanFilter)p).plan!=null ) append(CR+"     dedicatedto=\""+((PlanFilter)p).plan.label+"\"");

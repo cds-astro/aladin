@@ -42,7 +42,7 @@ public class PlanHealpixDMap extends PlanHealpix {
    }
    
    protected void postProd() {
-      Projection p =new Projection("test",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.AIT,Calib.FK5);
+      Projection p =new Projection("test",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.AIT,Calib.FK5,this);
       p.frame = getCurrentFrameDrawing();
       setNewProjD(p);
       initZoom=1./64;

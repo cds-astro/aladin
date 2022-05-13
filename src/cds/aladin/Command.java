@@ -5429,7 +5429,7 @@ public final class Command implements Runnable {
          int cx = width / 2;
          int cy = height / 2;
          Projection p = new Projection("Test", Projection.SIMPLE, raj, dej, rm, rm1, cx - 0.5, cy - 0.5, width, height, 0, true,
-               type, Calib.FK5);
+               type, Calib.FK5, null);
 
          File g = new File(a.getDefaultDirectory() + Util.FS + file);
          g.delete();

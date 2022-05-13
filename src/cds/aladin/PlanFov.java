@@ -144,7 +144,7 @@ public class PlanFov extends Plan {
 		//System.out.println("le barycentre a pour coordonnées : "+ra+"  "+de);
 		double radius = max( max( diff[0], diff[1] ), max( diff[2], diff[3] ) );
 		//System.out.println("radius vaut : "+radius);
-		return new Projection(null,Projection.SIMPLE,ra,de,radius*60*2,250.0,250.0,500.0,0.0,false,Calib.TAN,Calib.FK5);
+		return new Projection(null,Projection.SIMPLE,ra,de,radius*60*2,250.0,250.0,500.0,0.0,false,Calib.TAN,Calib.FK5,null);
 	}
 
 	/**
@@ -188,7 +188,7 @@ public class PlanFov extends Plan {
 
             }
 
-            ArrayList<PointD[]> polygons = new ArrayList<PointD[]>();
+            ArrayList<PointD[]> polygons = new ArrayList<>();
             if (curFov.getStcObjects() != null) {
                 Iterator<STCObj> itStcObjs = curFov.getStcObjects().iterator();
                 while (itStcObjs.hasNext()) {

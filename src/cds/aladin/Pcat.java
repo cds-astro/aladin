@@ -331,7 +331,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             rajc,dejc,rm*2,
             250.0,250.0,500.0,
             0.0,false,
-            typeProj,Calib.FK5));
+            typeProj,Calib.FK5,plan));
 
       // Positionnement du centre que si ce n'est pas la valeur par défaut 0,0
       if( rajc!=0 && dejc!=0 ) plan.co=new Coord(rajc,dejc);
@@ -1021,6 +1021,12 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     */
    public void tableParserWarning(String msg) {
       if( msg.startsWith("!!!") ) {
+         int n = msg.indexOf("BODY=");
+         if( n>0 ) {
+            String body = msg.substring(n+5);
+            plan.setBody(body);
+            return;
+         }
          if( msg.indexOf("OVERFLOW")>=0 ) plan.error=msg;
          if( msg.indexOf("ERROR")>=0 ) plan.error=msg;
       }

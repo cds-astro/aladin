@@ -263,6 +263,8 @@ public final class PlanField extends Plan {
       pcat       = new Pcat(this,c,aladin.calque,aladin.status,aladin);
       aladin.calque.selectPlan(this);
       objet	 = null;
+      // IL FAUDRAIT AJOUTER LE BODY ICI. ON VA ASSUMER sky POUR LE MOMENT
+      body = BODYSKY;
 
       // set instrument code
       setInstr(instrument);
@@ -364,6 +366,8 @@ public final class PlanField extends Plan {
       pcat = new Pcat(this, c, aladin.calque, aladin.status, aladin);
       aladin.calque.selectPlan(this);
       objet = null;
+      // IL FAUDRAIT AJOUTER LE BODY ICI. ON VA ASSUMER sky POUR LE MOMENT
+      body = BODYSKY;
       instr = -1;
       this.fpBean = fpBean;
       setObjects(fpBean);
@@ -379,6 +383,8 @@ public final class PlanField extends Plan {
       pcat = new Pcat(this, c, aladin.calque, aladin.status, aladin);
       aladin.calque.selectPlan(this);
       objet = null;
+      // IL FAUDRAIT AJOUTER LE BODY ICI. ON VA ASSUMER sky POUR LE MOMENT
+      body = BODYSKY;
 
       instr = -1;
       this.fpBean = fpBean;
@@ -504,7 +510,7 @@ public final class PlanField extends Plan {
       projd = new Projection(null,Projection.SIMPLE,
             ra,de,/*instr==WFPC2?5:*/instr==MEGACAM || instr==MEGAPRIME ?100:45,
                   250,250,500,
-                  0,false,Calib.TAN,Calib.FK5);
+                  0,false,Calib.TAN,Calib.FK5,this);
       switch(instr) {
          case MEGACAM:
             setRollable(false);

@@ -60,7 +60,7 @@ public class Constellation {
          is = new BufferedReader(new InputStreamReader(
                    aladin.getClass().getResourceAsStream("/"+CONSTELLATION_FILE)));
          
-         cstMap = new HashMap<String, ArrayList<Position>>();
+         cstMap = new HashMap<>();
          String s,oCst=null;
          ArrayList<Position> cc = null;
          LigneConst oc = null;
@@ -125,11 +125,11 @@ public class Constellation {
                   }
                   
                   // Préparation de la liste des coordonnées de la nouvelle constellation
-                  cc = new ArrayList<Position>();
+                  cc = new ArrayList<>();
                   
                   // Generation d'une projection centrée sur la constellation
                   // afin de déterminer la position du label au barycentre
-                  proj = new Projection(null,Projection.WCS,ra,dec,60,0,0,60,0,false,Calib.SIN,Calib.FK5);
+                  proj = new Projection(null,Projection.WCS,ra,dec,60,0,0,60,0,false,Calib.SIN,Calib.FK5,null);
                }
                oCst = cst;
                

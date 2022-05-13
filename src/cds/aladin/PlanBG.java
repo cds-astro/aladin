@@ -514,9 +514,10 @@ public class PlanBG extends PlanImage {
          
          // Body
          if( isPlanet(strFrame) ) setBody( strFrame.trim().toLowerCase() ) ;
+         else setBody(Plan.BODYSKY);
 
          // Pour compatibilité avec le vieux vocabulaire
-         else if( strFrame.equals("X")) {
+         if( strFrame.equals("X")) {
             strFrame = prop.getProperty(Constante.OLD_HIPS_FRAME,"X");
             char c1 = strFrame.charAt(0);
             if( c1=='C' || c1=='Q' ) frame=Localisation.ICRS;
@@ -1004,8 +1005,7 @@ public class PlanBG extends PlanImage {
       specificProj = isAPlanet;
       
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
-            projection,Calib.FK5);
-      p.setBody( body );
+            projection,Calib.FK5,this);
       p.frame = getCurrentFrameDrawing();
 //      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);

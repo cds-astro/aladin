@@ -237,7 +237,7 @@ public class FrameHeaderFits extends JFrame {
       headerFits = new HeaderFits(s,this);
       if( plan!=null ) {
          Calib c = new Calib(headerFits);
-         plan.projd = new Projection(Projection.WCS, c);
+         plan.projd = new Projection(Projection.WCS, c, plan);
          plan.setHasSpecificCalib();
          plan.aladin.view.newView(1);
          plan.aladin.view.repaintAll();

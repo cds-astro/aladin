@@ -346,7 +346,7 @@ public final class FrameNewCalib extends JFrame
 
       // Dans le cas ou l'on veut editer le WCS
       if( proj==null ) {
-         getWCS(new Projection(label,Projection.SIMPLE,raj,dej,rm,rm1,cx,cy,r,r1,rot,sym,Calib.TAN,system));
+         getWCS(new Projection(label,Projection.SIMPLE,raj,dej,rm,rm1,cx,cy,r,r1,rot,sym,Calib.TAN,system,plan));
       } else getWCS(proj);
 
       pack();
@@ -808,7 +808,7 @@ e.printStackTrace();
                p=oldp;
                p.modify(label,Projection.SIMPLE,raj,dej,rm,rm1,cx,cy,r,r1,rot,sym,type,system);
             } else {
-               p = new Projection(label,Projection.SIMPLE,raj,dej,rm,rm1,cx,cy,r,r1,rot,sym,type,system);
+               p = new Projection(label,Projection.SIMPLE,raj,dej,rm,rm1,cx,cy,r,r1,rot,sym,type,system,plan);
             }
 
          // Methode par quadruplets
@@ -820,7 +820,7 @@ e.printStackTrace();
                if( plan.projd!=null ) p = plan.projd.copy();
                else {
                   p=new Projection(label,Projection.SIMPLE,
-                        coo[0].al,coo[0].del,cx,cy,coo[0].x,coo[0].y,cx*2,cy*2,0,false,Calib.TAN,system);
+                        coo[0].al,coo[0].del,cx,cy,coo[0].x,coo[0].y,cx*2,cy*2,0,false,Calib.TAN,system,plan);
                }
             }
             p.modify(label,coo);
@@ -831,7 +831,7 @@ e.printStackTrace();
             HeaderFits headerFits = new HeaderFits(s);
             Calib c = new Calib(headerFits);
             if( flagModif ) p=oldp;
-            else p = new Projection(label,Projection.WCS,c.alphai,c.deltai,/*raj,dej,*/rm,rm1,cx,cy,r,r1,rot,sym,Calib.TAN,system);
+            else p = new Projection(label,Projection.WCS,c.alphai,c.deltai,/*raj,dej,*/rm,rm1,cx,cy,r,r1,rot,sym,Calib.TAN,system,plan);
             p.modify(label,c);
          }
 

@@ -756,6 +756,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          pi.colorBackground=null;
          pi.reverse();
          pi.objet = pi.projd.getProjCenter().getSexa();
+         pi.body = pref.body;
          pi.flagOk=true;
 
       } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }
@@ -895,6 +896,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          pi.setOpacityLevel(1f);
          if( !(pref instanceof PlanImageRGB) ) pi.reverse();
          pi.objet = pi.projd.getProjCenter().getSexa();
+         pi.body = pref.body;
 
 
       } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }

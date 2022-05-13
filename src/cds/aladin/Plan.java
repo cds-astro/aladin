@@ -101,6 +101,9 @@ public class Plan implements Runnable {
    static final int ALLSKYCUBE=22; // Plan HiPS cube
    static final int ALLSKYTMOC=23; // Le plan contient un Multi-Order Coverage map Temporel
    static final int ALLSKYSTMOC=24; // Le plan contient un Multi-Order Coverage map Saptio-Temporel
+   
+   
+   static public final String BODYSKY = "sky";
 
    static String [] Tp       = { "","Image","RGB","Blink","Cube","Resampled","Mosaic","Algo",
       "Catalog",
@@ -117,7 +120,7 @@ public class Plan implements Runnable {
    protected boolean isOldPlan;  // True s'il s'agit d'un plan réutilisé (algo) (voir Plan.planReady());
    protected boolean noBestPlacePost; // true s'il ne faut pas passer le plan à la méthode bestPlacePost() après son chargement
    protected boolean collapse;	 // true si le plan est collapse dans la pile
-   protected String body="sky";  // le corps céleste concerné, C pour céleste, et null pour inconnu
+   protected String body=null;  // le corps céleste concerné, "sky" pour céleste, et null pour inconnu
    protected String objet;       // Target du plan (celui qui a ete indique a l'interrogation)
    public String label;          // Label du plan; (celui qui apparait dans le "plane stack"
    protected String param;       // Les parametres d'interrogation du serveur
@@ -243,6 +246,7 @@ public class Plan implements Runnable {
       p.folder=folder;
       p.collapse=collapse;
       p.objet=objet;
+      p.body=body;
       p.param=param;
       p.label=label;
       p.description = description;
@@ -1189,7 +1193,7 @@ public class Plan implements Runnable {
       flagOk=false;
       flagWaitTarget=isOldPlan=false;
       hasSpecificCalib=false;
-      objet=error=label=param=description=verboseDescr=ack=copyright=copyrightUrl=null;
+      body=objet=error=label=param=description=verboseDescr=ack=copyright=copyrightUrl=null;
       flagSkip=false;
       co=null;
       projd=projInit = null;
@@ -1710,10 +1714,9 @@ public class Plan implements Runnable {
          return true;
       }
       
-      // S'agit-il bien du même corps céleste
+      // S'agit-il bien du même body
       if( v.getProj().isUncompatibleBody( projd ) ) {
          setDebugFlag(NOTSAMEBODY, true);
-         System.err.println("isCompatibleWith => Ref="+v.pref.label+"/"+v.pref.body+" plan="+label+"/"+body);
          return false;
       } else setDebugFlag(NOTSAMEBODY, false);
 
@@ -1951,6 +1954,12 @@ public class Plan implements Runnable {
       } else {
          if( filename==null ) ADD( buf, "\n* Provenance: ",copyright);
       }
+      
+      if( aladin.configuration.isPlanet() ) {
+         String body = getBody();
+         if( body==null ) body="unknown";
+         ADD( buf,"\n* Body: ",body);
+      }
 
       addMessageInfo(buf,prop);
 
@@ -2038,15 +2047,11 @@ public class Plan implements Runnable {
       return Util.getSubpath(label,1,-1).replace('/',' ');
    }
    
-   /** Retourne le body concerné, ou C si céleste ou null si inconnu */
+   /** Retourne le body concerné, ou "sky" si céleste ou null si inconnu */
    protected String getBody() { return body; }
    
    /** Positionne le body concerné, ou C si céleste ou null si inconnu */
-   protected void setBody(String body) { 
-      this.body = body;
-      if( projd!=null ) projd.body=body;
-      if( Aladin.levelTrace>=3 ) System.err.println("Debug Plan.setBody("+body+") on "+this);
-   }
+   protected void setBody(String body) { this.body = body; }
 
    // Prévu pour les cubes
    protected String getFrameLabel(int frame) { return label; }
@@ -2321,7 +2326,7 @@ public class Plan implements Runnable {
             headerFits.setToHeader(prop,value);
          }
          try {
-            setNewProjD(new Projection(Projection.WCS,new Calib(headerFits.getHeaderFits())));
+            setNewProjD(new Projection(Projection.WCS,new Calib(headerFits.getHeaderFits()),this));
             setHasSpecificCalib();
             aladin.command.console("Astrometrical calibration has been modified on "+label);
             aladin.view.newView();

@@ -52,7 +52,7 @@ public final class Projection {
       "Simple reduction","Matching star red.","Squattered plot" };
    
    // Les parametres de la projection
-   protected String body = null;    // null pour sky, sinon la planète concernée, en anglais et en minuscule
+   protected Plan plan = null;      // Plan associé
    protected int frame = Localisation.ICRS;
    protected String label=null;		// Label de la projection
    protected double raj,dej;		// Centre de l'image (J2000)
@@ -151,6 +151,7 @@ public final class Projection {
    /** Creation d'une projection à partir d'une autre projection */
    protected Projection(Projection p) {
       c=p.c;
+      plan=p.plan;
       adjustParamByCalib(c);
    }
 
@@ -165,7 +166,7 @@ public final class Projection {
    }
 
    protected Projection(double refX,double refY,double x, double y, double refW, double refH, double w, double h,
-         boolean flipX, boolean flipY,boolean logX, boolean logY) {
+         boolean flipX, boolean flipY,boolean logX, boolean logY, Plan plan) {
       modeCalib=PLOT;
       raj=alphai = refX;
       dej=deltai = refY;
@@ -180,6 +181,7 @@ public final class Projection {
       flipPlotY = flipY ? -1 : 1;
       logPlotX = logX;
       logPlotY = logY;
+      this.plan = plan;
       
 //      Aladin.trace(3,"Projection centre:Mesure=("+alphai+","+deltai+") Pixel=("+cx+","+cy+" taille:Mesure="+rm+"x"+rm1+" pixel="+r+"x"+r1);
 
@@ -262,19 +264,20 @@ public final class Projection {
    protected Projection(String label,int type,
          double alphai, double deltai, double rm,
          double cx, double cy,double r,
-         double rot,boolean sym,int t,int system) {
-      this(label,type,alphai,deltai,rm,rm,cx,cy,r,r,rot,sym,t,system);
+         double rot,boolean sym,int t,int system,Plan plan) {
+      this(label,type,alphai,deltai,rm,rm,cx,cy,r,r,rot,sym,t,system,plan);
    }
    protected Projection(String label,int type,
          double alphai, double deltai, double rm,double rm1,
          double cx, double cy,double r, double r1,
-         double rot,boolean sym,int t,int system) {
+         double rot,boolean sym,int t,int system, Plan plan) {
       
       c=new Calib(alphai,deltai,cx,cy,r,r1,rm,rm1,rot,t,sym,system);
       adjustParamByCalib(c);
       this.modeCalib=type;
       this.label=label;
       if( this.label==null ) this.label = getName(type,t);
+      this.plan = plan;
    }
 
    /*
@@ -282,11 +285,12 @@ public final class Projection {
     * @param type type de la projection (mode ALADIN|WCS...)
     * @param c    Calibration
     */
-   public Projection(int type,Calib c) {
+   public Projection(int type,Calib c, Plan plan) {
       this.c=c;
       adjustParamByCalib(c);
       this.modeCalib=type;
       label = getName(type,0);
+      this.plan = plan;
    }
 
    /** Crée un clone de la projection (calibration comprise) */
@@ -306,7 +310,7 @@ public final class Projection {
          System.arraycopy(coo,0,p.coo,0,coo.length);
       }
       p.c = c==null ? null : Calib.copy(c);
-      p.body = body;
+      p.plan = plan;
 
       return  p;
    }
@@ -370,11 +374,6 @@ public final class Projection {
 
    public void setProjSym(boolean sym) {
       modify(label,modeCalib,alphai,deltai,rm,rm1,cx,cy,r,r1,rot,sym,t,system);
-   }
-   
-   // Positionnement du corps concerné. null si sky
-   public void setBody(String s) {
-      body= s==null ? null : s.trim().toLowerCase();
    }
    
    public void setProj(int type) {
@@ -676,12 +675,16 @@ public final class Projection {
    /** Teste si les projections ne concerneraient pas des corps célestes incompatibles
     * Affiche un warning en cas de suspicion d'incompatiblité
     * Retourne false que si on est sûr de l'incompatibilité.
-    * IL FAUDRA MODIFIER CETTE METHODE EN FONCTION DE LA CONFIGURATION UTLISATEUR
     */
    protected boolean isUncompatibleBody( Projection p ) {
 
       int r = isUncompatibleBody1( p );
-      if( r!=1 && !Aladin.aladin.isFullScreen() ) Aladin.aladin.uncompatibleFrameWarning(body, p.body);
+      if( r!=1 ) {
+         Plan plan = p.plan;
+         if( !Aladin.aladin.isFullScreen() ) {
+            Aladin.aladin.uncompatibleFrameWarning(getBody(), p.getBody());
+         }
+      }
          
       return r==0;
    }
@@ -696,15 +699,21 @@ public final class Projection {
       // Pas d'affichage des données planétaires => jamais d'incompatibilité sur les corps
       if( !Aladin.aladin.configuration.isPlanet() ) return 1;
       
+      String body = getBody();
+      String pbody= p.getBody();
+      
       // Toujours compatible pour un plot (time ou scatterplot)
-      if( Plot.PROJBODY.equalsIgnoreCase(body) || Plot.PROJBODY.equalsIgnoreCase(p.body) ) return 1;
+      if( Plot.PROJBODY.equalsIgnoreCase(body) || Plot.PROJBODY.equalsIgnoreCase(pbody) ) return 1;
 
       // Inconnu => on ne sait pas la compatibilité
-      if( body==null || p.body==null ) return -1;
+      if( body==null || pbody==null ) return -1;
       
       // compatible que si les bodies sont égaux
-      return body.equals(p.body) ? 1 : 0;
+      return body.equals(pbody) ? 1 : 0;
    }
+   
+   /** Retourne le body associé à la projection, ou null si inconnu */
+   protected String getBody() { return plan==null ? null : plan.body; }
 
    /** Test de ``superposabilite'' de deux projections.
     * Retourne vrai si la projection passee en parametre est compatible

@@ -36,7 +36,7 @@ public class PlanBGStatic extends PlanBG {
       dataMax=pixelMax=255;
       isOldPlan=false;
 
-      pixList = new Hashtable<String,HealpixKey>(1000);
+      pixList = new Hashtable<>(1000);
 
       RGBControl = new int[RGBCONTROL.length];
       for( int i=0; i<RGBCONTROL.length; i++) RGBControl[i] = RGBCONTROL[i];
@@ -62,7 +62,7 @@ public class PlanBGStatic extends PlanBG {
 //      int defaultProjType = Projection.getProjType(sProj);
       int defaultProjType = Calib.AIT;
       
-      projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false, defaultProjType,Calib.FK5);
+      projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false, defaultProjType,Calib.FK5,this);
       projd.frame = getCurrentFrameDrawing();
       
       typeCM = aladin.configuration.getCMMap();

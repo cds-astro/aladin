@@ -761,7 +761,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
             Projection lastProj=proj;
             try {
-               proj = new Projection(null,0,0,0,2*60,width/2,-height/2+10,width/190., 0,false, Calib.AIT,Calib.FK5);
+               proj = new Projection(null,0,0,0,2*60,width/2,-height/2+10,width/190., 0,false, Calib.AIT,Calib.FK5,null);
                proj.frame = Localisation.ICRS;
             }catch( Exception e ) { proj=lastProj; }
             
@@ -801,7 +801,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                c = v.getCooCentre();
                if( c== null ) {
                   System.err.println("ZommView.drawHipsControl bug++ (v.getCooCenter() returns null ! => switch in SIN");
-                  proj = v.pref.projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
+                  proj = v.pref.projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5,v.pref);
                   v.pref.projd.frame = aladin.localisation.getFrame();
                   v.projLocal = v.pref.projd.copy();
                   drawHipsControl(g, v);

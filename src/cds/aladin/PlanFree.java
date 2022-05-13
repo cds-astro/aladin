@@ -38,5 +38,15 @@ public final class PlanFree extends Plan {
       this.aladin= aladin;
       init();
    }
+   
+   /** Creation d'un plan bidon pour gérer le paramètre "body" pour les Projections
+    * @param aladin reference
+    * @param body le body associé à ce plan
+    */
+    protected PlanFree(Aladin aladin, String body) {
+       this(aladin);
+       this.body=body;
+    }
+
 }
 

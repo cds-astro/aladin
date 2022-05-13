@@ -1870,7 +1870,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( withsys && withSpace ) {
             String body = v.pref.getBody();
             if( body!=null ) {
-               if( body.equals("sky") ) body="C";
+               if( body.equals(Plan.BODYSKY) ) body="C";
                sysParam="&spacesys="+URLEncoder.encode(body);
             }
          }

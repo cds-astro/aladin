@@ -69,6 +69,9 @@ public class Plot {
    public Plot(ViewSimple viewSimple) {
       this.aladin=viewSimple.aladin;
       this.viewSimple = viewSimple;
+      
+      // Pour pouvoir passer une référence à un plan pour les projections utilisées dans les plot
+      if( planFree==null ) planFree= new PlanFree(aladin,PROJBODY);
    }
    
    /** Retourne la projection associée au plot */
@@ -243,11 +246,10 @@ public class Plot {
          
          if( plotProj!=null ) {
             plotProj = new Projection(0,0,0,0, (max1X-min1X), (max1Y-min1Y), w, h, 
-                  plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
+                  plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot(),planFree);
          } else {
-            plotProj = new Projection(0,0,0,0, (max1X-min1X), (max1Y-min1Y), w, h, false,false,false,false);
+            plotProj = new Projection(0,0,0,0, (max1X-min1X), (max1Y-min1Y), w, h, false,false,false,false,planFree);
          }
-         plotProj.setBody(PROJBODY);
          viewSimple.newView(1);
          viewSimple.setZoomRaDec(1, (min1X+max1X)/2, (min1Y+max1Y)/2);
          adjustWidgets();
@@ -257,6 +259,8 @@ public class Plot {
          e.printStackTrace();
       }
    }
+   
+   static private PlanFree planFree = null;
    
    private double [] maxTimeRange = null;
    private void memoMaxTimeRange(double jdmin, double jdmax, double ymin, double ymax ) { 
@@ -275,8 +279,7 @@ public class Plot {
       double max1X = Double.isNaN( t[1] ) ? maxTimeRange[1] : t[1];
       
       plotProj = new Projection(0,0,0,0, (max1X-min1X), plotProj.rm1, w, h, 
-            plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
-      plotProj.setBody(PROJBODY);
+            plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot(),planFree);
 
       viewSimple.setZoomRaDec(1, (min1X+max1X)/2, (maxTimeRange[2]+maxTimeRange[3])/2);
       viewSimple.newView(1);

@@ -448,9 +448,10 @@ public class PlanMoc extends PlanBGCat {
          if( moc.getNbCells()<10000 ) setMaxGapOrder();
       }
 
-      // Coverage planéto ?
+      // Body : céleste ou planéto ?
       if( moc.isSpace() ) {
-         if( !f.equals("C") && !f.equals("G") && !f.equals("E") ) setBody(f);
+         if( f.equals("C") || f.equals("G") || f.equals("E") ) setBody(Plan.BODYSKY);
+         else setBody(f);
       }
    }
 

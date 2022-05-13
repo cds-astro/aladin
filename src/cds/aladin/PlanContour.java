@@ -227,6 +227,7 @@ public final class PlanContour extends PlanTool {
        p = pimg==null ? calque.getPlanBase() : pimg;
        if ( p == null ) return false;
        objet = p.objet;
+       body = p.body;
 
        orgWidth = ((PlanImage)p).width;
        orgHeight = ((PlanImage)p).height;

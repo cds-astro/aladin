@@ -1743,9 +1743,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          planetChoice = new JComboBox();
          planetChoice.addItem(ACTIVATED);
          planetChoice.addItem(NOTACTIVATED);
-         planetChoice.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { infoPlanet(); }
-         });
+         
+         planetChoice.addItemListener(new ItemListener(){
+            public void itemStateChanged(ItemEvent event) { infoPlanet(); }
+          });
          PropPanel.addCouple(this, p, l, PLANETH, planetChoice, g, c, GridBagConstraints.EAST);
       }
       
@@ -1762,8 +1763,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    // Affichage d'un baratin pour prévenir des contraintes sur les affichages des données planétaires
    private void infoPlanet() {
-      if( isVisible() ) return;   // La fenêtre n'est pas encore ouverte
-      if( planetChoice.getSelectedIndex()==0 ) aladin.info(this,PLANETH);
+      if( previousPlanet==1 && planetChoice.getSelectedIndex()==0 ) aladin.info(this,PLANETH);
    }
 
    // Nettoyage du cache HPX et du cache GLU
@@ -2363,6 +2363,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          String value = (new String(a, j, a.length - j)).trim();
          if( key.equals(TRANSOLD) ) key=TRANS;      // Pour compatiblité
          if( key.equals(LOOKANDFEELTHEME) && !value.equals("dark") ) previousTheme=1;
+         if( key.equals(PLANET) && !value.equals(ACTIVATED) ) previousPlanet=1;
          aladin.trace(6, "Configuration.load() [" + key + "] = [" + value + "]");
          
          if( Aladin.TREEWIDTH!=null && key.equals(HWIDTH) ) value=Aladin.TREEWIDTH;

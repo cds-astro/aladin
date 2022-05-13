@@ -142,10 +142,23 @@ public class PlanFolder extends Plan {
    /** Positionne le niveau d'opacité [0..1] (0: entièrement transparent, 1: entièrement opaque) */
    public void setOpacityLevel(float opacityLevel) {
       super.setOpacityLevel(opacityLevel);
-      Plan [] list = aladin.calque.getFolderPlan(this,false);
-      for( Plan p : list ) {
+      for( Plan p : aladin.calque.getFolderPlan(this,false) ) {
          if( aladin.calque.canBeTransparent(p) ) p.setOpacityLevel(opacityLevel);
       }
+   }
+   
+   /** Retourne le body si tous les plans internes ont le même, sinon null (inconnu) */
+   public String getBody() {
+      String body=null;
+      boolean first=true;
+      for( Plan p : aladin.calque.getFolderPlan(this,false) ) {
+         if( first ) {
+            body=p.getBody();
+            if( body==null ) return null;  // Premier plan sans body connu => pas de body connu
+            first = false;
+         } else if( !body.equals(p.getBody()) ) return null;   // Panachage ? => pas de body connu
+      }
+      return body;
    }
 
 }   

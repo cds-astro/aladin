@@ -1637,6 +1637,9 @@ final public class TableParser implements XMLConsumer {
             else {
                String coosysID = cooFieldref.get(f.ID);
                if( coosysID!=null ) setSourceAstroFrame(coosysID,null,null,0);
+               
+               // Juste pour forcer la mise en place d'un éventuel body
+               else throw new Exception();
             }
          } catch( Exception e) {
 
@@ -1710,6 +1713,8 @@ final public class TableParser implements XMLConsumer {
    private void setSourceAstroFrame(String ref,String eq, String ep,int n) throws Exception {
 
       if( n>4 ) throw new Exception();  // Bouclage, on laisse tomber
+      
+      String body="sky";
 
       String  sys = coosys.get(ref);
       if( ep==null ) ep=cooepoch.get(ref);
@@ -1743,18 +1748,26 @@ final public class TableParser implements XMLConsumer {
       }
       else if( sys.indexOf("SUPER_GALACTIC")>=0 || sys.indexOf("SGAL")>=0 ) srcAstroFrame = AF_SGAL;
       else if( sys.indexOf("GALACTIC")>=0 || sys.indexOf("GAL")>=0 )        srcAstroFrame = AF_GAL;
-      else if( sys.indexOf("ICRS")>=0 && ep!=null ) {
-         srcAstroFrame = new ICRS((new Astrotime(ep)).getJyr());
-      }
-      else if( sys.indexOf("ICRS")<0 ) {
+      else if( sys.indexOf("ICRS")>=0 ) {
+         if( ep!=null ) srcAstroFrame = new ICRS((new Astrotime(ep)).getJyr());
+//      } else if( sys.indexOf("ICRS")<0 ) {
+      } else {
          String sref = coosys.get(sys);
+         
+         // C'est un système probablement non céleste, on va l'indiquer come corps spécifique
+         body=sys;
+         consumer.tableParserInfo("      => Body of the coordinate system: \""+body+"\"");
 
          // Peut être une déclaration en plusieurs coups (merci Fox)
          if( sref!=null ) { setSourceAstroFrame(sys,eq,ep,n+1); return; }
 
          // Perdu
          else consumer.tableParserInfo("      !!! Coordinate system unknown... assuming ICRS");
+         
       }
+      
+      // On utilise cette méthode détournée pour indiqué qu'on connait le corps de référence
+      consumer.tableParserWarning("!!! BODY="+body);
 
       // Déjà dans le bon référentiel
       if( (srcAstroFrame+"").equals("ICRS") ) srcAstroFrame=null;

@@ -402,7 +402,7 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
 	private void ucdRewriting(Legende leg) {
 		Field[] f = leg.field;
 		// v contiendra les UCD avec l'attribut main
-		Vector<String> v = new Vector<String>();
+		Vector<String> v = new Vector<>();
 
 	   	String ucd, ucdOrg;
 	   	int k;
@@ -433,6 +433,7 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
 		pc.setLabel(label!=null ? label:"XMatch");
 		if( p1.objet!=null ) pc.objet = p1.objet;
 		else pc.objet = "";
+		pc.body = p1.body;
 		pc.flagOk = false;
 		aladin.calque.select.repaint();
 
@@ -459,10 +460,10 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
 		double dist;
 		String newInfo;
 		Legende leg = null;
-		Hashtable<String, Legende> legMemory = new Hashtable<String, Legende>(); // mémoire des légendes créées
+		Hashtable<String, Legende> legMemory = new Hashtable<>(); // mémoire des légendes créées
 		Legende saveLeg1, saveLeg2;
 		saveLeg1 = saveLeg2 = null;
-		Hashtable<Legende, ArrayList<Source>> legToSources = new Hashtable<Legende, ArrayList<Source>>(); // correspondance légende --> sources résultats
+		Hashtable<Legende, ArrayList<Source>> legToSources = new Hashtable<>(); // correspondance légende --> sources résultats
 		ArrayList<Source> tmp;
 		Source srcResult = null;
 		for( int i=0; i<result.length; i++ ) {
@@ -502,7 +503,7 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
 
 			// on trie la source nouvellement créée selon la légende associée
 			tmp = legToSources.get(leg);
-			if( tmp==null ) legToSources.put(leg, tmp = new ArrayList<Source>());
+			if( tmp==null ) legToSources.put(leg, tmp = new ArrayList<>());
 			tmp.add(srcResult);
 
 		}
@@ -527,7 +528,7 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
 	}
 
 	private Legende createLeg(int xmatchType, boolean ellXMatch, Source s1, Source s2, int[] coordTab1) {
-		Vector<Field> v = new Vector<Field>();
+		Vector<Field> v = new Vector<>();
 
 		// ajout du champ distance (sauf en cas de JOIN)
 		if( xmatchType!=JOIN ) {

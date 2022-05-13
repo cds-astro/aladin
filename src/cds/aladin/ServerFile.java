@@ -968,7 +968,7 @@ public class ServerFile extends Server implements XMLConsumer {
             c.xydpoly=parsePoly((String)atts.get("xydpoly"));
             c.CD=parseMat((String)atts.get("CD"));
             c.ID=parseMat((String)atts.get("ID"));
-            plan.setNewProjD(new Projection(proj,c));
+            plan.setNewProjD(new Projection(proj,c,plan));
             if( plan instanceof PlanImage ) ((PlanImage)plan).setHasSpecificCalib();
          }
          if( (s=(String)atts.get("flagepoch"))!=null ) {

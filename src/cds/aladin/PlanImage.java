@@ -444,6 +444,7 @@ public class PlanImage extends Plan {
       this.aladin  = aladin;
       this.orig    = orig;
       this.objet   = objet;
+
       this.param   = param;
       this.fmt     = fmt;
       this.res     = res;
@@ -564,6 +565,7 @@ public class PlanImage extends Plan {
       p.cacheFromOriginalFile = cacheFromOriginalFile;
       p.typeCM=typeCM;
       p.opacityLevel=opacityLevel;
+      p.body=body;
 
    }
    
@@ -1799,7 +1801,10 @@ public class PlanImage extends Plan {
                   // On determine le x,y et le alpha,delta du centre de l'image
                   if( c!=null ) {
                      co = c.getImgCenter();
-                     setNewProjD(new Projection(Projection.WCS,c));
+                     setNewProjD(new Projection(Projection.WCS,c,this));
+                     
+                     // IL FAUDRAIT DECOUVRIR LE BODY DEPUIS LA CALIBRATION DU HEADER. ON VA ASSUMER sky POUR LE MOMENT
+                     body = BODYSKY;
 
                      // En cas de chargement par un fichier local
                      if( objet==null ) {
