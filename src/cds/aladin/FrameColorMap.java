@@ -170,7 +170,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
             || p instanceof PlanBG && ((PlanBG)pimg).isColored() ) return;
       pixelCutMinField.setText(p.getDataMinInfo());
       pixelCutMaxField.setText(p.getDataMaxInfo());
-      comboCM.setSelectedIndex(p.typeCM);
+      if( comboCM!=null ) comboCM.setSelectedIndex(p.typeCM);
    }
 
    /** Mise a jour de l'objet en fonction de l'image sélectionnée.

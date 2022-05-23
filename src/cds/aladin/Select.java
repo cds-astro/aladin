@@ -50,6 +50,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.Timer;
 
 import cds.tools.Util;
 
@@ -94,7 +95,8 @@ Runnable, SwingWidgetFinder, Widget {
    //   boolean clinDoeil=false;       // Vrai si je dois faire un clin d'oeil
    //   Thread clin=null;              // Thread d'attente pour le clin d'oeil
    Plan newRef=null;              // !=null si on est entrain de changer de ref.
-   Plan planIn=null;		      // si !=null, dernier plan sous la souris
+   Plan planIn=null;              // si !=null, dernier plan sous la souris
+   Plan planBlink=null;           // si !=null, dernier plan qui blink
 
    Thread thread = null;   	  // thread pour pour le clignotement
 
@@ -513,6 +515,7 @@ Runnable, SwingWidgetFinder, Widget {
    }
 
    boolean memoBoutonDroit = false;
+   boolean flagMouseIgnore=false;
    
    /** Gestion de la souris */
    public void mousePressed(MouseEvent e) {
@@ -539,6 +542,15 @@ Runnable, SwingWidgetFinder, Widget {
 
       // Recherche du plan clique
       if( (currentPlan = getPlan(y))==null ) return;
+      
+      // Un double clic sur le logo, sur ca marche
+      if( x>gapL && x<gapL+DX && e.getClickCount()>1 ) { //&& e.getWhen()-lastClick<250) {
+         planIn=currentPlan;
+         planIn.setActivated(true);
+         doBlinkPlan(currentPlan);
+         flagMouseIgnore=true;
+         return;
+      }
       
       //set current plan in all tap guis by default of what is chosen on plan stack.
       TapManager.getInstance(a).setCurrentUploadPlane(currentPlan.label);
@@ -584,9 +596,6 @@ Runnable, SwingWidgetFinder, Widget {
 
       // Image sans astrométrie non encore pris comme référence
       if( !Projection.isOk(currentPlan.projd) && !currentPlan.hasXYorig && !currentPlan.ref ) return x<frMax;
-
-      // Un double clic sur le logo, sur ca marche
-      //      if( x>gapL && x<gapL+DX && e.getClickCount()>1 && e.getWhen()-lastClick<250) return true;
 
       // Un plan déjà pris en référence visible ne pourra être repris en référence
       if( currentPlan.isRefForVisibleView() ) return false;
@@ -856,6 +865,8 @@ Runnable, SwingWidgetFinder, Widget {
    public void mouseReleased(MouseEvent e) {
       Plan newPlan;
       this.x=e.getX(); this.y=e.getY();
+      
+      if( flagMouseIgnore ) { flagMouseIgnore=false; return; }
 
       if( a.inHelp ) { a.helpOff(); return; }
 
@@ -1134,7 +1145,60 @@ Runnable, SwingWidgetFinder, Widget {
       if( canDrawFoVImg() ) lastPlanUnderMouse=p;
       else lastPlanUnderMouse=null;
    }
-
+   
+   private Timer timerBlinkPlan = null;
+   
+   /** Lancement du timer d'attente pour faire clignoter le plan sous la souris */
+   private void startBlinkPlan() {
+      
+      // Lancement du décompte
+      if( timerBlinkPlan==null ) {
+         timerBlinkPlan = new Timer(2000, new ActionListener() {
+            public void actionPerformed(ActionEvent e) { doBlinkPlan(null) ; }
+         });
+         timerBlinkPlan.setRepeats( false );
+      }
+      
+      timerBlinkPlan.start();
+   }
+   
+   /** Relance d'une attente de plan Blink */
+   private void restartBlinkPlan() {
+      
+      // N'a jamais été lancé => on lance
+      if( timerBlinkPlan==null ) {
+         startBlinkPlan();
+         return;
+      }
+      
+      // Rédémarrage du décompte
+      timerBlinkPlan.restart();
+   }
+   
+   // Je demande ou non le blink du plan mémorisé sous la souris
+   private void doBlinkPlan( Plan p) {
+      
+      // Arrêt du précédent plan qui clignotait
+      if( planBlink!=null && planBlink.isPlanBlink() ) {
+         planBlink.setPlanBlink(false);
+//         System.out.println("J'ai arrêté de faire clignoter le plan "+planBlink);
+      }
+      
+      // On sort (avec repaint)
+      if( p==null ) {
+         planBlink=null;
+         a.view.repaintAll();
+         return;
+      }
+      
+      // Lancement du clignotement du nouveau plan
+      planBlink=p;
+//      System.out.println("Je dois faire clignoter le plan sous la souris pdt 4 sec => "+planBlink);
+      planBlink.setPlanBlink(true);
+      restartBlinkPlan();
+      a.view.startTimer();
+      repaint();
+   }
 
    //   private Slide oSlide=null;
 
@@ -1157,7 +1221,7 @@ Runnable, SwingWidgetFinder, Widget {
 
       Slide s = getSlide(y);
       Plan p = s==null?null:s.getPlan();
-
+      
       // Specification du plan sous la souris
       underMouse(p);
 

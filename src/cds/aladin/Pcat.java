@@ -520,6 +520,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    private TableParser res;          // Parser utilisé pour créer les objets
    private StringBuilder line = new StringBuilder(500);
    private Map<Integer, Field> standardisedColumns = new HashMap<>();
+   
+
+   /** Demande d'interruption d'un parsing en cours */
+   public void interrupt() throws Exception { res.interrupt(); }
 
 
 //   // Légende générique qui vient remplacer toutes les légendes propres

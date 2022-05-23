@@ -68,6 +68,7 @@ MRGB	RGB image builder...
 MMOSAIC	Mosaic image builder...
 MBLINK	Blink/Movie generator...
 MSPECTRUM Spectrum extractor...
+MREDO Update all "Cone search" planes
 MSEARCH	Search in loaded catalogs...
 MSELECTALL	Select all objects
 MUNSELECT	Unselect objects
@@ -207,6 +208,7 @@ MXMATCH.fr	corr.
 MMOSAIC.fr	Créer une image mosaïque...
 MBLINK.fr	Créer une image séquence animée...
 MSPECTRUM.fr   Extraire un spectre d'un cube...
+MREDO.fr Met à jour tous les plans "Cone search"
 MSEARCH.fr	Chercher dans les catalogues chargés...
 MSELECTALL.fr	Sélectionner tous les objets
 MUNSELECT.fr	Désélectionner les objets
@@ -455,9 +457,9 @@ MB	Mb
 MB.fr	Mo
 PUB	*ALADIN is an interactive software sky atlas.\n* It allows one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n*%Aladin.png\n \n \n*%CDSLogo.png\n*Aladin is developed by Pierre Fernique,\n*Thomas Boch,  Anaïs Oberto, François Bonnarel and Chaitra.
 PUB.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe\n*quelle partie du ciel, d'y superposer des objets issus de catalogues\n*astronomiques, et, interactivement, d'accéder aux informations relatives.\n \n \n*%Aladin.png\n \n \n*%CDSLogo.png\n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.
-PUBBETA	*ALADIN is an interactive software sky atlas\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A BETA RELEASE\n*Send bug report and comments to cds-question@unistra.fr\n*Or take the official version for a real usage\n*(from http://aladin.u-strasbg.fr).\n \n \n*%Aladin.png\n \n \n*%CDSLogo.png\n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.
+PUBBETA	*ALADIN is an interactive software sky atlas\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A BETA RELEASE\n*Send bug report and comments to cds-question@unistra.fr\n*Or take the official version for a secure usage.\n \n \n*%Aladin.png\n \n \n*%CDSLogo.png\n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.
 PUBBETA.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!CETTE VERSION EST EN BETA TEST\n*Envoyez vos commentaires et bogues à cds-question@unistra.fr\n*Ou télécharger la dernière version officielle pour un usage réel\n*(à partir de http://aladin.u-strasbg.fr).\n \n \n*%Aladin.png\n \n \n*%CDSLogo.png\n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.
-PUBPROTO	ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A PROTOTYPE RELEASE\n*SOME FEATURES HAVE BEEN ADDED FOR DEMONSTRATION PURPOSES.\n*USE IT AT YOUR OWN RISKS\n \n*Or take the official version for a real usage\n*(from http://aladin.u-strasbg.fr).\n \n \n*%Aladin.png\n \n \n*%CDSLogo.png\n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.
+PUBPROTO	ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A PROTOTYPE RELEASE\n*SOME FEATURES HAVE BEEN ADDED FOR DEMONSTRATION PURPOSES.\n*USE IT AT YOUR OWN RISKS\n \n*Or take the official version for a secure usage.\n \n \n*%Aladin.png\n \n \n*%CDSLogo.png\n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.
 PUBPROTO.fr	ALADIN est un atlas du ciel interactif développé par le CDS.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!CETTE MISE-A-JOUR EST UNE VERSION PROTOTYPE\n*CERTAINES FONCTIONNALITES QUI ONT ETE AJOUTEES\n*EN DEMONSTRATION SONT SANS GARANTIE\n \n*Vous pouvez télécharger la dernière version officielle pour un usage réel\n*(à partir de http://aladin.u-strasbg.fr).\n \n \n*%Aladin.png\n \n \n*%CDSLogo.png\n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.\n
 PUBINPROG	*ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of\n*the sky, to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n \n!YOUR DATA ARE BEING DOWNLOADED...\n!Please wait...\n \n*%CDSLogo.png\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.
 PUBINPROG.fr	*ALADIN est un atlas du ciel interactif développé par le CDS.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n \n!VOS DONNEES SONT EN COURS DE CHARGEMENT\n!Veuillez patienter...\n \n*%CDSLogo.png\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.
@@ -560,6 +562,12 @@ OEIL	wink
 OEIL.fr	cligne
 OEILH	Activate/unactivate the overlaid planes
 OEILH.fr	Active/désactive les plans superposés
+CSREDO redo
+CSREDO.fr maj
+CSREDOH Updates the content of all pointed plans (cone search) according to the current view
+CSREDOH.fr Met à jour le contenu de tous les plans pointés (interrogation par cône) pour la vue courante
+REDODEMAND Using this function will update all planes currently in the stack that have used a positional query by cone. Beware that objects that have been loaded for another position will be lost. Do it ?
+REDODEMAND.fr L'utilisation de cette fonction va mettre à jour tous les plans actuellement dans la pile qui ont utilisés une requête positionnelle par cône. Attention les objets ayant été chargés pour une autre position vont être perdus. Lancer l'action ?
 BKGD	allsky
 BKGD.fr	ciel
 #BKGDH	Click to activate/unactivate the background sky
@@ -1341,7 +1349,7 @@ SLMEXP	Expand the selected folders
 SHOW	Show
 HIDE	Hide
 GOTO	Reticle to the initial plane location
-REDO  Updates the catalogue planes for the current field
+REDO  Update Cone Search plane
 BROWSE	Browse the plane sources
 SWARNING For displaying this plane, activate before a reference plane with compatible projection
 SWARNINGSLIDER For displaying this plane, use the opacity slider.\noR activate it as the projection reference
@@ -1374,7 +1382,7 @@ SLMEXP.fr	Ouvrir les dossiers sélectionnés
 SHOW.fr	Montrer
 HIDE.fr	Cacher
 GOTO.fr	Réticule sur la position initiale du plan
-REDO.fr Actualise les plans catalogues pour le champ courant
+REDO.fr Met à jour le plan "cone search"
 BROWSE.fr	Parcourir les objets du plan
 SWARNING.fr Pour visualiser ce plan, activez au préalable un plan de reférence avec une projection compatible
 SWARNINGSLIDER.fr Pour visualiser ce plan, utilisez le curseur de transparence.\nOu activez-le en tant que référence de projection
@@ -2799,9 +2807,10 @@ GRABINFO.fr Désignez la région circulaire de votre requête par un "cliquer/étire
 
 STOPHELP Redisplay this help?
 STOPHELP.fr Réafficher ce message d'aide ?
-
 GETOBJ	Object, coordinates, URL, filename or command ?
 GETOBJ.fr	Un objet, des coordonnées, une URL, un fichier ou une commande ?
+INTERRUPTCAT This catalogue plan is currently being loaded. Do you want to keep it as is?
+INTERRUPTCAT.fr Ce plan de catalogue est en cours de chargement. Voulez-vous le garder tel quel ?
 
 OPACITY opac.
 OPACITY.fr opac.
@@ -3696,8 +3705,8 @@ AWXMATCH	by CDS Xmatch
 AWXMATCH.fr	par Xmatch CDS
 AWXMATCHTIP	Cross-correlate the remote catalog/table\nwith the table selected in the stack.
 AWXMATCHTIP.fr	Corrèle le catalogue ou la table distante\navec la table sélectonnée dans la pile.
-AWCRIT	by criteria
-AWCRIT.fr	par critères
+AWCRIT	by TAP criteria
+AWCRIT.fr	par critères TAP
 AWCRITTIP	Advanced query by criteria\nby TAP protocol (Table Access Protocol).
 AWCRITTIP.fr	Interrogration avancée par critères\nvia le protocole TAP (Table Acccess Protocol).
 AWMOCX	cov.

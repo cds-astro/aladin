@@ -176,8 +176,8 @@ final public class TableParser implements XMLConsumer {
    private int timeFormat=-1 ;        // Format temporel (JD, MJD, YEARS, ISOUTC) le plus probable
    private Field timeField;           // Le field associé à la colonne de temps la plus probable;
    private boolean first=true;        // Pour n'afficher qu'une fois un message d'alerte sur TCB/BARYCENTER
- 
-   
+   private boolean flagInterrupt=false; // true s'il y a demande d'interruption de parsing   
+      
    class TimeFrame {
       String id=null;                  // Identifier
       String timeScale=null;           // Système temporel
@@ -497,6 +497,9 @@ final public class TableParser implements XMLConsumer {
          if( nField==nbField ) {
             consumeRecord(record,nRecord++);
 //            System.out.println();
+            
+            // Demande d'interruption de lecture
+            if( flagInterrupt ) break;
          }
       }
 
@@ -772,6 +775,9 @@ final public class TableParser implements XMLConsumer {
 
                // "Consommation" de l'enregistrement courant
                consumeRecord(record,i);
+               
+               // Interruption demandée ?
+               if( flagInterrupt ) break;
             }
          }
 
@@ -779,11 +785,13 @@ final public class TableParser implements XMLConsumer {
             consumer.endTable();
             consumer.endResource();
 
-            // On va encore skipper une éventuelle subextension (PCOUNT!=0 )
-            try {
-               offset = headerFits.getIntFromHeader("PCOUNT");
-               if( offset!=0 ) in.skip(offset);
-            } catch( Exception e1 ) {}
+            if( !flagInterrupt ) {
+               // On va encore skipper une éventuelle subextension (PCOUNT!=0 )
+               try {
+                  offset = headerFits.getIntFromHeader("PCOUNT");
+                  if( offset!=0 ) in.skip(offset);
+               } catch( Exception e1 ) {}
+            }
          }
 
       } catch( Exception e ) {
@@ -823,7 +831,7 @@ final public class TableParser implements XMLConsumer {
 
 
    /**
-    * Conversion d'un champ d'octets en valeur sont la forme d'un String
+    * Conversion d'un champ d'octets en valeur sous la forme d'un String
     * @param t le tableau des octets
     * @param i le premier octet concernés
     * @param n le nombre d'éléments
@@ -1099,6 +1107,9 @@ final public class TableParser implements XMLConsumer {
 
       return (xmlparser.parse(dis,endTag) && error==null /* && nField>1 */ );
    }
+   
+   /** Demande d'interruption d'un parsing en cours */
+   public void interrupt() throws Exception { flagInterrupt = true; }
 
    /** Retourne les caractères non lus du buffer du parser xml, ou null si fin du stream */
    public byte [] getUnreadBuffer() { return xmlparser.getUnreadBuffer(); }
@@ -2719,6 +2730,12 @@ final public class TableParser implements XMLConsumer {
                consumer.setRecord(targetCoo.getLon(),targetCoo.getLat(),jdTime, rec);
 
             }  else consumer.setRecord(c.getLon(),c.getLat(),jdTime, rec);
+         }
+         
+         // Interruption demandée (on a attendu la fin de l'enregistrement courant
+         if( flagInterrupt ) {
+            consumer.tableParserWarning("!!! Truncated result (OVERFLOW by interrupt)");
+            if( xmlparser!=null ) xmlparser.interrupt();
          }
 
 

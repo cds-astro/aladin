@@ -334,7 +334,8 @@ public class Plan implements Runnable {
   final protected boolean hasNoPosition() { return error==Plan.NOPOSITION; }
    
    /** Retourne true si le plan est prêt */
-   protected boolean isReady() { return type!=NO && flagOk && (error==null || hasNoReduction()); }
+   protected boolean isReady() { return type!=NO && flagOk 
+         && (error==null || hasNoReduction() || hasOverflow()); }
 
 
    /** Retourne la description du statut du plan (souris sur le voyant d'état dans la pile) */
@@ -488,6 +489,11 @@ public class Plan implements Runnable {
 
    /** Il s'agit d'un plan de type Space MOC (ou Space Time Moc) */
    protected boolean isSpaceMoc() { return type==ALLSKYMOC || type==ALLSKYSTMOC; }
+   
+   /** Gère le clignotement visuel d'un plan lorsque la souris reste qq sec sur la pile */
+   private boolean blinking=false;
+   protected void setPlanBlink(boolean flag) { blinking=flag; }
+   protected boolean isPlanBlink() { return blinking; }
 
    /** Il s'agit d'un plan de type Time MOC ou (Space Time Moc) */
    protected boolean isTimeMoc() { return type==ALLSKYTMOC || type==ALLSKYSTMOC; }
@@ -1133,6 +1139,10 @@ public class Plan implements Runnable {
     * @param mode true si on doit envoyer un log, false sinon
     */
    void setLogMode(boolean mode) { log=mode; }
+   
+   
+   // Libération avec possibilité d'une simple interruption (voir PlanCatalog)
+   protected boolean Free(boolean askInterrupt) { return Free(); }
 
    /** Libere le plan.
     * cad met toutes ses variables a <I>null</I> ou a <I>false</I>
@@ -1958,7 +1968,7 @@ public class Plan implements Runnable {
       if( aladin.configuration.isPlanet() ) {
          String body = getBody();
          if( body==null ) body="unknown";
-         ADD( buf,"\n* Body: ",body);
+         if( !BODYSKY.equals(body ) ) ADD( buf,"\n* Body: ",body);
       }
 
       addMessageInfo(buf,prop);
@@ -2648,14 +2658,9 @@ public class Plan implements Runnable {
       if( it==null ) return false;
       while( it.hasNext() ) {
          Obj o = it.next();
-//         if( !(o instanceof Source) ) continue;
          if( !o.asSource() ) continue;
-         Source s = (Source)o;
-         if( s.getFootprint() != null) {
-//            SourceFootprint sf = s.getFootprint();
-//            System.out.println("Trouvé "+sf);
-            return true;
-         }
+         SourceFootprint sf = ((Source)o).getFootprint();
+         if( sf!=null && sf.isSet() ) return true;
       }
       return false;
    }

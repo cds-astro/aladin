@@ -204,20 +204,16 @@ public class StatPixels {
             
       // Aucun pixels chargés, rien à faire
       if( pixels==null || pixels.size()==0 ) return false;
-      
-      // Si on demande la médiane et qu'on ne l'a pas encore calculée, il faut réinitialisé le flag
-      if( withMedian && Double.isNaN( median ) ) computed=false;
-      
       if( computed ) return false;
-      
-      // Calcul du temps de l'extration
-      time = Util.getTime()-t;
       
       boolean flagMin   = (currentStatMask & STATMIN)   !=0;
       boolean flagMax   = (currentStatMask & STATMAX)   !=0;
       boolean flagSigma = (currentStatMask & STATSIGMA) !=0;
       boolean flagSum   = (currentStatMask & STATSUM)   !=0;
-      boolean flagMedian= (currentStatMask & STATMEDIAN)!=0;
+      boolean flagMedian= (currentStatMask & STATMEDIAN)!=0 || withMedian;
+      
+      // Calcul du temps de l'extration
+      time = Util.getTime()-t;
       
       double sqr=0;
       for( Pixel pix : pixels ) {
@@ -238,7 +234,7 @@ public class StatPixels {
          sigma = Math.sqrt(variance);
       }
       
-      if( flagMedian && withMedian ) {
+      if( flagMedian ) {
          try {
             Collections.sort(pixels);
             median = pixels.get( nb/2 ).val;

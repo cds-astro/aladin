@@ -1837,7 +1837,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
                   if( !drawFast && mustBeDivided(b)  ) {
                      resetTimer();
-                     int m = drawFils(g,v,8);
+                     int rec = 8;
+                     
+                     // Si on ne dispose pas de losange d'ordre >=3, il faudra subdiviser davantage
+                     if( planBG.maxOrder<3 ) rec = rec * (int)CDSHealpix.pow2(3-planBG.maxOrder);
+                     
+                     int m = drawFils(g,v,rec);
                      if( m>0 ) return m;   // si aucun fils n'est tracé, on tentera le père
                   }
                }
@@ -1845,6 +1850,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                // Les losanges trop grands sont simplement ignorés
                if( mayCrossTheSky && isTooLarge(b,150) ) return 0;
                if( proj.t==Calib.STG && isTooLarge(b,2*v.rv.width/3) ) return 0;
+               if( isTooLarge(b,v.rv.width*2) ) return 0;
 
             } catch( Exception e ) { e.printStackTrace(); return 0; }
 

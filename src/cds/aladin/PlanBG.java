@@ -210,6 +210,7 @@ public class PlanBG extends PlanImage {
    protected int transferFct4Preview=LINEAR;  // Fonction de transfert pour le preview (par défaut celui de la configuration user)
    protected boolean flagNoTarget=false; // Par défaut pas de target indiquée
    private boolean flagWaitAllSky;     // En attente du chargement AllSky
+   protected boolean hasAllSky=true;    // false si le HiPS n'a pas de AllSky
    protected int tileOrder=-1;        // Ordre des losanges
 
    protected int RGBCONTROL[] = { 0,128, 255 , 0,128, 255 , 0,128, 255 };
@@ -279,7 +280,6 @@ public class PlanBG extends PlanImage {
    protected void initTileParam(int width,int height,int bitpix,byte [] pixelsOrigin,byte [] pixels) {
       if( color ) return;   // pas de maj pour les plans couleurs (pas sur de comprendre - PF jan 2020)
       
-      System.err.println("initTileParam pour "+this);
       this.pixelsOrigin = pixelsOrigin;
       this.pixels = pixels;
       this.bitpix=bitpix;
@@ -2568,7 +2568,7 @@ public class PlanBG extends PlanImage {
 //   protected int getMinOrder() { return 3; }
    
    protected int getMinOrder() {
-      if( hasRecutListener() ) return futurGetMinOrder();
+      if( !hasAllSky || hasRecutListener() ) return futurGetMinOrder();
       return 3;
    }
    
@@ -2615,7 +2615,11 @@ public class PlanBG extends PlanImage {
       int status= allsky.getStatus();
 
       
-      if( status==HealpixKey.ERROR ) return false;
+      if( status==HealpixKey.ERROR ) {
+//         System.out.println("Allsky not found");
+         hasAllSky=false;
+         return false;
+      }
       // A POURSUIVRE QUAND J'AURAIS LE TEMPS
 //      if( status==HealpixKey.ERROR ){
 //         if( minOrder!=0 ) return false;

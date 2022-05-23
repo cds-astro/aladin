@@ -633,7 +633,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    synchronized private void rmAllSrc() {
       try {
          if( nbSrc>MAXBLOC ) src = new Source[DEFAULTBLOC];
-         else for( int i=0; i<nbSrc; i++ ) src[i]=null;	// Pour le GC
+         else for( int i=0; i<src.length; i++ ) src[i]=null;	// Pour le GC
          nbSrc=0;
          mcanvas.unselect();
          aladin.calque.zoom.zoomView.stopHist();

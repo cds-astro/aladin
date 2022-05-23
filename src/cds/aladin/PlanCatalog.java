@@ -30,6 +30,8 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.Vector;
 
+import javax.swing.SwingUtilities;
+
 import cds.tools.Util;
 
 /**
@@ -155,7 +157,6 @@ public class PlanCatalog extends Plan {
       setLogMode(true);
       this.aladin= aladin;
       type       = CATALOG;
-      System.err.println("Color = "+color);
       c = color!=null ? color : Couleur.getNextDefault(aladin.calque);
       setLabel(label);
       id=this.label;
@@ -219,13 +220,20 @@ public class PlanCatalog extends Plan {
   /** Libere le plan.
    * cad met toutes ses variables a <I>null</I> ou a <I>false</I>
    */
-   protected boolean Free() {
-      if( getCounts()<=0 || isSED() ) return true;
+   protected boolean Free() { return Free(false); }
+   protected boolean Free(boolean flagAskInterrupt) {
+      int nbObj = getCounts();
+      if( nbObj<=0 || isSED() ) return true;
       
+      if( flagAskInterrupt && nbObj>0 && !isReady() ) {
+         if( aladin.confirmation(aladin.chaine.getString("INTERRUPTCAT")) ) {
+            loadInterrupt();
+            return false;
+         }
+      }
+
       aladin.view.deSelect(this);
-//      if (Aladin.PROTO) {
-    	  TapManager.getInstance(aladin).updateDeleteUploadPlans(this);
-//      }
+      TapManager.getInstance(aladin).updateDeleteUploadPlans(this);
       super.Free();
       aladin.view.free(this);
       headerFits=null;
@@ -233,6 +241,15 @@ public class PlanCatalog extends Plan {
       FilterProperties.notifyNewPlan();
       
       return true;
+   }
+   
+   // Demande d'interruption de chargement (on attendra tout de même la fin de l'enregistrement courant)
+   private void loadInterrupt() {
+      try {
+         pcat.interrupt();
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
    }
    
    final String TAGCIRCLE="CIRCLE('ICRS',";
@@ -299,18 +316,28 @@ public class PlanCatalog extends Plan {
    
    /** Remet à jour le contenue du plan (catalogue classique) en fonction 
     * d'une nouvelle requête ADQL
+    * @return le nouveau plan, ou null sinon
     */
-   protected boolean redoAdql(String query) {
+   protected boolean redoAdql(String query, final boolean flagWithProp) {
       if( getAdqlQuery()==null ) return false;
       String cmd = "get TAP("+getIdPrefix(id)+","+Tok.quote(query,true)+")";
       
       // Excécution de la commande en remplacement du plan courant
-      aladin.execCommand(label+"="+cmd);
-      
-      // Affectation de la même couleur
-      Plan p = aladin.calque.getPlan(label,1);
-      p.c = c;
-      
+      aladin.execAsyncCommand(label+"="+cmd);
+
+      SwingUtilities.invokeLater( new Runnable() {
+         public void run() {
+            Util.pause(500);
+            // Récupération du plan (pas très joli tout ça !)
+            Plan p = aladin.calque.getPlan(label,1);
+            // Affectation de la même couleur
+            p.c = c;
+            if( flagWithProp ) {
+               System.out.println("createProperties => "+p);
+               Properties.createProperties(p);
+            }
+         }
+      });
       return true;
    }
    

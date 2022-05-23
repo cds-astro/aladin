@@ -293,13 +293,15 @@ public class Calque extends JPanel implements Runnable {
    }
 
    /** Retourne une copie du tableau de tous les plans de la pile */
-   protected Plan [] getPlans() {
-      //      synchronized( pile ) {
-      //return plan;
+   protected Plan [] getPlans() { return getPlans(false); }
+   protected Plan [] getPlans(boolean flagReverse) {
       Plan [] p = new Plan[plan.length];
       System.arraycopy(plan, 0, p, 0, plan.length);
+      if( flagReverse ) {
+         Plan p1;
+         for( int i=0,j=p.length-1; i<j; i++, j--) { p1=p[i]; p[i]=p[j]; p[j]=p1; }
+      }
       return p;
-      //      }
    }
 
    /** Retourne le premier Plan Folder qui limite le scope du plan, null si aucun */
@@ -544,6 +546,16 @@ public class Calque extends JPanel implements Runnable {
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].isCatalog() && plan[i].flagOk ) n++;
+      }
+      return n;
+   }
+   
+   /** Retourne le nombre de plans Catalog susceptibles d'être maj (redoable) */
+   protected int getNbRedo() {
+      int n=0;
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].isRedoable() ) n++;
       }
       return n;
    }
@@ -1007,13 +1019,22 @@ public class Calque extends JPanel implements Runnable {
                for( j=0; j<p.length; j++ ) p[j].selected=true;
             }
          }
+         
+         // Gère la demande éventuelle d'une suspenssion du chargement qui serait encore en cours
+         // à la place de la simple suppression
+         boolean askInterrupt = false;
+         if( !aladin.NOGUI && verbose ) {
+            int nb=0;
+            for( Plan p : plan) if( p.selected && p.isSimpleCatalog() ) nb++;
+            askInterrupt = nb==1;
+         }
 
          // Suppression effective (par décalage)
          for( i=plan.length-1; i>=0; i-- ) {
             if( plan[i].selected ) {
                if( plan[i].type==Plan.NO) continue; // on ne supprime pas un plan vide
                if( verbose ) aladin.console.printCommand("rm "+Tok.quote(plan[i].label));
-               if( !plan[i].Free() ) continue;  // Le plan n'est pas libérable
+               if( !plan[i].Free(askInterrupt) ) continue;  // Le plan n'est pas libérable
                scroll.rm(i);
                for( j=i; j>1; j-- ) plan[j]=plan[j-1];
                i++;
@@ -4564,6 +4585,15 @@ public class Calque extends JPanel implements Runnable {
             }
          }
       }
+   }
+
+   /** Retourne true si un de plans projetés doit clignoter 
+    * @param view TODO*/
+   protected boolean hasPlanBlink(ViewSimple vs) {
+      for( Plan p : getPlans() ) {
+         if( p.isPlanBlink() ) return true;
+      }
+      return false;
    }
 
 }

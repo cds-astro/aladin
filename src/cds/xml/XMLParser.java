@@ -72,6 +72,7 @@ public final class XMLParser {
    private boolean beforeXML;	// true if the parser waits <?xml...> tag
    private String endTag;	    // Contient le tag de fin de parsing (siHparsing partiel)
    private int line;            // Ligne courante (en cas d'erreur)
+   private boolean flagInterrupt; // true si on demande une interruption de parsing
 
    static final int BUFSIZE = 64*1024;  // Reader buffer size
    static final int MAXBUF  = BUFSIZE-1024; // number of chars before a flush
@@ -96,6 +97,7 @@ public final class XMLParser {
       offset=max=0;
       beforeXML=true;
       error=null;
+      flagInterrupt=false;
    }
 
 
@@ -147,6 +149,9 @@ public final class XMLParser {
       }
       return rep;
    }
+   
+   /** Demande d'interruption d'un parsing en cours */
+   public void interrupt() throws Exception { flagInterrupt=true; }
 
    private void setTestBeforeXML(MyInputStream dis) throws Exception {
       beforeXML = (dis.getType() & MyInputStream.VOTABLE) ==0;
@@ -275,6 +280,8 @@ public final class XMLParser {
     * @return char
     */
    private char xmlGetc() {
+      if( flagInterrupt ) return EOF;
+      
       if( offset>=max ) {
          try { max=dis.read(tmp); }
          catch( IOException e ) { 

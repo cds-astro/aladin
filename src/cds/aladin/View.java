@@ -3997,34 +3997,34 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    private boolean isTagEditing() {
       return newobj instanceof Tag && ((Tag)newobj).isEditing();
    }
-
+   
    /** Boucle du thread threadC du mode Timer. Effectue un simple
     *  repaint des vues toutes les 150 msec
     */
    private void runC() {
       long debut = -1;
       long t,lastT=-1;
-      boolean tagBlink,editBlink,planBlink,sourceBlink,/*simbadBlink,*/scrolling,sablierBlink; //,taquinBlink;
+      boolean tagBlink,editBlink,cubeBlink,sourceBlink,scrolling,sablierBlink, planBlink;
       int delais=getDefaultDelais();
 
       for( int tour=0; _flagTimer; tour++ ) {
          try {
             delais=getDefaultDelais();
-            planBlink=sourceBlink=scrolling=sablierBlink=/*taquinBlink=*/editBlink=tagBlink=false;
-            int t0,t1,t2,t3,t4,t5,t6;
-            t0=t1=t2=t3=t4=t5=t6=0;
+            cubeBlink=sourceBlink=scrolling=sablierBlink=/*taquinBlink=*/editBlink=tagBlink=planBlink=false;
+            int t0,t1,t2,t3,t4,t5,t6,t7;
+            t0=t1=t2=t3=t4=t5=t6=t7=0;
 
             ViewSimple cv= getCurrentView();
 
             int m=getNbView();
             for( int i=0; i<m; i++ ) {
                ViewSimple v = viewSimple[i];
-
-               boolean plan = v.isPlanBlink() && v.cubeControl.mode!=CubeControl.PAUSE;
+               
+               boolean planBl = calque.hasPlanBlink(v);
+               boolean cube = v.isPlanBlink() && v.cubeControl.mode!=CubeControl.PAUSE;
                boolean source = v.isSourceBlink();
                boolean scroll = v.isScrolling();
                boolean sablier = v.isSablier();
-//               boolean taquin = flagTaquin;
                boolean flagEdit = crop!=null && crop.isEditing()
                      || cv.isPlanBlink() && cv.cubeControl.isEditing();
                boolean flagtag = isTagEditing();
@@ -4039,7 +4039,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                   t0=500;
                   if( t0<delais ) delais=t0;
                }
-               if( plan  ) {
+               if( cube  ) {
                   t1 = v.paintPlanBlink();
                   if( t1<delais ) delais=t1;
                }
@@ -4058,43 +4058,31 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                   t4=300;
                   if( t4<delais ) delais=t4;
                }
-//               if( taquin ) {
-//                  aladin.calque.zoom.zoomView.repaint();
-//                  t5=1000;
-//                  if( t5<delais ) delais=t5;
-//               }
+               if( planBl ) {
+                  v.repaint();
+                  t7=250;
+                  if( t7<delais ) delais=t7;
+              }
 
                tagBlink|=flagtag;
                editBlink|=flagEdit;
-               planBlink|=plan;
+               cubeBlink|=cube;
                sourceBlink|=source;
                scrolling|=scroll;
                sablierBlink|=sablier;
-//               taquinBlink|=taquin;
+               planBlink|=planBl;
             }
-
-//            simbadBlink = calque.flagSimbad || calque.flagVizierSED;
 
             if( t2>0 ) blinkMode++;
 
-            // Peut être faut-il lancer une résolution quick Simbad ?
-            // et/ou VizierSED ?
-//            if( !aladin.calque.zoom.zoomView.flagSED && simbadBlink && startQuickSimbad>0 ) {
-//               if( System.currentTimeMillis()-startQuickSimbad>500) {
-//                  startQuickSimbad=0L;
-//                  if( calque.flagSimbad ) quickSimbad();
-//                  if( calque.flagVizierSED && !calque.flagSimbad ) quickVizierSED();
-//               }
-//            }
-
-            //t = System.currentTimeMillis();
-            //int gap= lastT>=0? (int)(t-lastT) : -1;
-            //lastT=t;
-            //System.out.println("timer thread "+Thread.currentThread()+" gap=("+gap+") delais="+delais);
+//            t = System.currentTimeMillis();
+//            int gap= lastT>=0? (int)(t-lastT) : -1;
+//            lastT=t;
+//            System.out.println("timer thread "+Thread.currentThread()+" gap=("+gap+") delais="+delais);
 
             // Arrêt au bout de 5 secondes sans blinking nécessaire
-            if( tagBlink|editBlink|planBlink|sourceBlink
-                  /*|simbadBlink*/|scrolling|sablierBlink/*|taquinBlink*/ ) debut=-1;
+            if( tagBlink|editBlink|cubeBlink|sourceBlink
+                  /*|simbadBlink*/|scrolling|sablierBlink|planBlink/*|taquinBlink*/ ) debut=-1;
             else {
                if( debut==-1 ) debut=System.currentTimeMillis();
                else if( System.currentTimeMillis()-debut>5000 ) stopTimer();
@@ -4108,12 +4096,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       timer=null;
       //System.out.println("stop blink thread");
    }
-   //      long lastT=-1;
-
-   //   private int sesameInProgress=0;  // Nombre de sésames en attente de résolution
-   //   synchronized protected boolean isSesameInProgress() { return sesameInProgress>0; }
-   //   synchronized private void setSesameInProgress(boolean flag) { if( flag ) sesameInProgress++; else sesameInProgress--; }
-
+   
+   /** Retourne true si on est dans la phase cachée lors des blinks de repérage des plans */
+   protected boolean isPlanBlinkOff() {
+      return (System.currentTimeMillis()/250L)%2==0;
+   }
+   
    // Synchro sur les résolutions de sésame
    protected Synchro sesameSynchro = new Synchro(10000);
    protected boolean isSesameInProgress() { return !sesameSynchro.isReady(); }
@@ -5031,6 +5019,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          aladin.northup.repaint();
          aladin.pix.repaint();
          aladin.oeil.repaint();
+         aladin.csredo.repaint();
 
          // Ajustement de la configuration d'affichage en fonction de la position
          // de la scrollbar verticale si elle a changé.

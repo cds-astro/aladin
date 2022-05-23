@@ -122,7 +122,7 @@ public abstract interface VOApp {
     * see VOObserver.position() and VOObserver.pixel() associated callback methods
     * ex: addObserver(this,VOApp.POSITION|VOApp.PIXEL)
     * @param app the application to register
-    * @param eventMasq a bit field (use POSITION or PIXEL),
+    * @param eventMasq a bit field (use POSITION, PIXEL, MEASURE, STACKEVENT or MOUSEEVENT),
     *                  (0 to remove the observer)
     */
    public abstract void addObserver(VOObserver app,int eventMasq);

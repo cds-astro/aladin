@@ -154,6 +154,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    Couleur[] contoursCouleurs;   // Pour PlanContour, pour choisir la couleur de chaque contour
    Curseur curs = null;          // Pour PlanContour, permet de changer la valeur des niveaux
    JButton filterButtons[]=null;	 // Pour plan CATALOG, boutons pour filtres prédéfinis
+   JTextArea adql=null;          // Champ de saisie de la requête ADQL
    JPanel panelCont;
    JPanel panelScroll;
    JScrollPane scroll;
@@ -691,6 +692,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             b1.setEnabled(false);
             
             final JTextArea ta = new JTextArea(plan.query, 5, 40);
+            adql = ta;
             ta.addKeyListener( new KeyAdapter() {
                public void keyReleased(KeyEvent e) {
                   b1.setEnabled( !plan.query.equals(ta.getText()) );
@@ -703,10 +705,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             la.setFont(la.getFont().deriveFont(Font.ITALIC));
             pa.add( la, BorderLayout.NORTH);
             b1.addActionListener( new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  ((PlanCatalog)plan).redoAdql( ta.getText().replace('\n',' ') );
-                  dispose();
-               }
+               public void actionPerformed(ActionEvent e) {  redoAdql(); }
             });
             pa.add(b1, BorderLayout.SOUTH);
         	PropPanel.addCouple(p,pa, sc, g,c);
@@ -1733,6 +1732,19 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          planRefChoice.setSelectedIndex(j);
       }
    }
+   
+   private void redoAdql() {
+      try {
+         ((PlanCatalog)plan).redoAdql( adql.getText().replace('\n',' '), true );
+         SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+               dispose();
+            }
+         });
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
 
    protected void majProjInitCat() {
       if( !plan.isCatalog() ) return;
@@ -1951,6 +1963,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    }
 
    private void apply() {
+      
       setFlagFullMaj(true);// Pour que toutes les fenetres soient maj par la suite
       if( label!=null && !label.getText().equals(plan.label) ) {
          plan.setLabel(label.getText());
@@ -2064,9 +2077,12 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          }
       }
 
-
       if( ! actionSourceType() ) aladin.calque.repaintAll();
-
+      
+      // Une requête ADQL qui aurait été modifiée ?
+      if( adql!=null && !plan.query.equals(adql.getText()) ) {
+         redoAdql();
+      }
    }
 
    public void actionPerformed(ActionEvent e) {

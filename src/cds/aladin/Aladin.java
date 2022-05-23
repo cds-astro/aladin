@@ -234,7 +234,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.126";
+   static public final    String VERSION = "v11.128";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -272,8 +272,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
-   static String COPYRIGHT         = PREMIERE | BETA || PROTO ? "(c) 2021 Université de Strasbourg/CNRS - developed by CDS, ALL RIGHT RESERVED" :
-                               "(c) 2021 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
+   static String COPYRIGHT         = PREMIERE | BETA || PROTO ? "(c) 2022 Université de Strasbourg/CNRS - developed by CDS, ALL RIGHT RESERVED" :
+                               "(c) 2022 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -590,6 +590,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    IconStudy look;                    // Gere le logo pour l'outil Look (Simbad+Vizier SED)
    Grid grid;                    // Gere le logo pour la grille
    Oeil oeil;                    // Gere le logo pour l'oeil
+   IconRedo csredo;              // Gere le logo pour le Conesearch redo
    Northup northup;              // Gère le logo pour le Nord en haut
    Hdr pix;                      // Gère le logo pour le passage en full dynamique
    ViewControl viewControl;      // Gere le logo de controle des views
@@ -688,7 +689,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected Component iconFullScreen=null;
    
    private JButton bDetach;
-   private JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miAutoDist,miVizierSED,miXmatch,miROI,/*miTip,*/
+   protected JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miAutoDist,miVizierSED,miXmatch,miROI,/*miTip,*/
    miVOtool,miGluSky,miGluTool,miPref,miPlasReg,miPlasUnreg,miPlasBroadcast,
    miDel,miDelAll,miPixel,miContour,miSave,miPrint,miSaveG,miScreen,miPScreen,miMore,miNext,
    miLock,miPlot,miTimeRange,miDelLock,miStick,miOne,miNorthUp,miView,
@@ -696,7 +697,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miTarget,miOverlay,miConst,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
    /* miPrevPos,miNextPos, */
    miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel2t,miPanel4,miPanel9,miPanel16,
-   miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,miSpectrum,
+   miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,miSpectrum,miRedo,
    miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
    miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,
    miCropSTMOC,miCropTMOC,miCropSMOC,miCreateHpx,miCreateHpxRgb,
@@ -758,7 +759,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
    SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,PLOTVIEW,TIMERANGE,
    DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,COPIER,COLLER,
-   RGB,MOSAIC,BLINK,SPECTRUM,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
+   RGB,MOSAIC,BLINK,SPECTRUM,MREDO,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
    PANEL1,PANEL2C,PANEL2L,PANEL2T,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
    SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGEN,TMOCGENCAT,TMOCGENOBJ,
@@ -1104,7 +1105,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                //            else {
                DisplayMode dm = gd.getDisplayMode();
                int height = dm.getHeight();
-               UISCALE = height<=1080 ? 1f : height<=2880 ? 1.25f : 1.5f; 
+               UISCALE = height<=1080 ? 1f : height<=1200 ? 1.1f : 1.3f; 
                //            }
                if( UISCALE<1f ) UISCALE=1f;
                if( UISCALE!=1 ) trace(2,"Hight resolution screen detected => UI scale factor = "
@@ -1229,6 +1230,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MOSAIC  = chaine.getString("MMOSAIC");
       BLINK   = chaine.getString("MBLINK");
       SPECTRUM= chaine.getString("MSPECTRUM");
+      MREDO    = chaine.getString("MREDO");
       GREY    = chaine.getString("SLMGREY");
       SELECT  = chaine.getString("SLMSELECT");
       SELECTTAG=chaine.getString("SELECTTAG");
@@ -1433,6 +1435,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             },
             { {MCATALOG},
                {PLOTCAT},{XMATCH},{ADDCOL},
+               {},{MREDO+"|"+alt+" U"},
                {},{SEARCH+"|"+meta+" F"},
                {},{FILTER},{FILTERB,"-"},
                {},
@@ -2111,6 +2114,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,MOSAIC))  miMosaic  = ji;
       else if( isMenu(m,BLINK))   miBlink   = ji;
       else if( isMenu(m,SPECTRUM))   miSpectrum   = ji;
+      else if( isMenu(m,MREDO))   miRedo   = ji;
       else if( isMenu(m,GLASS))   miGlass   = ji;
       else if( isMenu(m,GLASSTABLE))   miGlassTable   = ji;
       else if( isMenu(m,PANEL1))  miPanel1  = ji;
@@ -2508,7 +2512,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       y.setBackground( getBackground());
       y.setBorder(BorderFactory.createEmptyBorder());
       y.add(grid);
-      y.add(look); y.add(oeil); y.add(northup); y.add(pix);
+      y.add(look); y.add(oeil); y.add(csredo); y.add(northup); y.add(pix);
       y.add(viewControl);
       y.add(match);
 
@@ -3128,6 +3132,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    
    static final private String LOGDEMAND = "LOGDEMAND";
+   static final private String REDODEMAND = "REDODEMAND";
    
    /** Si le log est inhibé par défaut on va demander l'avis de l'utilisateur */
    protected void testLog() {
@@ -3571,6 +3576,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,MOSAIC)) { blink(1);
       } else if( isMenu(s,BLINK))  { blink(0);
       } else if( isMenu(s,SPECTRUM))  { spectrum();
+      } else if( isMenu(s,MREDO))  { redo();
       } else if( isMenu(s,GREY))   { grey();
       } else if( isMenu(s,GLASS))  { glass();
       } else if( isMenu(s,GLASSTABLE))  { glassTable();
@@ -4211,22 +4217,22 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
    
    /** Cycle sur les modes des outils Simbad pointer + Vizier pointer */
-      protected void cycleLook() {
+   protected void cycleLook() {
       int mode = look.getMode();
       mode++;
       if( mode>2 ) mode=0;  // on ne cycle pas sur VizieR tout seul
-      
+
       if( mode==0 ) calque.flagSimbad = calque.flagVizierSED = false;
       else if( mode==1 ) { calque.flagSimbad = true; calque.flagVizierSED = false; }
       else if( mode==2 ) { calque.flagSimbad = true; calque.flagVizierSED = true; }
       else { calque.flagSimbad = false; calque.flagVizierSED = true; }
-      
+
       if( mode!=0 ) view.startQuickSimbad();
       else {
          view.simRep=null;
          view.stopSED(false);
       }
-      
+
       look.repaint();
    }
 
@@ -5019,6 +5025,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void spectrum() {
       toolBox.setGraphicButton(ToolBox.SPECT);
       aladin.view.repaintAll();
+   }
+
+   /** Met à jour tous les plans cone search (et TAP positionnel) présents dans la pile */
+   protected void redo() {
+      
+      if( configuration.mustShowHelp(REDODEMAND) ) {
+         if( !confirmation( chaine.getString(REDODEMAND) ) ) return;
+      }
+      // On ne posera qu'une fois la question
+      configuration.showHelpDone(REDODEMAND);
+
+      boolean result=false;
+      for( Plan p : calque.getPlans() ) result |= p.redoConeSearch();
+      if( result ) aladin.view.repaintAll();
    }
 
    /** Ouverture de la fenêtre des blinks avec maj du bouton associé */
@@ -6060,6 +6080,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          boolean hasProj = pimg!=null && Projection.isOk(pimg.projd);
          boolean isFree = calque.isFree();
          int nbPlans = calque.getNbPlans(true);
+         int nbRedo = calque.getNbRedo();
          boolean mode = nbPlans>0;
          boolean mode1 = nbPlans>1 || nbPlans==1 && !isBG;
          
@@ -6100,6 +6121,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miMosaic!=null ) miMosaic.setEnabled(nbPlanImgWithoutBG>1);
          if( miBlink!=null ) miBlink.setEnabled(nbPlanImgWithoutBG>1);
          if( miSpectrum!=null ) miSpectrum.setEnabled(isCube);
+         if( miRedo!=null ) miRedo.setEnabled(nbRedo>0);
          
          if( !calque.hasGrid() ) { if( miNoGrid!=null ) miNoGrid.setSelected( true ); }
          else if( calque.gridMode==1 || miHpxGrid==null ) miGrid.setSelected( true );
@@ -6422,6 +6444,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       a.f.pack(); // Même en mode script, le pack est indipensable pour créer les peer classes
       if( NOGUI ) return;
       Rectangle r = a.configuration.getWinLocation();
+      boolean winFull = a.configuration.getWinFull();
       if( LOCATION!=null ) {
          try {
             Tok tok = new Tok(LOCATION,",");
@@ -6441,7 +6464,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( h>SCREENSIZE.height ) h=SCREENSIZE.height-40;
          a.f.setSize(w,h);
          a.configuration.setInitWinLoc(a.f.getLocation().x,a.f.getLocation().y,
-               a.f.getSize().width,a.f.getSize().height);
+               a.f.getSize().width,a.f.getSize().height, winFull);
       } else {
          a.f.setLocation(new Point(r.x,r.y));
          if( r.width<0 ) { r.width = Math.abs(r.width); r.height=Math.abs(r.height); }
@@ -6456,6 +6479,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Positionnement initiales des splits
       Util.pause(10);
       resumeSplit(a);
+      
+      // Démarrage en plein écran
+      if( winFull ) a.fullScreen(0);
       
       // Reositionnement car nécessaires pour Linux GNOME
       (new Thread(){

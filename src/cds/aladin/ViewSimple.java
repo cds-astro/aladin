@@ -117,7 +117,6 @@ implements Propable,MouseWheelListener, MouseListener,MouseMotionListener,
 KeyListener,ActionListener,
 DropTargetListener, DragSourceListener, DragGestureListener {
 
-   static final boolean OVERLAYFORCEDISPLAY = false;
    static final String CREDIT = "Powered by Aladin";
    static final float CARTOUCHE = 0.7f;
 
@@ -6609,7 +6608,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       
       if( dx==0 ) drawBlinkControl(g);      // Il ne s'agit pas d'une impression
 
-      Plan [] allPlans = calque.getPlans();
+      Plan [] allPlans = calque.getPlans(true);
       // Recherche d'un éventuel Folder contenant le plan de ref
       Plan folder = calque.getMyScopeFolder(allPlans,pref);
 
@@ -6619,23 +6618,36 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Pour afficher des checkboxs associés aux plans directement dans la vue
       if( fullScreen ) aladin.fullScreen.startMemo();
       
+      
+      boolean deuxFois=false;         // Deux tours pour l'affichage afin de mettre les plans blinks catalogues au-dessus
+      boolean blinkStepOff = false;   // true si un plan blink est en mode blink, mais en phase off
+      if( calque.hasPlanBlink(this)  ) {
+         deuxFois = true;
+         blinkStepOff = view.isPlanBlinkOff();
+      }
+      
       // Affichage en 2 passes, d'abord les images, puis tout le reste
-      for( int passe=1; passe <= (OVERLAYFORCEDISPLAY ? 2 : 1); passe++ ) {
+      for( int passe=1; passe <= (deuxFois ? 2 : 1); passe++ ) {
          
-
          // Dessin des plans les uns après les autres
-         for( int i=allPlans.length-1; i>=0; i--) {
-            Plan p = allPlans[i];
+         for( Plan p : allPlans ) {
             if( p.type==Plan.NO || !p.flagOk ) continue;
             
-            // On affiche d'abord les images, puis tout le reste
-            if( OVERLAYFORCEDISPLAY ) {
-               if( passe==1 && !p.isPixel() ) continue;
-               if( passe==2 && p.isPixel() ) continue;
+            // On affiche d'abord les images et les plans non blinks, puis tout le reste
+            if( deuxFois ) {
+               boolean flagPlanBlink = p.isPlanBlink();
+               
+               boolean first = !flagPlanBlink || !p.isOverlay();
+               if( passe==1 && !first ) continue;
+               if( passe==2 && first ) continue;
+               
+               // Le plan clignote, mais on tombe dans une phase non affichée
+               if( flagPlanBlink && blinkStepOff ) continue;
             }
+            
 
-            if( p.isPixel()   && (mode & 0x1) == 0 ) continue;
-            if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
+            if( (mode & 0x1) == 0 && p.isPixel()  ) continue;
+            if( (mode & 0x2) == 0 && p.isOverlay() ) continue;
             
             // Seuls les catalogues (et éventuellement les surcharges graphiques et TMOC/STMOC) sont traçables dans un plot
             if( isPlot() && !p.isCatalog() && !p.isTool() && !p.isTimeMoc() ) continue;
@@ -6950,7 +6962,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       //      repaint();
       update(getGraphics());
    }
-
+   
    /** Retourne true si le plan de référence est un plan Blink */
    protected boolean isPlanBlink() {
       return pref!=null && pref.isCube();

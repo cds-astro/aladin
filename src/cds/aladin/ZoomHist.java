@@ -166,10 +166,10 @@ class ZoomHist implements Runnable {
    protected boolean initThread() {
       if( o.getLeg().isNumField(nField) ) {
          double [] xHist = aladin.mesure.getFieldNumericValues(o, nField);
-         
          pixelStats.reinit();
          for( double x : xHist) pixelStats.addPix(0, 0, x);
          flagHistPixel=true;
+
          setHist(pixelStats);
          
       } else {
