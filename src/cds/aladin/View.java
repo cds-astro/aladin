@@ -2593,6 +2593,34 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
       aladin.console.printInPad(res.toString());
    }
+   
+   static private final String CASSISDEMAND = "CASSISDEMAND";
+   
+   /** Affichage d'une explication du fonctionnement de CASSIS avec Aladin. N'apparait qu'une seule fois
+    * Si obj == null, pas de test sur l'objet ni le plan de base
+    */
+   protected void infoCassis(Obj obj) {
+      if( Aladin.NOGUI ) return;
+      if( obj!=null ) {
+         if( !(obj.hasPhot() || obj instanceof RepereSpectrum) ) return;
+         Plan p = aladin.calque.getPlanBase();
+         if( p==null ) return;
+         if( !p.isCube() && !(p instanceof PlanBG) && ((PlanImage)p).hasOriginalPixels() ) return;
+      }
+      if( !aladin.configuration.mustShowHelp(CASSISDEMAND) ) return;
+      
+      // Si le plugin est déjà installé, inutile de le demander
+      AladinPlugin pg = aladin.plugins.find("cassis");
+      if( pg!=null ) return;
+
+      // Demande d'installation
+      if( aladin.confirmation(aladin.chaine.getString(CASSISDEMAND) )) {
+         FrameVOTool.display(aladin,aladin.glu.getGluApp("cassis"));
+      }
+
+      // On ne posera qu'une fois la question
+      aladin.configuration.showHelpDone(CASSISDEMAND);
+   }
 
    /** Extension des clips de chaque vue pour contenir l'objet o */
    protected void extendClip(Obj o) {

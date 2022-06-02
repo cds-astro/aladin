@@ -813,7 +813,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Acquittement d'un message d'aide ponctuelle afin qu'elle n'apparaisse plus une seconde fois */
    protected void showHelpDone(String key) {
       if( stopHelp==null ) stopHelp = new Vector<>();
-      stopHelp.add(key);
+      if( !stopHelp.contains(key) ) stopHelp.add(key);
       
    }
 

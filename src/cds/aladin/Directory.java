@@ -2167,6 +2167,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private boolean hasValidProfile(MyProperties prop) {
       Iterator<String> it = prop.getIteratorValues("client_application");
       if( it == null ) return true;
+      boolean rep=true;
+      boolean first=true;
+      
       while( it.hasNext() ) {
          String profile = it.next();
          Tok tok = new Tok(profile);
@@ -2178,16 +2181,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
             // Si j'ai une mention de AladinDesktop, j'analyse le suffixe éventuel (ex: AladinDesktopBeta>9.6)
             if( profile.length() > 0 ) {
+               // Si plusieurs indications, il en suffit d'une valide pour que ça passe
+               if( first ) { first=false; rep=false; }
                String gluProfile = getGluProfile(profile);
 //                System.out.println("Profile = "+gluProfile);
-               return aladin.glu.hasValidProfile(gluProfile);
-
-               // System.out.println("valide="+aladin.glu.hasValidProfile(gluProfile));
-               // return true;
+               rep |= aladin.glu.hasValidProfile(gluProfile);
             }
          }
       }
-      return true;
+      return rep;
    }
 
    /** Retourne true si on a au moins une clé vers une url d'accès */
@@ -2240,7 +2242,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                "Directory.populateProp error - getID returns null => ignored [" + prop.toString().replace("\n", " ") + "]");
          return;
       }
-
+      
       // S'agit-il d'un hips privé ?
       String status = prop.getProperty("hips_status");
       if( status != null && status.indexOf("private") >= 0 ) return;

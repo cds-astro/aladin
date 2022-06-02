@@ -332,6 +332,7 @@ MouseWheelListener, Widget
     * l'application SAMP cibles via le popupmenu qui va apparaître */
    protected void toSamp(String url,int x,int y) {
       urlSamp=url;
+      aladin.view.infoCassis(null);
       showSAMPPopMenu(x,y);
    }
 

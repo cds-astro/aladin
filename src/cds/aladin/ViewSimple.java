@@ -1894,6 +1894,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       view.setSelectFromView(true);
 
       view.moveRepere( view.newobj.raj,view.newobj.dej );
+      
+      // Info sur l'existence de CASSIS
+      view.infoCassis(view.newobj);
 
       view.newobj=null;
       aladin.calque.repaintAll();
@@ -1909,7 +1912,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       view.extendClip(view.newobj);
       //      if( withForCDSTeam ) createCoteDist(aladin.view.vselobj);
    }
-
+   
    // Calcul du nouveau selecteur multiple en fonction de la souris
    // et positionnement du clipRect en fct
    void extendSelect(int x, int y) {
@@ -2764,7 +2767,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( tool==ToolBox.ZOOM ) return;
       
       // Un RepereSpectrum est inséré
-      if( view.newobj instanceof RepereSpectrum ) addObjSurfMove(view.newobj);
+      if( view.newobj instanceof RepereSpectrum ) {
+         addObjSurfMove(view.newobj);
+         view.infoCassis(view.newobj);
+      }
       
       // Le Phot est insere
       if( view.newobj instanceof SourceStat ) {

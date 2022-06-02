@@ -234,7 +234,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.128";
+   static public final    String VERSION = "v11.900";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -253,7 +253,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean MOCLOCAL=false; // true si on tourne sur un MocServer local
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
    public static int PLANET=-1;          // 0-sans planeto, 1-avec planeto, -1-selon configuration utilisateur
-   public static boolean BETA=true;        // true si on tourne en mode BETA
+   public static boolean BETA=false;        // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
@@ -3351,16 +3351,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Pour afficher les nouveautes
    private void newsReport() {
-      glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/NewInV11.png", true);
+      glu.showDocument("Http", "http://aladin.cds.unistra.fr/java/NewInV12.png", true);
    }
 
    // Pour affiche la page d'info sur les plugins
-   private void pluginsReport() {
+   protected void pluginsReport() {
       plugins.showFrame();
    }
 
    // Pour affiche la page d'info sur les VOTools
-   private void VOReport() {
+   protected void VOReport() {
       FrameVOTool.display(this);
    }
    
@@ -5032,9 +5032,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       if( configuration.mustShowHelp(REDODEMAND) ) {
          if( !confirmation( chaine.getString(REDODEMAND) ) ) return;
+         
+         // On ne posera qu'une fois la question
+         configuration.showHelpDone(REDODEMAND);
       }
-      // On ne posera qu'une fois la question
-      configuration.showHelpDone(REDODEMAND);
+      
 
       boolean result=false;
       for( Plan p : calque.getPlans() ) result |= p.redoConeSearch();

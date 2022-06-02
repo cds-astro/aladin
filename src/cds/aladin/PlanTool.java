@@ -148,16 +148,16 @@ public class PlanTool extends PlanCatalog {
       return false;
    }
 
-   /** Retourne vrai si le plan tool contient au moins un objet SourcePhot */
-   protected boolean hasPhot() {
-      if( pcat==null ) return false;
-      Iterator<Obj> it = iterator();
-      while( it.hasNext() ) {
-         Obj o = it.next();
-         if( o instanceof SourceStat ) return true;
-      }
-      return false;
-   }
+//   /** Retourne vrai si le plan tool contient au moins un objet SourcePhot */
+//   protected boolean hasPhot() {
+//      if( pcat==null ) return false;
+//      Iterator<Obj> it = iterator();
+//      while( it.hasNext() ) {
+//         Obj o = it.next();
+//         if( o instanceof SourceStat ) return true;
+//      }
+//      return false;
+//   }
 
    protected void setMovable(String v) throws Exception {
       if( v.equalsIgnoreCase("On") ) movable=true;
