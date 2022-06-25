@@ -1510,7 +1510,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     */
    protected boolean delObjet(Obj obj) { return delObjet(obj,removable); }
    protected boolean delObjet(Obj obj,boolean force) {
-      if( obj instanceof Ligne ) return delLigne(obj);
+      if( obj instanceof Ligne && !(obj instanceof Cote) ) return delLigne(obj);
       return delObjetOne(obj,force);
    }
 

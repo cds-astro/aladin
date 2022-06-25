@@ -6655,7 +6655,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( (mode & 0x1) == 0 && p.isPixel()  ) continue;
             if( (mode & 0x2) == 0 && p.isOverlay() ) continue;
             
-            // Seuls les catalogues (et éventuellement les surcharges graphiques et TMOC/STMOC) sont traçables dans un plot
+            // Seuls les catalogues (et éventuellement les surcharges graphiques et TMOC/STMOC) 
+            // sont traçables dans un plot
             if( isPlot() && !p.isCatalog() && !p.isTool() && !p.isTimeMoc() ) continue;
 
             // Repérage d'un éventuel plan sous la souris dans le stack

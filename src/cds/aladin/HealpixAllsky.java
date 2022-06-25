@@ -94,7 +94,7 @@ class HealpixAllsky extends HealpixKey {
       return planBG.aladin.enoughMemory() ? -1 : PlanBG.LIVETIME; 
    }
    
-   HealpixKey createOneKey(int npix,int width,byte [] pix) {
+   protected HealpixKey createOneKey(int npix,int width,byte [] pix) {
       HealpixKey h = new HealpixKey();
       h.allSky=true;
       h.planBG=planBG;
@@ -111,7 +111,7 @@ class HealpixAllsky extends HealpixKey {
       return h;
    }
    
-   HealpixKey createOneKeyRGB(int npix,int width,int []rgb) {
+   protected HealpixKey createOneKeyRGB(int npix,int width,int []rgb) {
       HealpixKey h = new HealpixKey();
       h.allSky=true;
       h.planBG=planBG;

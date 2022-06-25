@@ -114,8 +114,8 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
        scanDir(getPlugPath());
        
 //        Recherche des plugins dans mon répertoire de développement
-       System.out.println("Chargement des plugins locaux");
-       scanDir("C:\\Users\\Pierre\\Documents\\Développements\\AladinGit\\bin");
+//       System.out.println("Chargement des plugins locaux");
+//       scanDir("C:\\Users\\Pierre\\Documents\\Développements\\AladinGit\\bin");
 
 
 //        (juste pour me simplifier la vie)

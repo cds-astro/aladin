@@ -22,6 +22,7 @@
 package cds.aladin;
 
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.EOFException;
@@ -2096,9 +2097,9 @@ public class PlanHealpix extends PlanBG {
    }
 
    /** Dessin du ciel complet en rapide */
-   protected boolean drawAllSky(Graphics g,ViewSimple v) {
+   protected boolean drawAllSky(Graphics g,ViewSimple v,BufferedImage imgb) {
       local=true;
-      return super.drawAllSky(g,v);
+      return super.drawAllSky(g,v,imgb);
    }
 
    //    static final int FIRST   = 0;

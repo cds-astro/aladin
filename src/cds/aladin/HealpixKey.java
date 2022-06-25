@@ -900,6 +900,32 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       throw new Exception();
    }
+   
+   /** Retourne le pixel (RGB) d'indice healpixIdxPixel (l'order de référence est celui du pixel final) */
+   protected int getPixelRGB(long healpixIdxPixel) {
+      long startIdx =  npix * width * width;
+      int order = (int)CDSHealpix.log2(width);
+      if( planBG.hpx2xy == null || planBG.hpx2xy.length!=width*width ) {
+         try { planBG.createHealpixOrder(order); } catch( Exception e ) { return 0; }
+      }
+      int idx = planBG.hpx2xy((int)(healpixIdxPixel-startIdx));
+      int x = idx%width;
+      int y = width - idx/width -1;
+      return rgb[ y*width+x ];
+   }
+
+   /** Retourne le pixel (byte) d'indice healpixIdxPixel (l'order de référence est celui du pixel final) */
+   protected byte getPixelByte(long healpixIdxPixel) {
+      long startIdx =  npix * width * width;
+      int order = (int)CDSHealpix.log2(width);
+      if( planBG.hpx2xy == null || planBG.hpx2xy.length!=width*width ) {
+         try { planBG.createHealpixOrder(order); } catch( Exception e ) { return 0; }
+      }
+      int idx = planBG.hpx2xy((int)(healpixIdxPixel-startIdx));
+      int x = idx%width;
+      int y = width - idx/width -1;
+      return pixels[ y*width+x ];
+   }
 
    /** Retourne le pixel (true bits) d'indice healpixIdxPixel (l'order de référence est celui du pixel final)
     * @param mode NOW, ONLYIFAVAIL, ONLYIFLOCALAVAIL - prêt à attendre le chargement des données ou pas
@@ -1744,6 +1770,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    static protected int nDraw = 0;
    static protected int nOut = 0;
+   
+   protected boolean mayCrossTheSky(ViewSimple v) {
+      Projection proj = v.getProj();
+      if( proj.t==Calib.TAN || proj.t==Calib.SIN || proj.t==Calib.STG ) return false;
+      return v.getTaille(proj)> 40;
+   }
+
 
    /** Tracé du losange Healpix.
     * Si le bord d'un losange fait plus de 100 pixels, on trace les 4 fils récursivement (prof maximum 8);
@@ -1755,13 +1788,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
     * @param maxParente parente maximale autorisée pour le tracé des fils (longueur de la descendance, -1 si aucune)
     * @return le nombre d'images (java) tracés
     */
-
-   protected boolean mayCrossTheSky(ViewSimple v) {
-      Projection proj = v.getProj();
-      if( proj.t==Calib.TAN || proj.t==Calib.SIN || proj.t==Calib.STG ) return false;
-      return v.getTaille(proj)> 40;
-   }
-   
    //   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
    protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1); }
    protected int draw(Graphics g, ViewSimple v,int maxParente) {
@@ -1828,17 +1854,19 @@ public class HealpixKey implements Comparable<HealpixKey> {
                
                // Methode récursive pour s'approcher du bord du ciel
                if( methodeRecursive && isTooLarge(b, proj.t==Calib.ARC ? 100 : 150) ) {
+
                   resetTimer();
-                  int m = drawFils(g,v,drawFast?1:proj.t==Calib.ZEA?8:4);
+                  int rec = drawFast?1:proj.t==Calib.ZEA?8:4;
+                  int m = drawFils(g,v,rec);
                   if( m>0 ) return m;   // si aucun fils n'est tracé, on tentera le père
 
-               // Méthode récursive pour dimiduer les déformations
+                  // Méthode récursive pour dimiduer les déformations
                } else {
 
                   if( !drawFast && mustBeDivided(b)  ) {
                      resetTimer();
                      int rec = 8;
-                     
+
                      // Si on ne dispose pas de losange d'ordre >=3, il faudra subdiviser davantage
                      if( planBG.maxOrder<3 ) rec = rec * (int)CDSHealpix.pow2(3-planBG.maxOrder);
                      
@@ -1848,7 +1876,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                }
 
                // Les losanges trop grands sont simplement ignorés
-               if( mayCrossTheSky && isTooLarge(b,150) ) return 0;
+               if( mayCrossTheSky && isTooLarge(b,PlanBG.TESTV12 && proj.t==Calib.ZEA ? 125 : 150) ) return 0;
                if( proj.t==Calib.STG && isTooLarge(b,2*v.rv.width/3) ) return 0;
                if( isTooLarge(b,v.rv.width*2) ) return 0;
 

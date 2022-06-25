@@ -30,6 +30,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Paint;
+import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.Shape;
@@ -630,7 +631,6 @@ public class PlanBG extends PlanImage {
 
       scanProperties();
       scanMetadata();
-      
 
       gluSky.reset();
    }
@@ -1170,7 +1170,7 @@ public class PlanBG extends PlanImage {
       aladin.synchroPlan.stop(startingTaskId);
       
       if( co!=null ) aladin.view.setRepere(co);
-
+      
       // Chargement du MOC associé, avec ou sans création d'un plan dédié
       planReadyMoc();
    }
@@ -1225,9 +1225,12 @@ public class PlanBG extends PlanImage {
    @Override
    protected boolean Free() {
       String stat = getShortStats();
-      if( stat!=null ) aladin.log("HealpixStats",stat);
-      Aladin.trace(4,"PlanBG.Free() stat => "+(stat==null?"null":stat));
-
+      if( stat!=null ) {
+         aladin.log("HealpixStats",stat);
+         Aladin.trace(4,"PlanBG.Free() stat => "+stat);
+         nbLoadNet=nbLoadCache=0;   // Pour éviter un possible double envoi des stats
+      }
+      
       hpx2xy = xy2hpx = null;
       frameOrigin=Localisation.ICRS;
       FreePixList();
@@ -2119,7 +2122,6 @@ public class PlanBG extends PlanImage {
          HealpixKey h = getHealpixLowLevel(order,npixFile,(int)getZ(),HealpixKey.SYNC);
          if( h==null ) return Double.NaN;
 
-//         long nside = h.width * CDSHealpix.pow2(h.order);
          int orderPix = (int)CDSHealpix.log2( h.width) + h.order;
          long npixPixel = CDSHealpix.ang2pix_nest(orderPix, polar[0], polar[1]);
 
@@ -2582,19 +2584,21 @@ public class PlanBG extends PlanImage {
          try { allsky.loadNow(); } catch( Exception e ) { e.printStackTrace(); }
       }
    }
+   
+   
+   static boolean TESTV12 = true;
 
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
-   protected boolean drawAllSky(Graphics g,ViewSimple v) {
-      
+   protected boolean drawAllSky(Graphics g,ViewSimple v,BufferedImage imgb) {
       boolean hasDrawnSomething=false;
       int z = (int)getZ(v);
-      HealpixKey allsky = pixList.get( key(getMinOrder(),  -1, z) );
-      
+      int order = getMinOrder();
+      HealpixKey allsky = pixList.get( key(order,  -1, z) );
       flagWaitAllSky=false;
-
+      
       if( allsky==null ) {
-         if( drawMode==DRAWPOLARISATION ) allsky = new HealpixAllskyPol(this,getMinOrder());
-         else allsky =  new HealpixAllsky(this,getMinOrder(),z);
+         if( drawMode==DRAWPOLARISATION ) allsky = new HealpixAllskyPol(this,order);
+         else allsky =  new HealpixAllsky(this,order,z);
          pixList.put( key(allsky) , allsky);
 
          if( local ) {
@@ -2640,48 +2644,106 @@ public class PlanBG extends PlanImage {
          double taille = Math.min(v.getTailleRA(),v.getTailleDE());
          if( NOALLSKY ) return true;
 
+         
+         HealpixKey [] allSkyPixList = allsky.getPixList();
+         long [] pixList;
+         
          // Petite portion du ciel => recherche des losanges spécifiquement
-         boolean partial=taille<40 && !v.isAllSky();
-         if( partial ) {
-            long [] pixList = getPixList(v, null, getMinOrder());
-            for( int i=0; i<pixList.length; i++ ) {
-               HealpixKey healpix = (allsky.getPixList())[ (int)pixList[i] ];
-               if( healpix==null || isOutMoc(healpix.order,healpix.npix)
-                     || healpix.isOutView(v) ) continue;
-               if( drawMode==DRAWPIXEL ) healpix.draw(g,v);
-               else if( drawMode==DRAWPOLARISATION ) ((HealpixKeyPol)healpix).drawPolarisation(g, v);
-               statNbItems++;
-               hasDrawnSomething=true;
-            }
-
-            // Grande portion du ciel => tracé du ciel complet
+         if( taille<40 && !v.isAllSky() ) {
+            pixList = getPixList(v, null, order);
+            
+         // Sinon tous les losanges sans réfléchir
          } else {
-            HealpixKey [] allSkyPixList = allsky.getPixList();
-            for( int  i=0; i<allSkyPixList.length; i++ ) {
-               HealpixKey healpix = allSkyPixList[i];
-               if( healpix==null  || isOutMoc(healpix.order,healpix.npix)
-                     || healpix.isOutView(v) ) continue;
-               if( drawMode==DRAWPIXEL ) healpix.draw(g,v);
-               else if( drawMode==DRAWPOLARISATION ) ((HealpixKeyPol)healpix).drawPolarisation(g, v);
-               statNbItems++;
-               hasDrawnSomething=true;
-            }
+            pixList = new long[ allSkyPixList.length ];
+            for( int i=0; i<pixList.length; i++ ) pixList[i]=i;
          }
 
-//         if( aladin.macPlateform && (aladin.ISJVM15 || aladin.ISJVM16) ) {
-//            g.setColor(Color.red);
-//            g.drawString("Warning: Java1.5 & 1.6 under Mac is bugged.",5,30);
-//            g.drawString("Please update your java.", 5,45);
-//         }
-         //         long t1= (Util.getTime()-t);
-         //       System.out.println("drawAllSky "+(partial?"partial":"all")+" order="+ALLSKYORDER+" in "+t1+"ms");
+         for( int i=0; i<pixList.length; i++ ) {
+            int npix = (int)pixList[i];
+            HealpixKey healpix = allSkyPixList[ npix ];
+            if( healpix==null || healpix.isOutView(v) ) continue;
+            if( drawMode==DRAWPIXEL ) healpix.draw(g,v);
+            else if( drawMode==DRAWPOLARISATION ) ((HealpixKeyPol)healpix).drawPolarisation(g, v);
+            statNbItems++;
+            hasDrawnSomething=true;
+         }
 
+
+      // Rebouchage des trous par méthode inverse
+      if( TESTV12 ) drawHoles(imgb,v,allsky.getPixList());
+         
       } else {
          flagWaitAllSky=true;
       }
+
       return hasDrawnSomething;
    }
    
+   // On bouche les trous du ciel complet en méthode inverse, càd en parcourant les pixels d'arrivée
+   // qui n'ont pas été pris en compte par le tracé des losanges HEALPix
+   // et en recherchant sa valeur dans la bonne tuile du allsky (méthode plus proche)
+   private void drawHoles(BufferedImage imgb,ViewSimple v,HealpixKey allsky[]) {
+      if( imgb==null ) return;
+      if( mustDrawFast() ) return;
+      
+      long t0 = System.currentTimeMillis();
+      
+      int vide = 0x00FFFFFF & getColorHoles().getRGB(); // Valeur du pixel si c'est un "trou"
+      
+      // Buffer des pixels déja tracé par les losanges
+      int [] pixelsRGB = ((DataBufferInt)imgb.getRaster().getDataBuffer()).getData();
+      int width = imgb.getWidth();
+      int height = imgb.getHeight();
+      
+      Projection proj = v.getProj();
+      Coord c = new Coord();
+      int orderAllSky = (int)CDSHealpix.log2( 64 );
+      int orderPix = orderAllSky + 3;
+      int offset=0;
+      int rgb;
+      int nb=0;
+      for(int y=0; y<height; y++ ) {
+         for( int x=0; x<width; x++, offset++ ) {
+            rgb = pixelsRGB[offset];
+            if( (0x00FFFFFF&rgb)!=vide ) continue;   // pas dans un trou => rien à faire
+            
+            Point p = v.getPosition(x, y);
+            c.x=p.x; c.y=p.y;
+            proj.getCoord(c);
+            if( Double.isNaN(c.al) ) continue;  // hors projection => rien à faire
+            else {
+               nb++;
+
+               // Recherche de la valeur du pixel dans la bonne tuile
+               // soit en couleur, soit en niveaux de gris
+               try {
+                  double[] polar = CDSHealpix.radecToPolar(new double[] {c.al, c.del});
+                  long npixPixel = CDSHealpix.ang2pix_nest(orderPix, polar[0], polar[1]);
+                  long npixFile = npixPixel>>> (orderAllSky<<1);
+                  if( isOutMoc(3, npixFile)) continue; 
+                  HealpixKey h1 = allsky[ (int)npixFile ];
+                  if( h1==null ) continue;
+                  int pix;
+                  if( color ) pix = h1.getPixelRGB(npixPixel);
+                  else {
+                     byte b = h1.getPixelByte(npixPixel);
+                     pix = (b<<16) | (b<<8) | b;
+                  }
+                  
+                  if( aladin.levelTrace>=4 ) pix=0x00FF00;  // en vert pour voir les trous bouchés
+                  pixelsRGB[offset] = 0xFF000000 | pix;
+               } catch( Exception e ) {
+               }
+            }
+         }
+      }
+      if( nb>0 ) imgb.setRGB(0, 0, width, height, pixelsRGB, 0, width);
+      
+      long t1 = System.currentTimeMillis();
+      aladin.trace(4,"drawHoles in "+(t1-t0)+"ms redrawnPixel: "+nb+"/"+offset);
+   }
+   
+
 //   protected PlanImage crop( double ra, double de, double sizeRa, double sizeDe, double factor) {
 //      
 //      double pixRes = getPixelResolution();
@@ -3128,7 +3190,7 @@ public class PlanBG extends PlanImage {
       if( v==null ) return null;
       BufferedImage imgBuf = new BufferedImage(v.rv.width,v.rv.height,BufferedImage.TYPE_INT_ARGB);
       Graphics g = imgBuf.getGraphics();
-      drawLosanges(g, v, now);
+      drawLosanges(g, v, now, imgBuf);
       g.finalize(); g=null;
 
       int width=(int)Math.ceil(rcrop.width);
@@ -3156,7 +3218,7 @@ public class PlanBG extends PlanImage {
       if (shape != null) {
           g.setClip(shape);
       }
-      drawLosanges(g, v, now);
+      drawLosanges(g, v, now, imgBuf);
       g.finalize(); 
       if (shape != null) {
           g.setClip(null);
@@ -3232,8 +3294,8 @@ public class PlanBG extends PlanImage {
       if( now ) {
          BufferedImage img = new BufferedImage(v.rv.width,v.rv.height, BufferedImage.TYPE_INT_ARGB_PRE);
          Graphics g = img.getGraphics();
-//         v.drawBackground(g);    // impossible si NOGUI
-         drawLosanges(g,v,now);
+         v.drawBackground(g);    // impossible si NOGUI (JE NE COMPRENDS PAS PF - juin 2022)
+         drawLosanges(g,v,now, img);
          adjustCM( img );
          g.dispose();
          return img;
@@ -3266,8 +3328,9 @@ public class PlanBG extends PlanImage {
       flagClearBuf=false;
 
       // Je trace les losanges
+//      if( v.pref==this ) drawBackground(v.g2BG,v);
       if( !isTransparent() ) drawBackground(v.g2BG,v);
-      drawLosanges(v.g2BG,v,now);
+      drawLosanges(v.g2BG,v,now,v.imageBG);
 
       // Ajustement de la table des couleurs
       try {
@@ -3497,7 +3560,7 @@ public class PlanBG extends PlanImage {
       long [] pix=null;
       int max = Math.min(maxOrder(v),maxOrder);
       int nb=0;
-      if( v.getTaille()>20 && (hasDrawnSomething=drawAllSky(g, v))) return;
+      if( v.getTaille()>20 && (hasDrawnSomething=drawAllSky(g, v, null))) return;
 
       setMem();
       resetPriority();
@@ -3617,7 +3680,7 @@ public class PlanBG extends PlanImage {
 
    /** Tracé des losanges à la résolution adéquate dans la vue
     * mais en mode synchrone */
-   protected void drawLosangesNow(Graphics g,ViewSimple v) {
+   protected void drawLosangesNow(Graphics g,ViewSimple v,BufferedImage imgb) {
       int order = Math.max(getMinOrder(), Math.min(maxOrder(v),maxOrder) );
       boolean lowResolution = v.isAllSky() && order==getMinOrder();
 
@@ -3652,12 +3715,14 @@ public class PlanBG extends PlanImage {
             healpix.draw(g,v/*,localRedraw*/);
          }
       }
+      
+      if( TESTV12 ) drawHoles(imgb, v, allsky.getPixList());
    }
 
    // le synchronized permet d'éviter que 2 draw simultanés s'entremèlent (sur un crop par exemple)
-   synchronized protected void drawLosanges(Graphics g,ViewSimple v, boolean now) {
-      if( now ) drawLosangesNow(g,v);
-      else drawLosangesAsync(g,v);
+   synchronized protected void drawLosanges(Graphics g,ViewSimple v, boolean now,BufferedImage imgb) {
+      if( now ) drawLosangesNow(g,v,imgb);
+      else drawLosangesAsync(g,v,imgb);
    }
 
    /** Retourne true si on est sûr que ce losange est en dehors du
@@ -3690,7 +3755,7 @@ public class PlanBG extends PlanImage {
    }
 
    /** Tracé des losanges disposibles dans la vue et demande de ceux manquants */
-   protected void drawLosangesAsync(Graphics g,ViewSimple v) {
+   protected void drawLosangesAsync(Graphics g,ViewSimple v,BufferedImage imgb) {
       allWaitingKeysDrawn = false;
 
       boolean first=true;
@@ -3713,7 +3778,7 @@ public class PlanBG extends PlanImage {
 
       // On dessine le ciel entier à basse résolution
       if( min<getMinOrder() ) {
-         if( drawAllSky(g,v) ) {
+         if( drawAllSky(g,v,imgb) ) {
             nb++;
 //            debug.append(" allsky1");
          }
@@ -3773,7 +3838,7 @@ public class PlanBG extends PlanImage {
          }
 
          if( nb==0 && max<=getMinOrder()  && (!allKeyReady  || (!oneKeyReady && allsky!=null)) ) {
-            if( drawAllSky(g,v) ) {
+            if( drawAllSky(g,v,imgb) ) {
                nb++;
 //               debug.append(" allsky2");
             }
@@ -3899,7 +3964,7 @@ public class PlanBG extends PlanImage {
 
       // On a rien dessiné, on met tout de même le allsky du fond
       if( isPause() && nb==0 && !allskyDrawn && allsky!=null && allsky.getStatus()==HealpixKey.READY
-            && drawAllSky(g, v) ) {
+            && drawAllSky(g, v,imgb) ) {
          nb++;
 //         debug.append(" allsky3");
       }
@@ -3992,7 +4057,7 @@ public class PlanBG extends PlanImage {
 //      g.setColor( Aladin.COLOR_BACKGROUND );
       Stroke st = g.getStroke();
 
-      int epaisseur = 100;
+      int epaisseur = projd.t==Calib.CAR || projd.t==Calib.MER ? 20 : 100;
       g.setStroke(new BasicStroke(epaisseur));
 
       Projection projd = v.getProj().copy();
@@ -4002,8 +4067,6 @@ public class PlanBG extends PlanImage {
 //            g.setColor( Color.yellow );
       rayon=0;
       int m=epaisseur/2;
-//      int chouilla = (int)( (v.getWidth()/800. -1)*6 );
-//      if( chouilla<0 ) chouilla=0;
       int chouilla = 1;
 
       if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
@@ -4047,7 +4110,38 @@ public class PlanBG extends PlanImage {
 
          if( angle==0 ) g.drawOval(x-m,y-m,(grandAxe+m)*2,(rayon+m)*2);
          else Util.drawEllipse(g, x+grandAxe,y+rayon, grandAxe+m, rayon+m, angle );
-
+         
+      } else if( projd.t==Calib.CAR ) {
+         projd = v.getProjSyncView().getProj();
+         Coord c1 = new Coord(1, 89);
+         projd.getXYNative(c1);
+         Point p1 = v.getViewCoord(c1.x, c1.y);
+         Coord c2 = new Coord(359, -89);
+         projd.getXYNative(c2);
+         Point p2 = v.getViewCoord(c2.x, c2.y);
+         x = p1.x;
+         y = p1.y;
+         int w = p2.x - p1.x;
+         int h = p2.y - p1.y;
+         
+         g.drawRect(x, y, w, h);
+         
+      } else if( projd.t==Calib.MER ) {
+         Projection p =  projd.copy();
+         p.setProjCenter(0,0);
+         Coord c =p.c.getProjCenter();
+         p.getXY(c);
+         Point center = v.getViewCoord(c.x, c.y);
+         c.al+=180;
+         p.getXY(c);
+         Point gauche = v.getViewCoord(c.x, c.y);
+         x = gauche.x;
+         y = 0;
+         int w = 2* (center.x - gauche.x);
+         int h = v.rv.height;
+         
+         g.drawLine(x, 0, x, h);
+         g.drawLine(x+w, 0, x+w, h);
       }
       g.setStroke(st);
 
@@ -4069,12 +4163,34 @@ public class PlanBG extends PlanImage {
 
    }
    
+   // Retourne la couleur utilisée pour "colorier les trous"
+   private Color getColorHoles() {
+      
+      int r,g,b;
+      if( color ) r=g=b=0;
+      else if( cm==null ) r=g=b=255;
+      else {
+         r = cm.getRed(0);
+         g = cm.getGreen(0);
+         b = cm.getBlue(0);
+      }
+
+      // On ne prend pas la première (resp la dernière) valeur de la CM
+      // car elle sera utilisée bien plus souvent que si on décale un peu
+      if( PlanBG.TESTV12 ) {
+         if( b==255 ) b--;
+         else b++;
+      }
+      
+      return new Color(r,g,b);
+   }
+   
    /** Tracé d'un fond couvrant la forme de tout le ciel en fonction du type de projection
     * pour atténuer le phénomène de "feston" */
    protected void drawBackground(Graphics g,ViewSimple v) {
 
       if( aladin.calque.hasHpxGrid() || isOverlay() ) return;
-
+      
       Projection projd = v.getProjSyncView().getProj().copy();
       projd.setProjCenter(0, 0);
       projd.frame=0;
@@ -4082,13 +4198,12 @@ public class PlanBG extends PlanImage {
       int x=0,y=0,rayon=0,grandAxe=0;
       double angle=0;
 
-      Color bckCol = color ? Color.black : cm==null ? Color.white : 
-         new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
+      Color bckCol = getColorHoles();
       g.setColor( bckCol );
       rayon=0;
       
-//      if( projd.t==Calib.TAN || projd.t==Calib.SIP ) g.fillRect(0,0,v.getWidth(),v.getHeight());
-//      else 
+      boolean isTransparent = isTransparent();
+      if( TESTV12 ) isTransparent=false;
          
       if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();
@@ -4104,7 +4219,7 @@ public class PlanBG extends PlanImage {
          x = (int)(center.x-rayon);
          y = (int)(center.y-rayon);
 
-         if( isTransparent() ) {
+         if( isTransparent ) {
             Graphics2D g2d = (Graphics2D)g;
             Paint paint = g2d.getPaint();
             Paint gradient = new GradientPaint(x, y,new Color(0,0,70),
@@ -4139,7 +4254,7 @@ public class PlanBG extends PlanImage {
          x = (int)(center.x-grandAxe);
          y = (int)(center.y-rayon);
 
-         if( isTransparent() ) {
+         if( isTransparent ) {
             Graphics2D g2d = (Graphics2D)g;
             Paint paint = g2d.getPaint();
             Paint gradient = new GradientPaint(x+rayon/4, y+rayon/4,new Color(0,0,70),
@@ -4152,11 +4267,59 @@ public class PlanBG extends PlanImage {
             if( angle==0 ) g.fillOval(x,y,grandAxe*2,rayon*2);
             else Util.fillEllipse(g, x+grandAxe,y+rayon, grandAxe, rayon, angle );
          }
-
+         
+      } else if( projd.t==Calib.CAR ) {
+         projd = v.getProjSyncView().getProj();
+         Coord c1 = new Coord(1, 89);
+         projd.getXYNative(c1);
+         Point p1 = v.getViewCoord(c1.x, c1.y);
+         Coord c2 = new Coord(359, -89);
+         projd.getXYNative(c2);
+         Point p2 = v.getViewCoord(c2.x, c2.y);
+         x = p1.x;
+         y = p1.y;
+         int w = p2.x - p1.x;
+         int h = p2.y - p1.y;
+         
+         if( isTransparent ) {
+            Graphics2D g2d = (Graphics2D)g;
+            Paint paint = g2d.getPaint();
+            Paint gradient = new GradientPaint(0, 0,new Color(0,0,70), w,h, new Color(180,190,200));
+            g2d.setPaint(gradient);
+            g.fillRect(x,y, w,h);
+            g2d.setPaint(paint);
+         } else {
+            g.fillRect(x,y, w,h);
+         }
+        
+      } else if( projd.t==Calib.MER ) {
+         Projection p =  projd.copy();
+         p.setProjCenter(0,0);
+         Coord c =p.c.getProjCenter();
+         p.getXYNative(c);
+         Point center = v.getViewCoord(c.x, c.y);
+         c.al+=180;
+         p.getXYNative(c);
+         Point gauche = v.getViewCoord(c.x, c.y);
+         x = gauche.x;
+         y = 0;
+         int w = 2* (center.x - gauche.x);
+         int h = v.rv.height;
+         if( isTransparent ) {
+            Graphics2D g2d = (Graphics2D)g;
+            Paint paint = g2d.getPaint();
+            Paint gradient = new GradientPaint(0, 0,new Color(0,0,70), w,h, new Color(180,190,200));
+            g2d.setPaint(gradient);
+            g.fillRect(x,y, w,h);
+            g2d.setPaint(paint);
+         } else {
+            g.fillRect(x,y, w,h);
+         }
+      
       } else {
          int w = v.rv.width;
          int h = v.rv.height;
-         if( isTransparent() ) {
+         if( isTransparent ) {
             Graphics2D g2d = (Graphics2D)g;
             Paint paint = g2d.getPaint();
             Paint gradient = new GradientPaint(0, 0,new Color(0,0,70), w,h, new Color(180,190,200));

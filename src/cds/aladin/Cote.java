@@ -282,6 +282,11 @@ public class Cote extends Ligne {
          id= Util.myRound(distXY+"",1)+ " (delta x="+Util.myRound(dx+"",2)+", delta y="+Util.myRound(dy+"",2)+")";
       }
    }
+   
+   /** Il faut faire 2 polylignes disjointes */
+   protected void remove() {
+      plan.aladin.calque.zoom.zoomView.cutOff(this);
+   }
 
   /** Test d'appartenance.
    * Retourne vrai si le point (x,y) de l'image se trouve

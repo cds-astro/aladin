@@ -334,7 +334,7 @@ public final class Command implements Runnable {
          }
 
          try {
-            b = stream.read();
+            b = a.CONSOLE ? stream.read() : -1;
             // System.out.println("Read b="+b+"=>"+((char)b)+" from "+stream+" available="+stream.available());
          } catch( Exception e ) {
             stream = null;
@@ -376,7 +376,7 @@ public final class Command implements Runnable {
     */
    protected void scriptFromInputStream() {
       String s = null;
-      boolean prompt = (stream == System.in);
+      boolean prompt = a.CONSOLE && (stream == System.in);
 
       if( prompt ) print(getPrompt());
       while( !stop /* && true */ ) {
@@ -401,6 +401,7 @@ public final class Command implements Runnable {
                if( s.trim().length() != 0 ) execScript(s);
             }
             if( prompt ) print(getPrompt());
+            
          } catch( Exception e ) {
             if( Aladin.levelTrace >= 3 ) e.printStackTrace();
             println("!!! " + e);
@@ -1376,6 +1377,7 @@ public final class Command implements Runnable {
 
       return "";
    }
+   
 
    protected HipsGen hipsgen = null; // pour la génération des allskys via commande script
 
@@ -3422,15 +3424,7 @@ public final class Command implements Runnable {
     * @param s la commande a traiter
     */
    protected void execNow(String s) {
-      // if( SwingUtilities.isEventDispatchThread() ) {
       exec(s, true, false, true);
-      // } else {
-      // final String [] param = new String[1];
-      // param[0]=s;
-      // SwingUtilities.invokeLater(new Runnable() {
-      // public void run() { exec(param[0],true,false,true); }
-      // });
-      // }
    }
 
    // PROBABLEMENT TROP VERBEUX POUR APT.... JE NE LE METS PAS
@@ -3579,6 +3573,7 @@ public final class Command implements Runnable {
       if( cmd.equalsIgnoreCase("macro") ) execMacro(param);
       // else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
       else if( cmd.equalsIgnoreCase("anaglyph") ) anaglyph(param);
+      else if( cmd.equalsIgnoreCase("testv12") ) testv12(param);
       else if( cmd.equalsIgnoreCase("pf") ) pf(param);
       else if( cmd.equalsIgnoreCase("tap") ) tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") ) PlanBG.cleanCache();
@@ -5553,7 +5548,14 @@ public final class Command implements Runnable {
       a.isAnaglyph = !param.equals("off"); 
    }
 
-   
+   private void testv12(String param) {
+      PlanBG.TESTV12 = param!=null && param.indexOf("off")>=0 ? false:true;
+      System.out.println("Test v12 "+(PlanBG.TESTV12?"ON":"OFF"));
+      a.view.newView();
+      a.view.repaintAll();
+   }
+
+
    private void pf(String param) {
       try {
          a.calque.newCatalogPixelExtraction();

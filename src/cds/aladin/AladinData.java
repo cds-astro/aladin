@@ -123,7 +123,14 @@ public class AladinData {
    public double [][] getPixels() throws AladinException {
       testImage();
       testHuge();
-      return ((PlanImage)plan).getPixels();
+      PlanImage p = (PlanImage)plan;
+      double [][] pix = null;
+      try {
+         p.setLockCacheFree(true);
+         if( !p.hasOriginalPixels() || !p.pixelsOriginFromCache() ) throw new AladinException(ERR004);
+         pix = ((PlanImage)plan).getPixels();
+      } finally { p.setLockCacheFree(false); }
+      return pix;
    }
 
    /** Return the full pixel value convert in double for a dedicated position.
@@ -135,11 +142,15 @@ public class AladinData {
    public double getPixel(int x,int y) throws AladinException {
       testImage();
       testHuge();
-      if( !((PlanImage)plan).hasOriginalPixels()
-            || !((PlanImage)plan).pixelsOriginFromCache() ) throw new AladinException(ERR004);
-      if( x<0 || x>=((PlanImage)plan).naxis1
-       || y<0 || y>=((PlanImage)plan).naxis2 ) return Double.NaN;
-      return ((PlanImage)plan).getPixelOriginInDouble(x, y);
+      PlanImage p = (PlanImage)plan;
+      double pix=Double.NaN;
+      try {
+         p.setLockCacheFree(true);
+         if( !p.hasOriginalPixels() || !p.pixelsOriginFromCache() ) throw new AladinException(ERR004);
+         if( x<0 || x>=p.naxis1 || y<0 || y>=p.naxis2 ) return Double.NaN;
+         pix = p.getPixelOriginInDouble(x, y);
+      } finally { p.setLockCacheFree(false); }
+      return pix;
    }
 
    /** Return the full pixel value from a cube convert in double for a dedicated position.
@@ -364,9 +375,10 @@ public class AladinData {
    public byte [] seeCodedPixels() throws AladinException {
       testImage();
       testHuge();
-      if( !((PlanImage)plan).hasOriginalPixels()
-            || !((PlanImage)plan).pixelsOriginFromCache() ) throw new AladinException(ERR004);
-      return ((PlanImage)plan).pixelsOrigin;
+      PlanImage p = (PlanImage)plan;
+      p.setLockCacheFree(true);
+      if( !p.hasOriginalPixels() || !p.pixelsOriginFromCache() ) throw new AladinException(ERR004);
+      return p.pixelsOrigin;
    }
 
    /**
@@ -809,7 +821,7 @@ public class AladinData {
       if( !plan.isReady() ) throw new AladinException(ERR002);
       if( plan.pcat==null ) throw new AladinException(ERR007);
    }
-
+   
    // Create a new projection associated to the plane
    private void setCalib() {
       try {

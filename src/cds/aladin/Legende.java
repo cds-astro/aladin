@@ -550,7 +550,7 @@ public final class Legende extends AbstractTableModel  {
    /*******************************  Structure de la JTable *******************************/
 
    static final private String [] HEAD = {
-      "","Visible","Coo","Name","Description","Unit","Datatype","UCD","Utype","Width","Arraysize","Precision"
+      "","Visible","Ref","Name","Description","Unit","Datatype","UCD","Utype","Width","Arraysize","Precision"
    };
 
    static final private int [] WHEAD = { 30, 50, 50,100, 190, 50, 70, 110, -1, 40,40,40 };

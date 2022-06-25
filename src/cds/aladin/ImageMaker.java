@@ -142,7 +142,7 @@ public class ImageMaker {
       p.drawBackground(g, vs);
 
       // Dessin de l'image de fond
-      p.drawLosangesNow(g, vs);
+      p.drawLosangesNow(g, vs, img);
       
       // Les éventuels overlays
       if( overlays!=null ) {
@@ -545,7 +545,7 @@ public class ImageMaker {
    public static void checkPixelLimit(int width, int height, PlanBG planBG) throws Exception {
 	// TODO Auto-generated method stub
 	   int bitpix= planBG.getBitpix()==-64 ? -64 : -32;
-	      long limit = (long) width * (long)height * (long) (Math.abs(bitpix)/8);
+	      long limit = (long) width * (long)height * (Math.abs(bitpix)/8);
 	      if (limit < Integer.MIN_VALUE || limit >Integer.MAX_VALUE) {
 	    	  throw new Exception("Unable to process large request. Please consider retrying with smaller field of view or lower order/resolution");
 		}

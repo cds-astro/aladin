@@ -3748,7 +3748,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                
                saisie=aladin.localisation.J2000ToString(c.al,c.del);
 
-               aladin.console.printInPad(sourceName+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
+               aladin.console.printInPad(sourceName+" => "+saisie+" "+aladin.localisation.getFrameFox()+"\n");
                if( !setRepereByString() && !aladin.NOGUI ) {
                   Vector<Plan> v = aladin.calque.getPlanBG();
                   if( v!=null && v.size()>0 ) {

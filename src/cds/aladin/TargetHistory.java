@@ -101,12 +101,23 @@ public class TargetHistory {
     * de la dernière target insérée, 1 pour l'avant-dernière, etc...
     * @param index
     * @param nb
+    * @param frame frame courant à la Fox, pour supprimer les suffixes inutiles sur les coordonnées, 
+    *              null pour retourner la liste tel que
     * @return
     */
-   protected ArrayList<String> getTargets(int index, int nb) {
+   protected ArrayList<String> getTargets(int index, int nb) { return getTargets(index,nb,null); }
+   protected ArrayList<String> getTargets(int index, int nb, String frame) {
       ArrayList<String> a = new ArrayList<>(nb);
       int n=list.size()-1-index;
-      for( int i=0; i<nb && n>=0; i++, n-- ) a.add( list.get(n) );
+      for( int i=0; i<nb && n>=0; i++, n-- ) {
+         String target = list.get(n);
+         
+         // On supprime éventuellement le suffixe frame (ex: 345 +123 GAL => 345 +123);
+         if( frame!=null && target.endsWith(" "+frame) ) {
+            target = target.substring( 0, target.length()-frame.length()).trim();
+         }
+         a.add( target );
+      }
       if( n>0 ) a.add("...");
       return a;
    }

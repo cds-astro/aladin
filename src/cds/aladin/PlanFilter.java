@@ -404,7 +404,7 @@ public final class PlanFilter extends Plan {
             aladin.calque.repaintAll();
             Source[] sources = getSources(aladin);
             if( filterThread.askingRestart() ) {
-               System.err.println("PlanFilter.doApplyFilter() => return (getSources->filterThread.askingRestart())");
+               if( DEBUG ) System.err.println("PlanFilter.doApplyFilter() => return (getSources->filterThread.askingRestart())");
                return false;
            }
 

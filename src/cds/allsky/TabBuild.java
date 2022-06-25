@@ -313,46 +313,46 @@ public class TabBuild extends JPanel implements ActionListener {
          boolean isFile = context.isInputFile;
          boolean readyToDo = (isFile || isMap || context.isExistingDir())
                && mainPanel.tabDesc.outputField.getText().trim().length()>0;
-               boolean isExistingMoc = context.getMocIndex()!=null;
-               moc.setEnabled(isExistingMoc);
-               note.setText("<html><i>(*) "+getCoverageString()+"</i></html>");
-               previous.setEnabled(readyToDo && !isRunning);
-               next.setEnabled(readyToDo && !isRunning && context.isExistingAllskyDir() );
-               start.setEnabled(readyToDo && !isRunning && !(isRunning));
-               pause.setEnabled(isRunning);
-               abort.setEnabled(readyToDo && isRunning);
+         boolean isExistingMoc = context.getMocIndex()!=null;
+         moc.setEnabled(isExistingMoc);
+         note.setText("<html><i>(*) "+getCoverageString()+"</i></html>");
+         previous.setEnabled(readyToDo && !isRunning);
+         next.setEnabled(readyToDo && !isRunning && context.isExistingAllskyDir() );
+         start.setEnabled(readyToDo && !isRunning && !(isRunning));
+         pause.setEnabled(isRunning);
+         abort.setEnabled(readyToDo && isRunning);
 
-               bit8.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-               bit16.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-               bit32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-               bit_32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-               bit_64.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-               samplFast.setEnabled(readyToDo && !isRunning && !isMap);
-               overlayFast.setEnabled(readyToDo && !isRunning && !isMap);
-               samplBest.setEnabled(readyToDo && !isRunning && !isMap);
-               overlayBest.setEnabled(readyToDo && !isRunning && !isMap);
-               fading.setEnabled(readyToDo && !isRunning && !isMap);
-               tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
-               setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
-                     : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
-               tab.refresh();
+         bit8.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         bit16.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         bit32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         bit_32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         bit_64.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         samplFast.setEnabled(readyToDo && !isRunning && !isMap);
+         overlayFast.setEnabled(readyToDo && !isRunning && !isMap);
+         samplBest.setEnabled(readyToDo && !isRunning && !isMap);
+         overlayBest.setEnabled(readyToDo && !isRunning && !isMap);
+         fading.setEnabled(readyToDo && !isRunning && !isMap);
+         tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
+         setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
+               : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+         tab.refresh();
 
-               if( !isRunning ) {
-                  if( isMap ) {
-                     JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
-                     bar.setValue(bar.getMaximum());
-                     bar.setString("No indexation for map!");
-                  } else {
-                     if( context.moc==null ) {
-                        JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
-                        bar.setValue(0);
-                        bar.setString("");
-                        bar = ((ContextGui)context).mainPanel.getProgressBarTile();
-                        bar.setValue(0);
-                        bar.setString("");
-                     }
-                  }
+         if( !isRunning ) {
+            if( isMap ) {
+               JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
+               bar.setValue(bar.getMaximum());
+               bar.setString("No indexation for map!");
+            } else {
+               if( context.moc==null ) {
+                  JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
+                  bar.setValue(0);
+                  bar.setString("");
+                  bar = ((ContextGui)context).mainPanel.getProgressBarTile();
+                  bar.setValue(0);
+                  bar.setString("");
                }
+            }
+         }
       } catch( Exception e ) {
          e.printStackTrace();
       }

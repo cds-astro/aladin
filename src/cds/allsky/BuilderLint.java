@@ -974,7 +974,7 @@ public class BuilderLint extends Builder {
       return -1;
    }
 
-   // Example: 2016-05-09[T10:39[:00]][Z]
+   // Example: 2016-05-09[T10:39[:00.01]][Z]
    static public boolean checkDate(String s) {
       int mode=0;
       
@@ -999,11 +999,14 @@ public class BuilderLint extends Builder {
             case 4: if( ch==':' ) mode=5;
                     else if( !Character.isDigit(ch) ) return false;
                     break;
-            case 5: if( !Character.isDigit(ch) ) return false;
+            case 5: if( ch=='.' || ch==',' ) mode=6;
+                    else if( !Character.isDigit(ch) ) return false;
+                    break;
+            case 6: if( !Character.isDigit(ch) ) return false;
                     break;
          }
       }
-      return mode==2 || mode==4 || mode==5;
+      return mode==2 || mode==4 || mode==5 || mode==6;
    }
    
    // Retourne un mot clé HiPS sans son éventuel suffixe numérique "_nn"

@@ -333,7 +333,7 @@ public class PlanCatalog extends Plan {
             // Affectation de la même couleur
             p.c = c;
             if( flagWithProp ) {
-               System.out.println("createProperties => "+p);
+//               System.out.println("createProperties => "+p);
                Properties.createProperties(p);
             }
          }

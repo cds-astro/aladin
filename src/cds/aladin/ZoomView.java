@@ -209,12 +209,18 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    
    /** Mémorisation de la position courante du réticule dans l'historique des targets */
    private void memoTarget() {
-      aladin.targetHistory.add( aladin.localisation.getLocalisation(aladin.view.repere) );
+      aladin.targetHistory.add( aladin.localisation.getLocalisation(aladin.view.repere)
+            +" "+aladin.localisation.getFrameFox() );
    }
    
    /** Saisie d'un range temporel et Mémorisation dans l'historique des dates */
    private void memoDate() {
       aladin.timeRange( aladin.view.getCurrentView() );
+   }
+   
+   private void submitTarget(String target) {
+      if( !Localisation.notCoord(target) ) aladin.console.printInPad(target+"\n");
+      aladin.command.execNow(target);
    }
    
    /** Action à opérer lorsque l'on clique sur le triangle soit des targets, soit des dates
@@ -223,7 +229,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    protected void targetTriangleAction(int x,int y) { targetTriangleAction(x,y,0); }
    protected void targetTriangleAction( final int x, final int y, int initIndex) {
       int max=20;
-      ArrayList<String> v =  aladin.targetHistory.getTargets( initIndex, max );
+      ArrayList<String> v =  aladin.targetHistory.getTargets( initIndex, max, aladin.localisation.getFrameFox() );
       if( v.size()==0 ) return;
       
       // On crée un JPopupmenu contenant les 10 dernières targets, et s'il y en a encore,
@@ -249,7 +255,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             mi.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
                   String s = ((JMenuItem)e.getSource()).getActionCommand();
-                  aladin.command.execNow(s);
+                  submitTarget(s);
                }
             });
          }

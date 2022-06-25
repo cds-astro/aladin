@@ -182,7 +182,8 @@ import cds.xml.XMLParser;
  * @beta         <LI> Support for planetary MOCs (proto)
  * @beta    </UL>
  * @beta    <LI> HiPS improvements:
- * @beta    <UL> <LI> Hipsgen new coadd mode: SUM, DIV, MUL
+ * @beta    <UL> <LI> Improved plotting for HiPS displayed in large fields
+ * @beta         <LI> Hipsgen new coadd mode: SUM, DIV, MUL
  * @beta         <LI> gzip/nogzip automatic strategy for FITS tiles
  * @beta         <LI> Display symmetry (N&lt;-&gt;S, E&lt;-&gt;W)
  * @beta    </UL>
@@ -196,6 +197,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> Fix -noconsole bug with execAsync() [thanks to G.Eychaner]
+ * @beta    <LI> Fix pixel access methods via plugin avoiding memory cache release.
  * @beta    <LI> Removal of potential deadlock when applying a dedicated filter on a HiPS catalogue
  * @beta    <LI> Java getFreeSpace() bug workaround for Hipsgen disk cache
  * @beta    <LI> Fix bug for Coord Tool box ICRS proper motion computation error
@@ -234,7 +237,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.900";
+   static public final    String VERSION = "v11.905";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2643,7 +2646,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
       // Lecture des commandes scripts sur la console (et/ou stdin)
-      if( CONSOLE ) command.readStandardInput();
+      command.readStandardInput();
 
       // Message d'avertissement pour le mode applet bridée
       if( !STANDALONE && v>=120 && !warningRestricted) {
@@ -3168,13 +3171,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
       setHelp(false);
       
       // Chargement initial
-      if( !command.hasCommand() && command.isSync() ) {
-         if( PLANET==1 ) {
-            directory.showTreePath("Solar system");
-            execAsyncCommand("setconf frame=Planet;get hips(CDS/P/Mars/MOLA-color) 15:07:42.89 +17:45:09.9 120°");
+      if( NETWORK ) {
+         if( !command.hasCommand() && command.isSync() ) {
+            if( PLANET==1 ) {
+               directory.showTreePath("Solar system");
+               execAsyncCommand("setconf frame=Planet;get hips(CDS/P/Mars/MOLA-color) 15:07:42.89 +17:45:09.9 120°");
+            }
+            else execAsyncCommand("get hips 20:59:46.08 +43:39:43.5 0.8deg");
+            //         else execAsyncCommand("get hips 22:47:38.58 +58:02:48.6 1deg");   // SH2-142 
          }
-         else execAsyncCommand("get hips 20:59:46.08 +43:39:43.5 0.8deg");
-//         else execAsyncCommand("get hips 22:47:38.58 +58:02:48.6 1deg");   // SH2-142 
       }
 //      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips NGC 2244 1.2deg");
    }

@@ -472,7 +472,9 @@ public class TabDesc extends JPanel implements ActionListener {
    public String getInputField() { return inputField.getText(); }
 
    public String getOutputField() { return outputField.getText(); }
-   public void setOutputField(String output) { outputField.setText(output); }
+   public void setOutputField(String output) { 
+      outputField.setText(output); 
+   }
 
    public Mode getCoaddModeField() {
       return resetTiles.isSelected() ? Mode.REPLACETILE : 
@@ -584,7 +586,7 @@ public class TabDesc extends JPanel implements ActionListener {
       // enlève les multiples FS à la fin
       while (path.endsWith(Util.FS)) path = path.substring(0, path.lastIndexOf(Util.FS));
 
-      outputField.setText(path + Constante.HIPS + Util.FS);
+      outputField.setText(path + Constante.HIPS); //+ Util.FS);
    }
 
    public boolean isResetTiles() {

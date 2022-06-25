@@ -903,7 +903,7 @@ public class SED extends JPanel {
       // Tooltips ?
       if( timeIcon.inside(x,y) )     { toolTip("TIMEPLOTHELP"); return; }
       if( tableIcon.inside(x,y) )    { toolTip("TABLEICONHELP"); return; }
-      if( rCroix.contains(x,y) )     { toolTip("SEDCLOSE");       return; }
+      if( rCroix!=null && rCroix.contains(x,y) )     { toolTip("SEDCLOSE");       return; }
       if( rMore.contains(x,y) )      { toolTip("SEDMORE");       return; }
 //      else if( rInfo.contains(x,y) ) { toolTip("SEDCREATEPLANE"); return; }
       else if( rWave.contains(x,y) ) { toolTip("SEDFREQWAVE");    return; }
