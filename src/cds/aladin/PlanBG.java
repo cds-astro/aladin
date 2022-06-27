@@ -2669,8 +2669,8 @@ public class PlanBG extends PlanImage {
          }
 
 
-      // Rebouchage des trous par méthode inverse
-      if( TESTV12 ) drawHoles(imgb,v,allsky.getPixList());
+         // Rebouchage des trous par méthode inverse
+         if( TESTV12 ) drawHoles(imgb,v,allsky.getPixList());
          
       } else {
          flagWaitAllSky=true;
@@ -2683,8 +2683,14 @@ public class PlanBG extends PlanImage {
    // qui n'ont pas été pris en compte par le tracé des losanges HEALPix
    // et en recherchant sa valeur dans la bonne tuile du allsky (méthode plus proche)
    private void drawHoles(BufferedImage imgb,ViewSimple v,HealpixKey allsky[]) {
+      
+      // Tous les cas où c'est mieux de ne pas faire le nettoyage (trop lent a priori)
       if( imgb==null ) return;
       if( mustDrawFast() ) return;
+      if( !v.isAllSky() ) return;
+      try {
+         if( moc!=null && (moc.getSpaceMoc()).getCoverage()<0.3) return;
+      } catch( Exception e1 ) { }
       
       long t0 = System.currentTimeMillis();
       
@@ -2700,19 +2706,20 @@ public class PlanBG extends PlanImage {
       int orderAllSky = (int)CDSHealpix.log2( 64 );
       int orderPix = orderAllSky + 3;
       int offset=0;
-      int rgb;
+      int rgb,pix;
       int nb=0;
       for(int y=0; y<height; y++ ) {
          for( int x=0; x<width; x++, offset++ ) {
             rgb = pixelsRGB[offset];
-            if( (0x00FFFFFF&rgb)!=vide ) continue;   // pas dans un trou => rien à faire
+            if( (0x00FFFFFF & rgb)!=vide ) continue;   // encore du fond donc pas dans un trou => rien à faire
             
             Point p = v.getPosition(x, y);
             c.x=p.x; c.y=p.y;
             proj.getCoord(c);
+            c = Localisation.frameToFrame(c,Localisation.ICRS,frameOrigin);
+            
             if( Double.isNaN(c.al) ) continue;  // hors projection => rien à faire
             else {
-               nb++;
 
                // Recherche de la valeur du pixel dans la bonne tuile
                // soit en couleur, soit en niveaux de gris
@@ -2720,18 +2727,17 @@ public class PlanBG extends PlanImage {
                   double[] polar = CDSHealpix.radecToPolar(new double[] {c.al, c.del});
                   long npixPixel = CDSHealpix.ang2pix_nest(orderPix, polar[0], polar[1]);
                   long npixFile = npixPixel>>> (orderAllSky<<1);
-                  if( isOutMoc(3, npixFile)) continue; 
+                  if( isOutMoc(3,npixFile) ) continue;
+//                  if( isOutMoc(orderPix,npixPixel) ) continue;
+
                   HealpixKey h1 = allsky[ (int)npixFile ];
                   if( h1==null ) continue;
-                  int pix;
+                  nb++;
                   if( color ) pix = h1.getPixelRGB(npixPixel);
-                  else {
-                     byte b = h1.getPixelByte(npixPixel);
-                     pix = (b<<16) | (b<<8) | b;
-                  }
-                  
-                  if( aladin.levelTrace>=4 ) pix=0x00FF00;  // en vert pour voir les trous bouchés
-                  pixelsRGB[offset] = 0xFF000000 | pix;
+                  else  pix = cm.getRGB( h1.getPixelByte(npixPixel) );
+
+                  if( aladin.levelTrace>=4 ) pix=pix | 0xFFFF00FF;  // en cyan pour voir les trous bouchés
+                  pixelsRGB[offset] = pix;
                } catch( Exception e ) {
                }
             }
@@ -3328,8 +3334,8 @@ public class PlanBG extends PlanImage {
       flagClearBuf=false;
 
       // Je trace les losanges
-//      if( v.pref==this ) drawBackground(v.g2BG,v);
-      if( !isTransparent() ) drawBackground(v.g2BG,v);
+      if( v.pref==this ) drawBackground(v.g2BG,v);
+//      if( !isTransparent() ) drawBackground(v.g2BG,v);
       drawLosanges(v.g2BG,v,now,v.imageBG);
 
       // Ajustement de la table des couleurs
@@ -3649,9 +3655,6 @@ public class PlanBG extends PlanImage {
       lastMustDrawFast = !rep ? false : statTimeDisplay>DRAWFASTMS;
       if( lastMustDrawFast ) computeDrawFast=false;
       return lastMustDrawFast;
-
-      //      if( !rep ) return false;
-      //      return statTimeDisplay>DRAWFASTMS;
    }
 
    /** Autorise à nouveau la mesure du DrawFast (voir ViewSimple.mouseRelease()) */
@@ -3974,8 +3977,8 @@ public class PlanBG extends PlanImage {
       tryWakeUp();
 
       // Vitesse de tracé - sur les MAXSTAT derniers tracé
-//      long t2 = Util.getTime(0);
-//      long statTime = statTimeDisplayArray[nStat++] = (t2-t1)/1000000L;
+      long t2 = Util.getTime(0);
+      long statTime = statTimeDisplayArray[nStat++] = (t2-t1)/1000000L;
       if( nStat==statTimeDisplayArray.length ) nStat=0;
       long totalStatTime=0;
       int nbStat=0;
@@ -3998,7 +4001,7 @@ public class PlanBG extends PlanImage {
    private long[] statTimeDisplayArray = new long[MAXSTAT];
 
    /** Retourne le Fps du dernier tracé des losanges */
-   protected double getFps() { return statTimeDisplay>0 ? 1000./statTimeDisplay : -1 ; }
+   protected double getFps() { return mustDrawFast() ? 0 : statTimeDisplay>0 ? 1000./statTimeDisplay : -1 ; }
 
    private boolean first=true;
 
@@ -4167,13 +4170,10 @@ public class PlanBG extends PlanImage {
    private Color getColorHoles() {
       
       int r,g,b;
-      if( color ) r=g=b=0;
-      else if( cm==null ) r=g=b=255;
-      else {
-         r = cm.getRed(0);
-         g = cm.getGreen(0);
-         b = cm.getBlue(0);
-      }
+      if( isTransparent() ) { r=69; g=145; b=161; }
+      else if( color ) r=g=b=0;
+      else if( cm==null ) r=g=b=255;      
+      else { r = cm.getRed(0); g = cm.getGreen(0); b = cm.getBlue(0); }
 
       // On ne prend pas la première (resp la dernière) valeur de la CM
       // car elle sera utilisée bien plus souvent que si on décale un peu

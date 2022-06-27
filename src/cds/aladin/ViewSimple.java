@@ -2087,7 +2087,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected boolean flagScrolling=false;
 
    protected void setScrollable(boolean flag ) {
-      // Il faut nécessairement un repaint forccé pour un planBG
+      // Il faut nécessairement un repaint forcé pour un planBG
       if( !flag && flagScrolling && pref!=null && pref.type==Plan.ALLSKYIMG) {
          newView(); repaint();
       }
@@ -5186,8 +5186,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    public  boolean isAllSky() {
       Projection proj;
       if( pref==null || !Projection.isOk(proj=getProj()) ) return false;
-      return getTailleDE()>=proj.getDeMax() || getTailleRA()>=proj.getRaMax();
-//      return getTailleDE()>=180 || getTailleRA()>=180;
+      double tailleDE = getTailleDE();
+      double tailleRA = getTailleRA();
+      
+      // Pour SIN et ZEAon prend un peu plus petit parce qu'il peut y avoir un bord de ciel dans les coins
+      if( proj.t==Calib.SIN || proj.t==Calib.ZEA) return tailleDE>=80 || tailleRA>=80; 
+      
+      // Pour les autres projections on ne s'embarrasse pas, et on prend le vrai max
+      return tailleDE>=proj.getDeMax() || tailleRA>=proj.getRaMax();
    }
 
    /** Retourne la taille en degrés de la vue courante */

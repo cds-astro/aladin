@@ -3608,7 +3608,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       ViewSimple v = getCurrentView();
       if( v instanceof ViewSimpleStatic ) return false;
       
-      //      System.out.println("mustDrawFast: v.flagScrolling="+v.flagScrolling+" zoomView.flagdrag="+aladin.calque.zoom.zoomView.flagdrag);
+//      System.out.println("mustDrawFast: v.flagScrolling="+v.flagScrolling+" zoomView.flagdrag="+aladin.calque.zoom.zoomView.flagdrag);
       return v.flagScrolling || aladin.calque.zoom.zoomView.flagdrag;
    }
 
