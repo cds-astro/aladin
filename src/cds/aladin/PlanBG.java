@@ -2585,8 +2585,6 @@ public class PlanBG extends PlanImage {
       }
    }
    
-   
-   static boolean TESTV12 = true;
 
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
    protected boolean drawAllSky(Graphics g,ViewSimple v,BufferedImage imgb) {
@@ -2670,7 +2668,7 @@ public class PlanBG extends PlanImage {
 
 
          // Rebouchage des trous par méthode inverse
-         if( TESTV12 ) drawHoles(imgb,v,allsky.getPixList());
+         if( Aladin.TESTV12 ) drawHoles(imgb,v,allsky.getPixList());
          
       } else {
          flagWaitAllSky=true;
@@ -3719,7 +3717,7 @@ public class PlanBG extends PlanImage {
          }
       }
       
-      if( TESTV12 ) drawHoles(imgb, v, allsky.getPixList());
+      if( Aladin.TESTV12 ) drawHoles(imgb, v, allsky.getPixList());
    }
 
    // le synchronized permet d'éviter que 2 draw simultanés s'entremèlent (sur un crop par exemple)
@@ -4053,9 +4051,9 @@ public class PlanBG extends PlanImage {
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       
       
-//      Color bckCol = color ? Color.black : cm==null ? Color.white : new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
       Color bckCol = v.getCouleurFond();
       g.setColor( bckCol );
+//      g.setColor( Color.yellow );
       
 //      g.setColor( Aladin.COLOR_BACKGROUND );
       Stroke st = g.getStroke();
@@ -4067,7 +4065,6 @@ public class PlanBG extends PlanImage {
       projd.setProjCenter(0, 0);
       projd.frame=0;
 
-//            g.setColor( Color.yellow );
       rayon=0;
       int m=epaisseur/2;
       int chouilla = 1;
@@ -4177,7 +4174,7 @@ public class PlanBG extends PlanImage {
 
       // On ne prend pas la première (resp la dernière) valeur de la CM
       // car elle sera utilisée bien plus souvent que si on décale un peu
-      if( PlanBG.TESTV12 ) {
+      if( Aladin.TESTV12 ) {
          if( b==255 ) b--;
          else b++;
       }
@@ -4203,7 +4200,7 @@ public class PlanBG extends PlanImage {
       rayon=0;
       
       boolean isTransparent = isTransparent();
-      if( TESTV12 ) isTransparent=false;
+      if( Aladin.TESTV12 ) isTransparent=false;
          
       if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();

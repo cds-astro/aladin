@@ -1876,7 +1876,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                }
 
                // Les losanges trop grands sont simplement ignorés
-               if( mayCrossTheSky && isTooLarge(b,PlanBG.TESTV12 && proj.t==Calib.ZEA ? 125 : 150) ) return 0;
+               if( mayCrossTheSky && isTooLarge(b,Aladin.TESTV12 && proj.t==Calib.ZEA ? 125 : 150) ) return 0;
                if( proj.t==Calib.STG && isTooLarge(b,2*v.rv.width/3) ) return 0;
                if( isTooLarge(b,v.rv.width*2) ) return 0;
 

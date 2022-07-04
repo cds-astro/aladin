@@ -258,7 +258,7 @@ public class PlanSTMoc extends PlanTMoc {
    
    
    private boolean isDisplayedInView() {
-      if( Aladin.TIMETEST ) return false;
+      if( Aladin.TESTTIME ) return false;
       
       int m=aladin.view.getNbView();
       for( int i=0; i<m; i++ ) {

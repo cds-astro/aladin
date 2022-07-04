@@ -41,7 +41,7 @@ public interface AppMessagingInterface {
     static final AbstractMessage ABSTRACT_MSG_LOAD_CHARAC_FROM_URL = new AbstractMessage();
 
     // icon URL
-    static final public String ICON_URL = "http://aladin.u-strasbg.fr/aladin_large.gif";
+    static final public String ICON_URL = "https://"+Aladin.ALADINMAINSITE+"/aladin_large.gif";
 
 //    public abstract Object getMessage(AbstractMessage abstractMessage);
 

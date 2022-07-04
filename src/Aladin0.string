@@ -941,6 +941,7 @@ IMGRESET	Reset
 IMGHELP	Caveat
 IMGCLOSE	Close
 IMGNONE	-- none --
+IMMISSING RRequired information is missing. Please complete the form.
 IMGBEST	best resolution
 IMGHELP1	The Aladin resampling is based on the nearest pixel. Each pixel of the sampling reference image is converted in coordinates according to its astrometric solution. These coordinates are converted in pixel coordinates in the others images using their respective astrometric solution. The corresponding pixel values are taken without any linear or others methods. It is typically the "winner takes all" algorithm.
 
@@ -949,6 +950,7 @@ IMGRESET.fr	Réinit.
 IMGHELP.fr	Info
 IMGCLOSE.fr	Ferme
 IMGNONE.fr	-- aucun --
+IMMISSING.fr Des informations requises sont manquantes. Veuillez compléter le formulaire.
 IMGBEST.fr	Meilleure résolution
 IMGHELP1.fr	Le rééchantillonnage utilisé est basé sur le plus proche pixel. Chaque pixel de l'image de référence est converti en coordonnées en fonction de la solution astrométrique. Ces coordonnées astronomiques sont converties en coordonnées pixel dans les autres images en fonction de leur propre solution astrométrique. Les valeurs des pixels sont prises telles que.
 

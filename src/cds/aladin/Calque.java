@@ -4423,7 +4423,7 @@ public class Calque extends JPanel implements Runnable {
     *  Vérifie que la compatibilité des projections
     */
    protected boolean canBeTransparent(Plan p) {
-      if( Aladin.SLIDERTEST ) {
+      if( Aladin.TESTSLIDER ) {
          if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,true);
          return true;
       }

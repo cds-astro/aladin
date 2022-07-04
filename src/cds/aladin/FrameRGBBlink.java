@@ -53,7 +53,7 @@ import cds.tools.Util;
 public abstract class FrameRGBBlink extends JFrame
                 implements ActionListener {
 
-   String SUBMIT, RESET,HELP,CANCEL,NONE;
+   String SUBMIT, RESET,HELP,CANCEL,NONE,MISSING;
 
    // Les references aux objets
    Aladin a;
@@ -71,6 +71,7 @@ public abstract class FrameRGBBlink extends JFrame
       HELP   = a.chaine.getString("IMGHELP");
       CANCEL = a.chaine.getString("IMGCLOSE");
       NONE   = a.chaine.getString("IMGNONE");
+      MISSING= a.chaine.getString("IMGMISSING");
    }
 
    /**
@@ -341,7 +342,13 @@ public void hide() {
    // Gestion des evenement
    public void execute(String menu) {
            if (CANCEL.equals(menu)) hide();
-      else if (SUBMIT.equals(menu)) submit();
+      else if (SUBMIT.equals(menu)) {
+         if( getPlan(ch[0])==null ) {
+            a.error(this,MISSING);
+            return;
+         }
+         submit();
+      }
       else if (HELP.equals(menu))   Aladin.info(this, getHelp());
       else if (RESET.equals(menu))  reset();
 

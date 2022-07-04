@@ -1728,6 +1728,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected Image getImage(int w, int h) { return getImage(w,h,true); }
    protected Image getImage(int w, int h, boolean withOverlays) {
 
+      // EN ATTENDANT DE TROUVER POURQUOI CA NE MARCHE PAS SUR LES IMAGES
+      // PlanBG AVEC isTransparent() - PF JUIN 2022
+      boolean testv12 = Aladin.TESTV12;
+      if( testv12 ) Aladin.TESTV12=false;
+      
       // Si on est en mode script, il faut creer manuellement l'image de la vue. 
       BufferedImage img = new BufferedImage(rv.width, rv.height,
             pref.isImage() && ((PlanImage)pref).isTransparent() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
@@ -1750,6 +1755,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       aladin.waitImage(img);
       //      System.out.println("ViewSimple.getImage("+w+","+h+") => paintOverlays done on "+img);
       //      if( aladin.NOGUI ) aladin.command.syncNeedRepaint=false;
+      
+      Aladin.TESTV12 = testv12;
       return img;
    }
 
@@ -2205,7 +2212,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          
          if( !isProjSync ) {
             
-            if( Aladin.TIMETEST ) {
+            if( Aladin.TESTTIME ) {
 //               if( !flagshift /* && (!selected || !view.isMultiView()) */ ) {
                if( !flagshift && aladin.match.getMode()!=3 ) {
                   aladin.calque.unSelectAllPlan();
@@ -6699,7 +6706,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                continue;
             }
 
-            if( !Aladin.SLIDERTEST && p==pref && p instanceof PlanBG ) {
+            if( !Aladin.TESTSLIDER && p==pref && p instanceof PlanBG ) {
                if( p.active ) {
                   ((PlanBG)p).draw(g,vs,dx,dy, 1,now);
                   if( p.isPixel() ) flagBordure=true;
@@ -6726,7 +6733,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                if( p.isImage() && (mode & 0x1) == 0 ) continue;
                if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
                
-               if( Aladin.SLIDERTEST ) {
+               if( Aladin.TESTSLIDER ) {
                   if( flagActive && (p==pref || p!=pref && !p.isRefForVisibleView()) ) {
                      ((PlanImage)p).draw(g,vs,dx,dy,-1);
                      if( p instanceof PlanBG && p.isPixel() && p.getOpacityLevel()>0.1) flagBordure=true;

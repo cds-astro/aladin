@@ -197,6 +197,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> Corrected boolean data type SAMP bug
  * @beta    <LI> Fix -noconsole bug with execAsync() [thanks to G.Eychaner]
  * @beta    <LI> Fix pixel access methods via plugin avoiding memory cache release.
  * @beta    <LI> Removal of potential deadlock when applying a dedicated filter on a HiPS catalogue
@@ -237,7 +238,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.905";
+   static public final    String VERSION = "v11.906";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -260,20 +261,21 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
-   static public final boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
-   static public final boolean TIMETEST=true;    // true pour le test sur le développement des controles temporels avancés
    static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
    static public String LOCATION=null;  // Force Aladin à s'afficher à un emplacement précis (syntaxe: x,y,w,h)
    static boolean SETLOG=false; // true si on a forcé le positionnement du LOG
+   
+   static public final boolean TESTSLIDER=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
+   static public final boolean TESTTIME=true;    // true pour le test sur le développement des controles temporels avancés
+   static public boolean TESTV12 = true;         // true pour le test des affichages HiPS 2 étapes
    
    static {
       if( PREMIERE ) BETA=PROTO=false;
       if( PROTO ) PLANET=1;
    }
-   
 
    static final String ICON              = "icon.gif";
-   static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
+   static final String ALADINMAINSITE    = "aladin.cds.unistra.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
    static String COPYRIGHT         = PREMIERE | BETA || PROTO ? "(c) 2022 Université de Strasbourg/CNRS - developed by CDS, ALL RIGHT RESERVED" :
                                "(c) 2022 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";

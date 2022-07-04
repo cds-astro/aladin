@@ -5549,8 +5549,8 @@ public final class Command implements Runnable {
    }
 
    private void testv12(String param) {
-      PlanBG.TESTV12 = param!=null && param.indexOf("off")>=0 ? false:true;
-      System.out.println("Test v12 "+(PlanBG.TESTV12?"ON":"OFF"));
+      Aladin.TESTV12 = param!=null && param.indexOf("off")>=0 ? false:true;
+      System.out.println("Test v12 "+(Aladin.TESTV12?"ON":"OFF"));
       a.view.newView();
       a.view.repaintAll();
    }

@@ -196,12 +196,17 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     static final protected String MSG_PING = "samp.app.ping";
 
     // liste des messages supportés (i.e auxquels on répond)
-    static final protected String[] SUPPORTED_MESSAGES = {MSG_LOAD_FITS_IMAGE, MSG_POINT_AT_COORDS, MSG_GET_COORDS,MSG_GET_SNAPSHOT,
+    static final protected String[] SUPPORTED_MESSAGES = {
+            MSG_LOAD_FITS_IMAGE, MSG_POINT_AT_COORDS, MSG_GET_COORDS,MSG_GET_SNAPSHOT,
             MSG_LOAD_VOT_FROM_URL,
             MSG_LOAD_FITS_TABLE_FROM_URL, MSG_HIGHLIGHT_OBJECT, MSG_SELECT_OBJECTS,
             MSG_PING, MSG_SEND_ALADIN_SCRIPT_CMD,
             HUB_MSG_SHUTDOWN, HUB_MSG_REGISTRATION, HUB_MSG_UNREGISTRATION,
-            HUB_MSG_SUBSCRIPTIONS, HUB_MSG_DISCONNECT};
+            HUB_MSG_DISCONNECT,
+            HUB_MSG_SUBSCRIPTIONS
+            };
+    
+
 
     // strings associated to reply to a message
     static final protected String MSG_REPLY_SAMP_STATUS = "samp.status";
@@ -349,13 +354,13 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         params = new Vector();
         Map map = new Hashtable();
         map.put("samp.name", "Aladin");
-        map.put("samp.description.text", "The Aladin sky atlas");
+        map.put("samp.description.text", "The Aladin Sky Atlas");
         map.put("samp.icon.url", ICON_URL);
-        map.put("samp.documentation.url", "http://aladin.u-strasbg.fr/java/FAQ.htx");
-        map.put("author.name", "Pierre Fernique, Thomas Boch");
-        map.put("author.email", "pierre.fernique@astro.unistra.fr");
+        map.put("samp.documentation.url", "https://"+Aladin.ALADINMAINSITE+"/java/AladinManual.pdf");
+        map.put("author.name", "Pierre Fernique, Thomas Boch, Anais Oberto, Francois Bonnarel, Chaitra");
+        map.put("author.email", "cds-question@astro.unistra.fr");
         map.put("author.affiliation", "CDS, Observatoire astronomique de Strasbourg");
-        map.put("home.page", "http://aladin.u-strasbg.fr/");
+        map.put("home.page", "https://"+Aladin.ALADINMAINSITE);
         map.put("aladin.version", a.VERSION);
         params.add(myPrivateKey);
         params.add(map);
@@ -1405,7 +1410,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
      */
     static private String readStream(InputStream in) throws IOException {
         try {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for( int c; (c = in.read()) >= 0; ) {
                 sb.append((char)c);
             }
@@ -1421,8 +1426,13 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     }
 
     private static final Object VOID = "";
-    private static final Object TRUE = Boolean.TRUE;
-    private static final Object FALSE = Boolean.FALSE;
+    
+    // PF 3/7/2022 - Les booléens ne sont pas supporté par SAMP, uniquement par PLASTIC
+    // Il faut utiliser une chaine "0" ou "1" à la place.
+//    private static final Object TRUE = Boolean.TRUE;
+//    private static final Object FALSE = Boolean.FALSE;
+    private static final Object TRUE = "1";
+    private static final Object FALSE = "0";
 
     /** Select in aladin objects designated by their oid
      *
@@ -2448,9 +2458,6 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     public PlasticWidget getPlasticWidget() {
         return this.widget;
     }
-
-
-
 
     private boolean sampTrace = false;
 
