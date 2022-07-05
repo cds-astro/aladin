@@ -209,8 +209,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    
    /** Mémorisation de la position courante du réticule dans l'historique des targets */
    private void memoTarget() {
-      aladin.targetHistory.add( aladin.localisation.getLocalisation(aladin.view.repere)
-            +" "+aladin.localisation.getFrameFox() );
+      String target = aladin.localisation.foxString(aladin.view.repere.getRa(),aladin.view.repere.getDec());
+      aladin.targetHistory.memoTarget( target );
    }
    
    /** Saisie d'un range temporel et Mémorisation dans l'historique des dates */
@@ -229,7 +229,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    protected void targetTriangleAction(int x,int y) { targetTriangleAction(x,y,0); }
    protected void targetTriangleAction( final int x, final int y, int initIndex) {
       int max=20;
-      ArrayList<String> v =  aladin.targetHistory.getTargets( initIndex, max, aladin.localisation.getFrameFox() );
+      String fox = " "+aladin.localisation.getFrameFox();
+      ArrayList<String> v =  aladin.targetHistory.getTargets( initIndex, max );
       if( v.size()==0 ) return;
       
       // On crée un JPopupmenu contenant les 10 dernières targets, et s'il y en a encore,
@@ -250,12 +251,19 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             });
 
          } else {
-            mi = new JMenuItemExt( s.length()>40 ? s.substring(0,38)+" ..." : s);
-            mi.setActionCommand( TargetHistory.getValue(s) );
+            // Le menu ne fera pas apparaitre le frame si c'est celui courant
+            String m = s;
+            if( m.endsWith(fox) ) m=m.substring(0,m.length()-fox.length());
+            if( m.length()>38 ) m= m.substring(0,38)+" ...";
+            
+            mi = new JMenuItemExt( m);
+//            mi.setActionCommand( TargetHistory.getLoc(s) );
+            mi.setActionCommand( s );
             mi.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
                   String s = ((JMenuItem)e.getSource()).getActionCommand();
-                  submitTarget(s);
+                  submitTarget(  TargetHistory.getLoc(s) );
+                  aladin.targetHistory.add(s);
                }
             });
          }
@@ -837,7 +845,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             // Info spatiale textuelle
             int xInfo,yInfo;
             gbuf.setColor( Aladin.COLOR_CONTROL_FOREGROUND ); //Color.magenta );
-            s=aladin.localisation.J2000ToString(c.al, c.del, Astrocoo.ARCSEC+1,false);
+            s=aladin.localisation.J2000ToString(c.al, c.del, Astrocoo.ARCSEC+1,true);
             aladin.targetHistory.setCurrentPos(s);
             String s1=v.getTaille(0);
             xInfo = (int)( c.x + fm.stringWidth(s1) > width ? c.x - fm.stringWidth(s1)-10 : c.x+10);

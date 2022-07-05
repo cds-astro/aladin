@@ -238,7 +238,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.906";
+   static public final    String VERSION = "v11.907";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -5280,7 +5280,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       localisation.focus(chaine.getString("YOUREXPR"),"= ");
    }
 
-
    protected FrameTimeToolbox frameTimeTool=null;
    protected void timeTool() {
       if( frameTimeTool==null ) frameTimeTool=new FrameTimeToolbox(this);
@@ -5732,6 +5731,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( p.x+459>SCREENSIZE.width ) {
             p.x-=aladin.f.getWidth()+459;
             if( p.x<0 ) p.x=0;
+         }
+         return p;
+      }
+      if( f instanceof TargetHistory.FrameMemoLoc && aladin.f!=null ) {
+         Point p = aladin.f.getLocation();
+         p.x+=aladin.f.getWidth()-200;
+         if( p.x+200>SCREENSIZE.width ) {
+            p.x-=aladin.f.getWidth()+200;
+            if( p.x<0 ) p.x=0;
+         }
+         p.y+=aladin.f.getHeight()-200;
+         if( p.y+100>SCREENSIZE.width ) {
+            p.y-=aladin.f.getHeight()+100;
+            if( p.y<0 ) p.y=0;
          }
          return p;
       }

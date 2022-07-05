@@ -3738,7 +3738,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                }
                
                // On ne garde pas une cible non résolu
-               aladin.targetHistory.remove(sourceName);
+               aladin.targetHistory.removeLoc(sourceName);
                
                saisie=sourceName;
                rep=false;

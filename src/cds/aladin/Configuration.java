@@ -2900,7 +2900,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    /** Mémorise les dernières targets */
    protected void setLastTarget(String target ) {
-      if( aladin.targetHistory!=null ) aladin.targetHistory.add(target);
+      if( aladin.targetHistory!=null ) aladin.targetHistory.add(target,false);
    }
    
    // Juste pour mémoriser temporairement l'historique passée des indirections Glu

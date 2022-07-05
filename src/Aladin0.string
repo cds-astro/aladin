@@ -3745,6 +3745,18 @@ REDODEMAND Using this function will update all planes currently in the stack tha
 REDODEMAND.fr L'utilisation de cette fonction va mettre à jour tous les plans actuellement dans la pile qui ont utilisés une requête positionnelle par cône. Attention les objets ayant été chargés pour une autre position vont être perdus. Lancer l'action ?
 CASSISDEMAND The photometric tools ("phot", "draw" [polygon]) on cubes, as well as the "spect" tool, can be used to extract a spectrum. By installing the CASSIS plugin developed by IRAP/Toulouse you will be able to analyse the spectrum generated. Would you like to install this plugin (takes only a few seconds)?
 CASSISDEMAND.fr Les outils photométriques ("phot", "draw" [polygon]) sur des cubes, ainsi que l'outil "spect", peuvent être utilisés pour extraire un spectre. En installant le plugin CASSIS développé par l'IRAP/Toulouse vous pourrez analyser le spectre ainsi créé. Souhaitez-vous installer ce plugin (ne prend que quelques secondes) ?
+MEMOLOCTITLE Save target
+MEMOLOCTITLE.fr Mémorise une position
+MEMOLOC Localisation
+MEMOLOC.fr Localisation
+MEMOLOCNAME Label
+MEMOLOCNAME.fr Label
+MEMOSUBMIT Save it
+MEMOSUBMIT.fr Mémorise
+MEMOLOCDUP This label is already used for another position. This will delete the previous record. Do you still want to continue?
+MEMOLOCDUP.fr Ce label est déjà utilisée pour une autre position. Cela supprimera la précédente mémorisation. Voulez-vous tout de même continuer ?
+MEMOLOCHELP Save a position, either by indicating its coordinates or a name of an astronomical object. In order to retrieve it easily, especially in the case of coordinates, it is possible to associate a "label" to this position
+MEMOLOCHELP.fr Mémorise une position, soit en indiquant ses coordonnées, soit un nom d'objet astronomique. Afin de la retrouver aisément, notamment dans le cas des coordonnées, il est possible d'associé un "label" à cette position
 
 XMATCH_RADIUS_TITLE	Xmatch separation (arcsec)
 XMATCH_RADIUS_TITLE.fr	Séparation angulaire du Xmatch (arcsec)
