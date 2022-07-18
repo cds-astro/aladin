@@ -238,7 +238,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.907";
+   static public final    String VERSION = "v11.912";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -267,6 +267,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    static public final boolean TESTSLIDER=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
    static public final boolean TESTTIME=true;    // true pour le test sur le développement des controles temporels avancés
+   static public final boolean TESTFADING = false;      // true pour le test des affichages HiPS avec fading effect
+   static public final boolean TESTANAGLYPH = false; // true pour les tests d'affichage GAIA en mode anaglyphe (stéréo couleur)
    static public boolean TESTV12 = true;         // true pour le test des affichages HiPS 2 étapes
    
    static {
@@ -5736,14 +5738,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       if( f instanceof TargetHistory.FrameMemoLoc && aladin.f!=null ) {
          Point p = aladin.f.getLocation();
-         p.x+=aladin.f.getWidth()-200;
-         if( p.x+200>SCREENSIZE.width ) {
-            p.x-=aladin.f.getWidth()+200;
+         p.x+=aladin.f.getWidth()-300;
+         if( p.x+300>SCREENSIZE.width ) {
+            p.x=SCREENSIZE.width-300;
             if( p.x<0 ) p.x=0;
          }
-         p.y+=aladin.f.getHeight()-200;
-         if( p.y+100>SCREENSIZE.width ) {
-            p.y-=aladin.f.getHeight()+100;
+         p.y+=aladin.f.getHeight()-180;
+         if( p.y+180>SCREENSIZE.height ) {
+            p.y= SCREENSIZE.height-180;
             if( p.y<0 ) p.y=0;
          }
          return p;
@@ -6460,13 +6462,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       makeAdd(p,a,"Center");
       a.myInit();
       int id = a.getInstanceId();
-      a.f.setTitle(TITRE+" "+getReleaseNumber()
-            +(/*OUTREACH?OUTREACH_VERSION : */PROTO?PROTO_VERSION : BETA?BETA_VERSION:"")
+      a.f.setTitle(TITRE+" "+getReleaseNumber() +(PROTO?PROTO_VERSION : BETA?BETA_VERSION:"")
             +(id>0?" ("+(id)+")":""));
       a.f.pack(); // Même en mode script, le pack est indipensable pour créer les peer classes
       if( NOGUI ) return;
       Rectangle r = a.configuration.getWinLocation();
-      boolean winFull = a.configuration.getWinFull();
+      int winFull = a.configuration.getWinFull();
       if( LOCATION!=null ) {
          try {
             Tok tok = new Tok(LOCATION,",");
@@ -6479,7 +6480,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       if( r==null || r.x>SCREENSIZE.width || r.y>SCREENSIZE.height ) {
          a.f.setLocation(computeLocation(a.f));
-//         a.f.setSize(732,679);
          int w = 1250;
          int h = 900;
          if( w>SCREENSIZE.width ) w=SCREENSIZE.width-40;
@@ -6492,8 +6492,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( r.width<0 ) { r.width = Math.abs(r.width); r.height=Math.abs(r.height); }
          a.f.setSize(r.width,r.height);
       }
-//      a.splitMesure.setMesureHeight( a.configuration.getWinDivider() );
-      
       a.offsetLocation();
       
       a.f.setVisible(true);
@@ -6502,8 +6500,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Util.pause(10);
       resumeSplit(a);
       
-      // Démarrage en plein écran
-      if( winFull ) a.fullScreen(0);
+      // Démarrage en pleine fenêtre
+      if( winFull==1 ) a.fullScreen(1);
+      
+      // ou plein écran
+      else if( winFull==2 ) a.fullScreen(0);
       
       // Reositionnement car nécessaires pour Linux GNOME
       (new Thread(){
@@ -7377,11 +7378,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
       int indent=4;
       Legende leg = o.getLeg();
 
-      // On recupere le nom de la table sur le premier element "info" de l'objet (le triangle)
+      // On "mange" le triangle (premier élément de la ligne info
       StringTokenizer st = new StringTokenizer(o.info,"\t");
-      String tableName=getValue(st.nextToken()); // Le nom de la table est "sur le triangle"
+      String tableName = st.nextToken();
+      
+      // On récupère le nom de la table depuis la légende
+      if( leg!=null ) tableName = leg.name;
+      
+      // Et à défaut depuis le tag associé au triangle
+      else tableName=getValue(tableName); // Le nom de la table est "sur le triangle"
+      
       writeIndent(s,indent);
-      writeBytes(s, "<TABLE name=\""+XMLParser.XMLEncode(tableName)+"\">\n");
+      writeBytes(s, "<TABLE"+(tableName==null?">\n":" name=\""+XMLParser.XMLEncode(tableName)+"\">\n"));
       indent+=3;
 
       // Les définitions par des groupes
@@ -8824,7 +8832,5 @@ DropTargetListener, DragSourceListener, DragGestureListener
    @Override
    public void pixel(double pixValue) { }
    
-   
-   protected boolean isAnaglyph = false;
 
 }

@@ -1470,7 +1470,9 @@ public final class Util {
       String o = c.getToolTipText();
       if( s!=null && s.length()==0 ) s=null;
       if( o==s ) return;
-      if( o==null || s==null || !o.equals(s) ) c.setToolTipText(s);
+      if( o==null || s==null || !o.equals(s) ) {
+         c.setToolTipText(s);
+      }
    }
 
    // LE TEMPS QUE THOMAS AIT FINI SES MISES A JOUR HISTOIRE DE NE PAS FAIRE

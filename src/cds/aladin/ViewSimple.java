@@ -411,7 +411,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
 
    JPopupMenu popMenu;
-   JMenuItem menuLabel,menuClone,menuCopy,menuCopyImg,menuLock, menuLook, menuPlot
+   JMenuItem menuLabel,menuClone,menuCopy,menuTargetHistory,menuCopyImg,menuLock, menuLook, menuPlot
    //             ,menuROI,menuDel,menuDelROI,menuStick,menuSel,
    //              menuMore,menuNext,menuScreen
    ;
@@ -479,6 +479,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       popMenu.add( menuCopy=j=new JMenuItem(view.MCOPY));
       j.setAccelerator( KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit ().getMenuShortcutKeyMask()) );
       j.addActionListener(this);
+      popMenu.add( menuTargetHistory=j=new JMenuItem(view.MTARGETHISTORY));
+      j.addActionListener(this);
       popMenu.add( menuClone=j=new JMenuItem(aladin.CLONE));
       j.addActionListener(this);
       popMenu.add( menuLabel=j=new JMenuItem(view.MLABELON));
@@ -500,6 +502,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( src==menuLabel )  view.setSourceLabel();
       else if( src==menuClone )  aladin.cloneObj(false);
       else if( src==menuCopy )   copierReticule();
+      else if( src==menuTargetHistory ) zoomview.memoTarget();
       else if( src==menuCopyImg ) copierVue();
       else if( src==menuLook ) look();
       else if( src==menuLock )   switchLock();
@@ -594,6 +597,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       menuLook.setEnabled( aladin.calque.getNbPlanImg()>0 );
       menuClone.setEnabled(aladin.view.hasSelectedSource());
       menuCopy.setEnabled(repCoord.al!=0 && repCoord.del!=0);
+      menuTargetHistory.setEnabled(repCoord.al!=0 && repCoord.del!=0);
       //      menuStick.setText( sticked ? view.MSTICKOFF:view.MSTICKON);
       menuLabel.setText( view.labelOn() ? view.MLABELON:view.MLABELOFF);
       menuLock.setEnabled( !isProjSync() );
@@ -2811,7 +2815,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          view.newobj=null;
       }
       
-      if( view.newobj instanceof RepereSpectrum && pref instanceof PlanImageBlink /* && !view.hasSelectedObj() */ ) {
+      if( view.newobj instanceof RepereSpectrum && pref instanceof PlanImageBlink ) {
          aladin.toolBox.setMode(ToolBox.SPECT,Tool.UP);
          aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
          view.deSelect();
@@ -2819,36 +2823,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          view.extendClip(view.newobj);
          calque.setObjet(view.newobj);
          view.newobj=null;
-     }
-
-
-//      // Le repere est insere
-//      if( view.newobj!=null && view.newobj instanceof Repere ) {
-//
-//         flagDrag=false;
-//
-//         if( view.newobj!=null ) {
-//
-//            // Juste pour le spectre localisé pour un cube via un repere
-//            if( pref instanceof PlanImageBlink && !view.hasSelectedObj() ) {
-//               aladin.toolBox.setMode(ToolBox.PHOT,Tool.UP);
-//               aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
-//               view.selectCote(view.newobj);
-//               view.extendClip(view.newobj);
-//            }
-//
-//            // Insertion d'un repère avec mesure de surface
-//            if( ((Repere)view.newobj).hasRayon() ) {
-//               view.newobj.setSelected(true);
-//               addObjSurfMove(view.newobj);
-//
-//            }
-//            finNewObjet();
-//         }
-//
-//         view.newobj=null;
-//      }
-
+      }
+ 
       // Traitement de la fin d'une selection multiple
       if( rselect!=null ) {
          if( rselect.width>1 && rselect.height>1 ) {
@@ -2872,7 +2848,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                   }
                }
             } else {
-               Vector vTag = new Vector();
+               Vector<Obj> vTag = new Vector<>();
                for( Obj o : aladin.view.vselobj ) {
                   if( o instanceof Source && ((Source)o).isTagged()
                         && !res.contains(o) ) vTag.add(o);
@@ -2882,9 +2858,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             }
 
             extendClip(res);
-
-            //            if( nObjAdd==2 ) createCoteDist(res);
-            //            else { withForCDSTeam=false; createCoteDist(aladin.view.vselobj); }
 
             aladin.view.setMesure();
             rselect=null;
@@ -2941,7 +2914,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          view.newobj=null;
       }
 
-      if(  view.newobj!=null && view.newobj instanceof Tag ) {
+      if( view.newobj!=null && view.newobj instanceof Tag ) {
          if( ((Tag)view.newobj).isReticle() ) {
             aladin.calque.updateToolCatTag((Tag)view.newobj);
             view.newobj=null;

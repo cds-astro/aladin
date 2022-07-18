@@ -24,7 +24,6 @@ package cds.aladin;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Composite;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -241,6 +240,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       planBG = father.planBG;
       order=father.order+1;
       npix=father.npix*4+child;
+      timerLoad=father.timerLoad;
       hpix = new Hpix(order,npix,planBG.frameOrigin);
       anc=father.anc;
       if( anc==null ) anc=father;
@@ -256,7 +256,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       allSky=father.allSky;
       setStatus(UNKNOWN);
    }
-
+   
    /** Création dynamique des 4 losanges fils à partir du losange courant */
    protected HealpixKey [] getChild() {
       if( getStatus()!=READY ) return null;
@@ -1935,12 +1935,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
       try { img=createImage(); }
       catch( Exception e ) {
          e.printStackTrace();
-         return 0; }
+         return 0; 
+      }
 
       Graphics2D g2d = (Graphics2D)g;
-      float opacity = getFadingOpacity();
-      Composite saveComposite = g2d.getComposite();
-      g2d.setComposite( Util.getImageComposite( opacity ) );
       Shape clip = g2d.getClip();
 
       try {
@@ -1952,30 +1950,28 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.clearBuf();
       }
       finally {
-         g2d.setComposite(saveComposite);
          g2d.setClip(clip);
       }
       if( parente>0 ) { pixels=null; rgb=null; }
-      
-      if( opacity<1f ) planBG.updateFading(true);
-
       return n;
    }
 
-   private long loadDate = System.currentTimeMillis();
-
-   static private final long TIMEFADER = 1500;
-   static private final float MINFADER = 0.6f;
+   static private final long TIMEFADER = 600;
+   static private final float MINFADER = 0.1f;
 
    // Pour le moment pas d'animation de fondu-enchainé
    // EN FAIT IL FAUDRAIT MELANGER LES PIXELS AVEC LES VALEURS DU LOSANGE PERE
    // PLUTOT QUE DE JOUER SUR L'OPACITY
-   private float getFadingOpacity() {
-      return 1f;
-      //      if( allSky ) return 1f;
-      //      long t = System.currentTimeMillis() - loadDate;
-      //      float op = t>=TIMEFADER ? 1f : MINFADER +( (float)t/TIMEFADER)*(1f-MINFADER);
-      //      return op;
+   // ET D'AUTRE PART, IL FAUDRAIT TRAVAILLER SUR UN BUFFER ADDITIONNEL POUR EVITER
+   // DE VOIR APPARAITRE LES BORDS DES SUBDIVISIONS DES LOSANGES QUI SE RECOUVRENT PARTIELLEMENT
+   // ET POUR FINIR, CA FAIT CHAUFFER LA CARTE GRAPHIQUE - PF JUILLET 2022
+   protected float getFadingOpacity() {
+//      return 1f;      
+            if( allSky || timerLoad==0) return 1f;
+            long t0 = System.currentTimeMillis();
+            long t = t0 - timerLoad;
+            float op = t>=TIMEFADER ? 1f : MINFADER +( (float)t/TIMEFADER)*(1f-MINFADER);
+            return op;
    }
 
    /** Retourne >0 si le point a est "à droite" de la droite passant par g et d */

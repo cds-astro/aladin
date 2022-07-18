@@ -134,7 +134,7 @@ public class SourceInfo extends SourceTag {
       }
       
       // Génération de la ligne des infos
-      info = "<&_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+fov+"\t"+nomPlan+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+cnt+"\t"+tot+"\t"+sig+"\t"+min+"\t"+avg+"\t"+max+"\t"+surf;
+      info = "<&_A|Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+fov+"\t"+nomPlan+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+cnt+"\t"+tot+"\t"+sig+"\t"+min+"\t"+avg+"\t"+max+"\t"+surf;
    }
    
    /** Retourne le type d'objet */

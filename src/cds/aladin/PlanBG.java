@@ -48,7 +48,6 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.lang.ref.SoftReference;
 import java.net.HttpURLConnection;
-import java.net.ServerSocket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -144,7 +143,6 @@ import cds.tools.pixtools.CDSHealpix;
 public class PlanBG extends PlanImage {
 
    static final boolean NOALLSKY = false;
-   static final boolean TEST = true;
 
    static final int DRAWPIXEL=0;
    static final int DRAWPOLARISATION=1;
@@ -1183,36 +1181,29 @@ public class PlanBG extends PlanImage {
             try {
                if( loadMocNow ) loadMoc();
                else if( hasMoc() ) loadInternalMoc();
+               
+               // Déplacement a posteriori car complètement hors champ du HiPS
+               if( hasMoc() && co!=null ) {
+                  Healpix hpx = new Healpix();
+                  if( !moc.contains(hpx, co.al, co.del) ) {
+                     co.al = Double.parseDouble( prop.getFirst("hips_initial_ra") );
+                     co.del = Double.parseDouble( prop.getFirst("hips_initial_dec") );
+                     aladin.view.setRepere(co);
+                     aladin.trace(4,"PlanBG.planReadyMoc(): default target out of HiPS moc => moving on "+co);
+                  }
+               }
+               
             } catch( Exception e ) {
                e.printStackTrace();
             }
          }
       });
-
-
-//      if( loadMocNow ) {
-//         (new Thread() { public void run() { loadMoc(); } }).start();
-//      } else if( hasMoc() ) {
-//         (new Thread() {
-//            public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
-//         }).start();
-//      }
    }
 
    @Override
    protected boolean waitForPlan() {
       return error==null;
    }
-
-   // INUTILE, DEJA DANS PlanImage
-   //   /** Creation d'une table de couleurs par defaut */
-   //   protected void creatDefaultCM() {
-   //      transfertFct = aladin.configuration.getCMFct();
-   //      typeCM       = aladin.configuration.getCMMap();
-   //      video        = aladin.configuration.getCMVideo();
-   //      boolean transp = pixMode==PIX_255 || pixMode==PIX_TRUE;
-   //      cm = ColorMap.getCM(0,128,255,video==PlanImage.VIDEO_INVERSE, typeCM,transfertFct, transp);
-   //   }
 
    /** Modifie la table des couleurs */
    @Override
@@ -2668,7 +2659,7 @@ public class PlanBG extends PlanImage {
 
 
          // Rebouchage des trous par méthode inverse
-         if( Aladin.TESTV12 ) drawHoles(imgb,v,allsky.getPixList());
+         drawHoles(imgb,v,allsky.getPixList());
          
       } else {
          flagWaitAllSky=true;
@@ -2677,18 +2668,29 @@ public class PlanBG extends PlanImage {
       return hasDrawnSomething;
    }
    
+//       Tous les cas où c'est mieux de ne pas faire le nettoyage (trop lent a priori)
+   private boolean mustDrawHoles(ViewSimple v) {
+      if( mustDrawFast() ) return false;
+      if( !v.isAllSky() ) return false;
+      try {
+         if( moc!=null && (moc.getSpaceMoc()).getCoverage()<0.3) return false;
+      } catch( Exception e1 ) { }
+      
+      // POUR LE MOMENT - PF Juillet 2022
+      // Le souci de "boucher" les trous sur un HiPS transparent oblige à faire un "aplat" dans le drawBackground()
+      // et nom un gradian. Cela pose également un souci lorsqu'il y a des plans en dessous dans la pile
+      // Pour le moment j'inhibe cette fonction pour les plans transparents
+      if( isTransparent() ) return false;
+      return true;
+   }
+   
    // On bouche les trous du ciel complet en méthode inverse, càd en parcourant les pixels d'arrivée
    // qui n'ont pas été pris en compte par le tracé des losanges HEALPix
    // et en recherchant sa valeur dans la bonne tuile du allsky (méthode plus proche)
    private void drawHoles(BufferedImage imgb,ViewSimple v,HealpixKey allsky[]) {
       
-      // Tous les cas où c'est mieux de ne pas faire le nettoyage (trop lent a priori)
       if( imgb==null ) return;
-      if( mustDrawFast() ) return;
-      if( !v.isAllSky() ) return;
-      try {
-         if( moc!=null && (moc.getSpaceMoc()).getCoverage()<0.3) return;
-      } catch( Exception e1 ) { }
+      if( !mustDrawHoles(v) ) return;
       
       long t0 = System.currentTimeMillis();
       
@@ -3331,9 +3333,10 @@ public class PlanBG extends PlanImage {
       v.ovizBG=v.iz;
       flagClearBuf=false;
 
+      //         if( v.pref==this ) drawBackground(v.g2BG,v);
+      if( !isTransparent() ) drawBackground(v.g2BG,v);
+
       // Je trace les losanges
-      if( v.pref==this ) drawBackground(v.g2BG,v);
-//      if( !isTransparent() ) drawBackground(v.g2BG,v);
       drawLosanges(v.g2BG,v,now,v.imageBG);
 
       // Ajustement de la table des couleurs
@@ -3439,11 +3442,11 @@ public class PlanBG extends PlanImage {
    private Timer timer = null;
    synchronized protected void redrawAsap() {
       if( timer!=null ) return;
-      System.out.println("starting fading process");
+//      System.out.println("starting fading process");
       timer = new Timer();
       TimerTask timerTask = new TimerTask() {
          public void run() {
-            System.out.println("redrawAsap now");
+//            System.out.println("redrawAsap now");
             changeImgID();
             aladin.view.repaintAll();
          }
@@ -3456,6 +3459,11 @@ public class PlanBG extends PlanImage {
       System.out.println("stopping fading process");
       timer.cancel();
       timer=null;
+      
+      op=0f;
+      
+//      changeImgID();
+//      aladin.view.repaintAll();
    }
 
    /** Tracage de tous les losanges concernés, utilisation d'un cache (voir getImage())
@@ -3493,7 +3501,7 @@ public class PlanBG extends PlanImage {
 
       setHasMoreDetails( maxOrder(v)<maxOrder );
 
-      if( fading ) redrawAsap();
+      if( isFading() ) redrawAsap();
       else stopRedraw();
 
       readyDone = readyAfterDraw;
@@ -3678,6 +3686,8 @@ public class PlanBG extends PlanImage {
          }
       }
    }
+   
+
 
    /** Tracé des losanges à la résolution adéquate dans la vue
     * mais en mode synchrone */
@@ -3734,26 +3744,100 @@ public class PlanBG extends PlanImage {
       // Attention, le Hips et le MOC n'ont pas le même système de coord
       char a = moc.getSpaceSys().charAt(0);
       int frameMoc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
-      if( frameOrigin!=frameMoc ) {
-         return false;
-      
-// CA NE FONCTIONNE PAS CAR CA CONVERTIT LE CENTRE DU LOSANGE ET NON TOUTE SA SURFACE - PF 27 janvier 2020
-// ON VA ALORS ESTIMER DANS CES CAS QU'IL N'EST JAMAIS EN DEHORS
-//         try {
-//            double radec[] = CDSHealpix.pix2ang_nest( order, npix);
-//            radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
-//            Coord co = new Coord(radec[0],radec[1]);
-//            co = Localisation.frameToFrame(co, frameOrigin, frameMoc);
-//            radec = CDSHealpix.radecToPolar(new double[] {co.al, co.del});
-//            npix = CDSHealpix.ang2pix_nest(order, radec[0], radec[1]);
-//         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); return false; }
-         
-      }
-      
+      if( frameOrigin!=frameMoc )  return false;
       boolean res = !moc.isIntersecting(order, npix);
-//            if( res ) System.out.println("en dehors du MOC "+order+"/"+npix);
       return res;
    }
+   
+// ESSAI POUR ALGO DE TRACE PLUS SIMPLE - 17/7/2002 PF
+// => Pour le moment, plus simple, mais fonctionne moins bien
+//
+//   protected void drawLosangesAsync(Graphics g,ViewSimple v,BufferedImage imgb) {
+//      long t1 = Util.getTime(0);
+//      int minOrder = getMinOrder();
+//      int maxOrder = Math.max( minOrder, Math.min(maxOrder(v),this.maxOrder) );
+////      boolean lowResolution = v.isAllSky() && maxOrder==getMinOrder();
+//      
+//      // Les numéros de pixels concernés
+//      ArrayList<Long> pix = new ArrayList<>();
+//      for( long npix: getPixList(v,getCooCentre(v),maxOrder) ) pix.add( npix );
+//      
+//      // Les losanges à tracer
+//      ArrayList<HealpixKey> listKey = new ArrayList<>(50);
+//      
+//      // Je dois parcouvrir tous les losanges à l'ordre max.
+//      // Si le losange est déjà prêt il sera placé à tracer
+//      // sinon, on va chercher le premier ancêtre disponible et le tracé en amont
+//      //   (il faudra vérifier qu'il n'est pas déjà pris)
+//      //   et si pas d'ancêtre, on cherchera dans le allsky
+//      System.out.println("\ndrawAsync:");
+//      int order;
+//      for( order = maxOrder; pix.size()>0 && order>=minOrder; order-- ) {
+//         System.out.print("\n.order="+order );
+//         ArrayList<Long> anc = new ArrayList<>();
+//         for( long npix : pix ) {
+//            if( order==maxOrder && isOutMoc(order, npix) ) continue;
+//            System.out.print(" "+npix);
+//            boolean flagLoad = order==maxOrder;
+//            HealpixKey hk = getHealpix(order,npix, flagLoad);
+//            if( hk!=null && hk.getStatus()==HealpixKey.READY ) {
+//               hk.resetTimer();
+//               listKey.add(hk);
+//            } else {
+//               long a = npix/4;
+//               if( !anc.contains(a) ) anc.add(a);
+//            }
+//         }
+//         pix=anc;
+//      }
+//      
+//      // S'il reste des trous, il faut voir si on peut les combler par le allsky
+//      HealpixKey allsky = pixList.get( key(minOrder,  -1) );
+//      if( allsky==null ) {
+//         allsky =  new HealpixAllsky(this,minOrder);
+//         flagWaitAllSky=false;
+//         try { allsky.loadNow();
+//         } catch( Exception e ) { e.printStackTrace(); }
+//      }
+//      
+//      if( pix.size()>0 ) {
+//         System.out.print("\n.allsky"+minOrder+ " order="+order);
+//         for( long npix : pix ) {
+//            int i = (int)( order<minOrder ? npix<< ((minOrder-order)*2) : npix>>> ((order-minOrder)*2));
+//            System.out.print(" "+i);
+//            HealpixKey hk = (allsky.getPixList())[i];
+//            if( hk!=null ) listKey.add(hk);
+//         }
+//      }
+//      
+//      // et puis je les dessine dans l'ordre inverse
+//      System.out.println("\n.draw");
+//      for( int i=listKey.size()-1; i>=0; i-- ) {
+//         HealpixKey hk = listKey.get(i);
+//         System.out.print(" "+hk.order+"/"+hk.npix);
+//         hk.draw(g, v);
+//      }
+//      System.out.println();
+//      
+//      if( Aladin.TESTV12 ) drawHoles(imgb, v, allsky.getPixList());
+//      
+//      hasDrawnSomething= listKey.size()>0;
+//      tryWakeUp();
+//
+//      // Vitesse de tracé - sur les MAXSTAT derniers tracé
+//      long t2 = Util.getTime(0);
+//      statTimeDisplayArray[nStat++] = (t2-t1)/1000000L;
+//      if( nStat==statTimeDisplayArray.length ) nStat=0;
+//      long totalStatTime=0;
+//      int nbStat=0;
+//      for( int i=0; i<statTimeDisplayArray.length; i++ ) {
+//         if( statTimeDisplayArray[i]==0 ) continue;
+//         totalStatTime+=statTimeDisplayArray[i];
+//         nbStat++;
+//      }
+//      statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1;
+//      statNbItems = listKey.size();
+//   }
 
    /** Tracé des losanges disposibles dans la vue et demande de ceux manquants */
    protected void drawLosangesAsync(Graphics g,ViewSimple v,BufferedImage imgb) {
@@ -3855,6 +3939,11 @@ public class PlanBG extends PlanImage {
          if( aladin.isAnimated() ) {
             if( cmin<max-1) { cmin=max-1; oneKeyReady=true; }
          }
+         
+         BufferedImage imgPost=null;
+         Graphics gImgPost=null;
+         HealpixKey oanc=null;
+         int n1=0;
 
          if( max>=getMinOrder() )
             for( int order=cmin; order<=max || !oneKeyReady && order<=max+2 && order<=maxOrder; order++ ) {
@@ -3881,7 +3970,7 @@ public class PlanBG extends PlanImage {
                } catch( Exception e ) { }
                //               }
 
-//               boolean debugOrder=false; // passe à true si on a dessiné au-moins un losange de cet ordre
+               //               boolean debugOrder=false; // passe à true si on a dessiné au-moins un losange de cet ordre
                for( int i=0; i<pix.length; i++ ) {
                   if( pix[i]==-1 ) continue;
                   healpix = getHealpix(order,pix[i],z, false);
@@ -3900,8 +3989,8 @@ public class PlanBG extends PlanImage {
 
                      // Si c'est un cube et qu'on dispose du losange de la tranche d'à-coté, on affiche cette derniere en attendant
                      // plutôt que d'afficher une résolution différente
-//                     HealpixKey h = getHealpixPreviousFrame(order,pix[i]);
-//                     if( h!=null ) nb+=h.draw(g,v);
+                     //                     HealpixKey h = getHealpixPreviousFrame(order,pix[i]);
+                     //                     if( h!=null ) nb+=h.draw(g,v);
 
                      continue;
                   }
@@ -3913,8 +4002,6 @@ public class PlanBG extends PlanImage {
                   healpix.priority=order<max ? 500-(priority++) : priority++;
 
                   int status = healpix.getStatus();
-                  
-                  ServerSocket s;
 
                   // Losange erroné ?
                   if( status==HealpixKey.ERROR ) continue;
@@ -3938,12 +4025,48 @@ public class PlanBG extends PlanImage {
 
                   // EN FAIT CA N'ARRIVE QUASI JAMAIS - JE LAISSE TOMBER
                   // Tous les fils, ou petits-fils à tracer sont déjà prêts => on passe
-//                  if( order<max && childrenReady(healpix,v,max) ) {
-////                     healpix.filsFree();  POURQUOI DIABLE AI-JE FAIT CELA ???
-//                     continue;
-//                  }
+                  //                  if( order<max && childrenReady(healpix,v,max) ) {
+                  ////                     healpix.filsFree();  POURQUOI DIABLE AI-JE FAIT CELA ???
+                  //                     continue;
+                  //                  }
 
-                  nb+=healpix.draw(g,v);
+                  Graphics g1 = g;
+
+                  if( Aladin.TESTFADING ) {
+                     
+                     // Si le losange vient d'arriver, on va appliquer un fading
+                     float op1 = healpix.getFadingOpacity();
+                     if( op1<1f && op<1f ) {
+                        
+                        // On va appliquer le fading sur un ancêtre déjà disponible
+                        HealpixKey anc = null;
+                        for( int o=healpix.order-1,n=(int)healpix.npix/4; o>=3 && anc==null; o--, n/=4) anc = getHealpix(o, n, false);
+//                        anc = getHealpix(healpix.order-1, healpix.npix/4, false);
+                        if( anc!=null && anc!=oanc) {
+                           
+                           // tracé de l'ancêtre présent dans le buffer principal
+                           n1++;
+                           anc.resetTimer();
+                           anc.draw(g, v);
+//                           System.out.println("Drawing ancetre "+anc.order+"/"+anc.npix);
+                           oanc=anc;
+
+                           // Préparation d'un buffer image (voir ci-dessous)
+                           if( imgPost==null ) {
+                              imgPost = new BufferedImage(v.rv.width,v.rv.height, BufferedImage.TYPE_INT_ARGB_PRE);
+                              gImgPost = imgPost.getGraphics();
+                           }
+
+                           // le losange qui vient d'arriver va être tracé dans une buffer image spécifique 
+                           // qui sera tracé avec le niveau de transparence max des losanges
+                           // en cours de chargement (pour éviter le clignotement)
+                           if( op1>op ) op=op1;
+                           g1=gImgPost;
+                        }
+                     }
+                  }
+
+                  nb+=healpix.draw(g1,v);
                   setHealpixPreviousFrame(order,pix[i]);
 
                   if( first && !isColored() ) {
@@ -3954,9 +4077,26 @@ public class PlanBG extends PlanImage {
                      resetHist();
                   }
 
-//                  if( !debugOrder ) { debug.append(" "+order); debugOrder=true; }
+                  //                  if( !debugOrder ) { debug.append(" "+order); debugOrder=true; }
                }
             }
+
+         // Tracé de du buffer image des tuiles en fading
+         if( imgPost!=null ) {
+            System.err.println("imgPost drawn n1="+n1+" op="+op);
+            Graphics2D g2 = (Graphics2D) g;
+            Composite saveComposite = null;
+            try {
+               saveComposite = g2.getComposite();
+               g2.setComposite( AlphaComposite.getInstance(AlphaComposite.SRC_OVER,op) );
+               g2.drawImage(imgPost, 0, 0, null);
+               
+               // demande mise à jour du Fading
+               updateFading(true);
+            } finally {
+               if( saveComposite!=null ) g2.setComposite( saveComposite );
+            }
+         }
 
          //essai
          allWaitingKeysDrawn = allKeyReady || (max<=getMinOrder() && hasDrawnSomething);
@@ -4004,8 +4144,10 @@ public class PlanBG extends PlanImage {
    private boolean first=true;
 
    private boolean fading=false;
-   protected void resetFading() { fading=false; }
-   protected void updateFading(boolean flag) {
+   private float op=0f;
+   synchronized private boolean isFading() {return fading; }
+   synchronized protected void resetFading() { fading=false; }
+   synchronized protected void updateFading(boolean flag) {
       fading |= flag;
    }
 
@@ -4200,7 +4342,6 @@ public class PlanBG extends PlanImage {
       rayon=0;
       
       boolean isTransparent = isTransparent();
-      if( Aladin.TESTV12 ) isTransparent=false;
          
       if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();

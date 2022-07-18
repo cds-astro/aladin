@@ -87,7 +87,7 @@ public class SourcePhot extends SourceTag {
    /** (Re)énération de la ligne des infos (détermine les mesures associées) */
    protected void resumeMesures() {
       Coord c = new Coord(raj,dej);
-      info = "<_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+planBase.label+"\t"+"\t"+c.getRA()+"\t"+c.getDE()
+      info = "<&_A|Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+planBase.label+"\t"+"\t"+c.getRA()+"\t"+c.getDE()
              +"\t"+iqe[0]+"\t"+iqe[2]+"\t"+iqe[1]+"\t"+iqe[3]+"\t"+iqe[4]+"\t"+iqe[5]+"\t"+iqe[6];
    }
 

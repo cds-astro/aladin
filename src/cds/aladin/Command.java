@@ -3574,6 +3574,7 @@ public final class Command implements Runnable {
       // else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
       else if( cmd.equalsIgnoreCase("anaglyph") ) anaglyph(param);
       else if( cmd.equalsIgnoreCase("testv12") ) testv12(param);
+      else if( cmd.equalsIgnoreCase("testfading") ) testFading(param);
       else if( cmd.equalsIgnoreCase("pf") ) pf(param);
       else if( cmd.equalsIgnoreCase("tap") ) tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") ) PlanBG.cleanCache();
@@ -5545,7 +5546,7 @@ public final class Command implements Runnable {
    }
    
    private void anaglyph(String param) {
-      a.isAnaglyph = !param.equals("off"); 
+//      a.TESTANAGLYPH = !param.equals("off"); 
    }
 
    private void testv12(String param) {
@@ -5553,6 +5554,11 @@ public final class Command implements Runnable {
       System.out.println("Test v12 "+(Aladin.TESTV12?"ON":"OFF"));
       a.view.newView();
       a.view.repaintAll();
+   }
+
+   private void testFading(String param) {
+//      Aladin.TESTFADING = param!=null && param.indexOf("off")>=0 ? false:true;
+//      System.out.println("Test Fading "+(Aladin.TESTFADING?"ON":"OFF"));
    }
 
 

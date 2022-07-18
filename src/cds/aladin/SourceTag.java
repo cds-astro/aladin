@@ -118,7 +118,6 @@ public class SourceTag extends Source  {
    protected void suite() {
       setLeg(legende);
       setShape(Obj.PLUS);
-//      setTag(true);
       setWithLabel(true);
       resumeMesures();
    }
@@ -144,13 +143,13 @@ public class SourceTag extends Source  {
       String x = " ";
       String y = " ";
       
-      if( planBase instanceof PlanImage ) {
+      if( planBase instanceof PlanImage && !(planBase instanceof PlanBG) ) {
          planBase.projd.getXY(c);
          x = Util.myRound(""+(c.x+0.5),4);
          y = Util.myRound(""+( ((PlanImage)planBase).naxis2-c.y+0.5));
       }
       
-      info = "<&_A Tags>\t"+raj+"\t"+dej+"\t"+id+"\t"+planBase.label+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+x+"\t"+y;
+      info = "<&_A|Tags>\t"+raj+"\t"+dej+"\t"+id+"\t"+planBase.label+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+x+"\t"+y;
    }
    
    /** Cet objet a des propriétés spécifiques */

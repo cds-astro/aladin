@@ -102,9 +102,12 @@ public class BuilderMirror extends BuilderTiles {
       flagCat=false;
       s = prop.getProperty("dataproduct_type");
       if( s!=null && s.indexOf("catalog")>=0 ) {
-         context.info("Mirroring a HiPS catalog...");
-//         throw new Exception("Hipsgen mirror not usable for catalog HiPS");
          flagCat=true;
+         
+         throw new Exception("Hipsgen mirror not usable for catalog HiPS");
+         
+         // TEST POUR COPIE HIPSCAT
+//         context.info("Mirroring a HiPS catalog...");
       }
 
       // Détermination de l'ordre max: si non précisé, récupéré depuis
@@ -131,13 +134,15 @@ public class BuilderMirror extends BuilderTiles {
       if( s==null ) context.info("No min order specified in the remote HiPS properties file !");
       o = s==null ? -1 : Integer.parseInt(s) ;
       paramO = context.minOrder;
-      if( paramO ==-1 ) {
-         o = flagCat ? 1 : 3;    // Le défaut en fonction de la nature du HiPS
-         context.warning("Min order unknown => use default ["+o+"]");
+      if( paramO ==-1 ) { 
+         if( o==-1 ) {
+            o = flagCat ? 1 : 3;    // Le défaut en fonction de la nature du HiPS
+            context.warning("Min order unknown => use default ["+o+"]");
+         }
          context.setMinOrder(o);
       } else {
          if( o!=-1 ) {
-            if( paramO<o ) throw new Exception("Min Order lower than the original");
+            if( paramO<o ) throw new Exception("Specified min Order lower than the original");
             else if( o!=paramO ) isPartial=true;
          }
       }
@@ -444,9 +449,14 @@ public class BuilderMirror extends BuilderTiles {
    }
 
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
-      if( !isSmaller ) return bidon;
-      return createLeaveHpx(hpx,file,path,order,npix,z,true);
-   }
+    return createLeaveHpx(hpx,file,path,order,npix,z,true);
+ }
+
+// TEST POUR COPIE HIPSCAT
+//   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
+//    if( !isSmaller ) return bidon;  
+//    return createLeaveHpx(hpx,file,path,order,npix,z,true);
+// }
 
    private Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z,boolean stat) throws Exception {
       String fileInX = context.getInputPath()+"/"+cds.tools.pixtools.Util.getFilePath(order,npix,z);
@@ -480,100 +490,101 @@ public class BuilderMirror extends BuilderTiles {
       }
    }
    
-   /** Dans le cas d'une copie, mirroir on profite de ce test pour copier la tuile
-    * Et dans le cas d'un Hips catalogue, on détermine si on doit aller vraiment plus profond
-    * en fonction du commentaire de complétude en première ligne de la tuile
-    * @return ATTENTION retourn null si on doit aller plus profond
-    */
-   protected Fits findLeaf(ThreadBuilderTile hpx, String file, String path,int order,long npix, int z) throws Exception { 
-      if( isSmaller ) return bidon;
-      try {
-         createLeaveHpx(hpx,file,path,order,npix,z,order==ordermax);
-         if( flagCat && order<ordermax && stopCompleteness(file) ) return bidon; 
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
-      return null;
-   }
-   
-   public Fits findLeaf(String file) { return null; }
-   
-   // Vérifie la complétude de la tuile catalogue
-   private boolean stopCompleteness(String file) throws Exception {
-      boolean stop=false;
-      String ext = context.tileFormat.get(0);
-      String fileOut = file+ext;
-      if( !(new File(fileOut)).exists() ) {
-         stop=true;
-      } else {
-         RandomAccessFile f = null;
-         byte [] buf=new byte[128];
-         try {
-            f = new RandomAccessFile(fileOut, "r");
-            f.read(buf);
-            stop = testLast(buf);
-            f.close();
-            f=null;
-         } finally { 
-            if( f!=null ) try{ f.close(); } catch( Exception e) {} 
-         }
-      }
-      if( stop ) {
-         System.err.println("Stop tree for "+file);
-      }
-      return stop;
-   }
-         
-   static final private char [] COMPLETENESS = { '#',' ','C','o','m','p','l','e','t','e','n','e','s','s',' ','=',' ' };
-
-   // Vérifie la complétude de la tuile catalogue (les 128 premiers caractères)
-   // ex: "# Completeness = 903 / 90811"  => Return false
-   private boolean testLast(byte [] stream) {
-      boolean rep[];  // [0] test achevé true|false, [1] résultat du test
-      
-      // En début de fichier
-      rep = testLast(stream,0,COMPLETENESS);
-
-      // Parmi des commentaires ?
-      if( !rep[0] ) {
-         for( int i=1; !rep[0] && i<stream.length-1; i++) {
-            if( stream[i]=='\n' || stream[i]=='\r' ) {  
-               if( stream[i+1]=='#' ) {
-                  rep=testLast(stream,i+1,COMPLETENESS);    
-               }
-               else if( stream[i+1]!='\n' && stream[i+1]!='\r' ) break;  // fin des commentaires ?
-            }
-         }
-      }
-      return rep[1];
-   }
-
-   // Scanne à partir de l'offset
-   private boolean[] testLast(byte [] stream,int offset, char [] signature) {
-      boolean last=false;
-      
-      if( stream.length<signature.length ) return new boolean[] {false,false};
-      for( int i=offset; i<signature.length; i++ ) {
-         if( signature[i]!=stream[i] ) return new boolean[] {false,false};
-      }
-      int deb=offset+signature.length;
-      int fin;
-      int slash=0;
-      for( fin=offset+signature.length; fin<stream.length 
-            && stream[fin]!='\n' && stream[fin]!='\r'; fin++ ) {
-         if( stream[fin]=='/' ) slash=fin;
-      }
-      if( slash==0 ) return new boolean[] {false,false};
-      if( fin==stream.length ) return new boolean[] {false,false};
-      try {
-         String a = new String(stream,deb,slash-deb);
-         String b = new String(stream,slash+1,fin-(slash+1));
-         int nLoaded = Integer.parseInt(a);
-         int nTotal = Integer.parseInt(b);
-         last = nLoaded==nTotal;
-      } catch( Exception e ) { last=false; }
-      return new boolean[] {true,last};
-   }
+// TEST POUR COPIE HIPSCAT
+//   /** Dans le cas d'une copie, mirroir on profite de ce test pour copier la tuile
+//    * Et dans le cas d'un Hips catalogue, on détermine si on doit aller vraiment plus profond
+//    * en fonction du commentaire de complétude en première ligne de la tuile
+//    * @return ATTENTION retourn null si on doit aller plus profond
+//    */
+//   protected Fits findLeaf(ThreadBuilderTile hpx, String file, String path,int order,long npix, int z) throws Exception { 
+//      if( isSmaller ) return bidon;
+//      try {
+//         createLeaveHpx(hpx,file,path,order,npix,z,order==ordermax);
+//         if( flagCat && order<ordermax && stopCompleteness(file) ) return bidon; 
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//      return null;
+//   }
+//   
+//   public Fits findLeaf(String file) { return null; }
+//   
+//   // Vérifie la complétude de la tuile catalogue
+//   private boolean stopCompleteness(String file) throws Exception {
+//      boolean stop=false;
+//      String ext = context.tileFormat.get(0);
+//      String fileOut = file+ext;
+//      if( !(new File(fileOut)).exists() ) {
+//         stop=true;
+//      } else {
+//         RandomAccessFile f = null;
+//         byte [] buf=new byte[128];
+//         try {
+//            f = new RandomAccessFile(fileOut, "r");
+//            f.read(buf);
+//            stop = testLast(buf);
+//            f.close();
+//            f=null;
+//         } finally { 
+//            if( f!=null ) try{ f.close(); } catch( Exception e) {} 
+//         }
+//      }
+//      if( stop ) {
+//         System.err.println("Stop tree for "+file);
+//      }
+//      return stop;
+//   }
+//         
+//   static final private char [] COMPLETENESS = { '#',' ','C','o','m','p','l','e','t','e','n','e','s','s',' ','=',' ' };
+//
+//   // Vérifie la complétude de la tuile catalogue (les 128 premiers caractères)
+//   // ex: "# Completeness = 903 / 90811"  => Return false
+//   private boolean testLast(byte [] stream) {
+//      boolean rep[];  // [0] test achevé true|false, [1] résultat du test
+//      
+//      // En début de fichier
+//      rep = testLast(stream,0,COMPLETENESS);
+//
+//      // Parmi des commentaires ?
+//      if( !rep[0] ) {
+//         for( int i=1; !rep[0] && i<stream.length-1; i++) {
+//            if( stream[i]=='\n' || stream[i]=='\r' ) {  
+//               if( stream[i+1]=='#' ) {
+//                  rep=testLast(stream,i+1,COMPLETENESS);    
+//               }
+//               else if( stream[i+1]!='\n' && stream[i+1]!='\r' ) break;  // fin des commentaires ?
+//            }
+//         }
+//      }
+//      return rep[1];
+//   }
+//
+//   // Scanne à partir de l'offset
+//   private boolean[] testLast(byte [] stream,int offset, char [] signature) {
+//      boolean last=false;
+//      
+//      if( stream.length<signature.length ) return new boolean[] {false,false};
+//      for( int i=offset; i<signature.length; i++ ) {
+//         if( signature[i]!=stream[i] ) return new boolean[] {false,false};
+//      }
+//      int deb=offset+signature.length;
+//      int fin;
+//      int slash=0;
+//      for( fin=offset+signature.length; fin<stream.length 
+//            && stream[fin]!='\n' && stream[fin]!='\r'; fin++ ) {
+//         if( stream[fin]=='/' ) slash=fin;
+//      }
+//      if( slash==0 ) return new boolean[] {false,false};
+//      if( fin==stream.length ) return new boolean[] {false,false};
+//      try {
+//         String a = new String(stream,deb,slash-deb);
+//         String b = new String(stream,slash+1,fin-(slash+1));
+//         int nLoaded = Integer.parseInt(a);
+//         int nTotal = Integer.parseInt(b);
+//         last = nLoaded==nTotal;
+//      } catch( Exception e ) { last=false; }
+//      return new boolean[] {true,last};
+//   }
 
 
    // Copie d'un fichier distant (url) vers un fichier local sans générer d'exception
@@ -836,13 +847,25 @@ public class BuilderMirror extends BuilderTiles {
       return false;
    }
 
+// TEST POUR COPIE HIPSCAT   
+//   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
+////      if( !isSmaller ) return createLeaveHpx(null,file,path,order,npix,z,false);
+//      return bidon;
+//   }
+   
    // Dans le cas d'un mirroir complet, on copie également les noeuds. En revanche pour un miroir partiel
    // on regénérera l'arborescence à la fin
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
-//      if( !isSmaller ) return createLeaveHpx(null,file,path,order,npix,z,false);
+      if( !isSmaller ) return createLeaveHpx(null,file,path,order,npix,z,false);
       return bidon;
    }
-   
+
+   /** Recherche et chargement d'un losange déjà calculé
+    *  Retourne null si non trouvé
+    * @param file Nom du fichier ( sans extension)
+    */
+   public Fits findLeaf(String file) throws Exception { return null; }
+
    private void initStat() {
       statNbFile=0;
       statCumul=0L;

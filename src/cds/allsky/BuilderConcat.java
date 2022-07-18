@@ -75,7 +75,11 @@ public class BuilderConcat extends BuilderTiles {
 
          // Regeneration des tuiles png et de l'arborescence pour la zone concernée si nécessaire
          inPng = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.png")).exists();
-         if( inPng ) { (new BuilderPng(context)).run(); context.info("PNG tiles updated"); }
+         if( inPng ) {
+            context.info("Updating PNG tiles...");
+            context.setMode(Mode.REPLACETILE);
+            (new BuilderPng(context)).run(); 
+         }
       }
 
       // Dans le cas d'un traitement algorythmique, les mises à jour des métadonnées

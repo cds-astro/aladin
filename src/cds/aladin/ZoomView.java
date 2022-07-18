@@ -208,9 +208,9 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    }
    
    /** Mémorisation de la position courante du réticule dans l'historique des targets */
-   private void memoTarget() {
+   protected void memoTarget() {
       String target = aladin.localisation.foxString(aladin.view.repere.getRa(),aladin.view.repere.getDec());
-      aladin.targetHistory.memoTarget( target );
+      aladin.targetHistory.createFrame( target,"" );
    }
    
    /** Saisie d'un range temporel et Mémorisation dans l'historique des dates */
@@ -219,8 +219,17 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    }
    
    private void submitTarget(String target) {
+      target = aladin.targetHistory.removeFox(target);
       if( !Localisation.notCoord(target) ) aladin.console.printInPad(target+"\n");
       aladin.command.execNow(target);
+   }
+   
+   // Mise en forme HTML s'il y a un label en préfixe
+   private String inHTML(String s) {
+      String label = TargetHistory.getLabel(s);
+      if( label==null || label.length()==0 ) return s;
+      String pos = TargetHistory.getLoc(s);
+      return "<html><b>"+label+"</b> -> "+pos+"</html>";
    }
    
    /** Action à opérer lorsque l'on clique sur le triangle soit des targets, soit des dates
@@ -229,8 +238,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    protected void targetTriangleAction(int x,int y) { targetTriangleAction(x,y,0); }
    protected void targetTriangleAction( final int x, final int y, int initIndex) {
       int max=20;
-      String fox = " "+aladin.localisation.getFrameFox();
-      ArrayList<String> v =  aladin.targetHistory.getTargets( initIndex, max );
+      ArrayList<String> v =  aladin.targetHistory.getTargets4Menu( initIndex, max );
       if( v.size()==0 ) return;
       
       // On crée un JPopupmenu contenant les 10 dernières targets, et s'il y en a encore,
@@ -253,11 +261,11 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          } else {
             // Le menu ne fera pas apparaitre le frame si c'est celui courant
             String m = s;
-            if( m.endsWith(fox) ) m=m.substring(0,m.length()-fox.length());
+            m = aladin.targetHistory.removeFox(m);
             if( m.length()>38 ) m= m.substring(0,38)+" ...";
+            m = inHTML(m);
             
             mi = new JMenuItemExt( m);
-//            mi.setActionCommand( TargetHistory.getLoc(s) );
             mi.setActionCommand( s );
             mi.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
@@ -402,46 +410,45 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          TIPSTOREDATE = aladin.chaine.getString("TIPSTOREDATE");
       }
       
+      boolean in1,in2,in3,in4,in5;
+      boolean repaint1=false,repaint2=false;
+      in1=in2=in3=in4=in5=false;
+      
       // S'il y a affichage du controle de l'historique des targets, mise à jour
       // des flags si la souris est dessus
       if( rectTargetTriangle!=null ) {
-         boolean in1,in2,in3;
-         boolean repaint=false;
          in1=rectTargetTriangle.contains( e.getPoint() );
-         if( in1!=inTargetTriangle ) { inTargetTriangle=in1; repaint=true; }
+         if( in1!=inTargetTriangle ) { inTargetTriangle=in1; repaint1=true; }
          if( in1 ) Util.toolTip(this, TIPTARGET);
 
          in2=rectTargetList!=null && rectTargetList.contains( e.getPoint());
-         if( in2!=inTargetList ) { inTargetList=in2; repaint=true; }
+         if( in2!=inTargetList ) { inTargetList=in2; repaint1=true; }
          if( in2 ) Util.toolTip(this, TIPLISTTARGET);
 
          in3=rectTargetLogo.contains( e.getPoint());
-         if( in3!=inTargetLogo ) { inTargetLogo=in3; repaint=true; }
+         if( in3!=inTargetLogo ) { inTargetLogo=in3; repaint1=true; }
          if( in3 ) Util.toolTip(this, TIPSTORETARGET);
 
          flagTargetControl = in1 || in2 || in3;
-         if( !flagTargetControl ) Util.toolTip(this, "");
-         if( repaint ) repaint();
       }
 
       // S'il y a affichage du controle de l'historique des dates, mise à jour
       // des flags si la souris est dessus
       if( rectDateLogo!=null ) {
-         boolean in2,in3;
-         boolean repaint=false;
 
-         in2=rectDateList!=null && rectDateList.contains( e.getPoint());
-         if( in2!=inDateList ) { inDateList=in2; repaint=true; }
-         if( in2 ) Util.toolTip(this, TIPDATE);
+         in4=rectDateList!=null && rectDateList.contains( e.getPoint());
+         if( in4!=inDateList ) { inDateList=in4; repaint2=true; }
+         if( in4 ) Util.toolTip(this, TIPDATE);
 
-         in3=rectDateLogo.contains( e.getPoint());
-         if( in3!=inDateLogo ) { inDateLogo=in3; repaint=true; }
-         if( in3 ) Util.toolTip(this, TIPSTOREDATE);
+         in5=rectDateLogo.contains( e.getPoint());
+         if( in5!=inDateLogo ) { inDateLogo=in5; repaint2=true; }
+         if( in5 ) Util.toolTip(this, TIPSTOREDATE);
 
-         flagDateControl = in3 || in2 ;
-         if( !flagDateControl ) Util.toolTip(this, "");
-         if( repaint ) repaint();
+         flagDateControl = in5 || in4 ;
       }
+      
+      if( !in1 && !in2 && !in3 && !in4 && !in5 ) Util.toolTip(this, "");
+      if( repaint1 || repaint2 ) repaint();
 
       if( flagSED ) {
          sed.mouseMove(e.getX(),e.getY());

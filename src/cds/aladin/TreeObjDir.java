@@ -1368,7 +1368,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** Génération et exécution de la requête script correspondant au protocole MOC */
    protected void loadMoc( ) {
       exec( getMocCmd() ); 
-      }
+   }
    protected String getMocBkm() { return getMocCmd(); }
    private String getMocCmd() {
       String param = aladin.directory.mocServerVersion>=5 ? ",anymoc":"";
@@ -1377,9 +1377,19 @@ public class TreeObjDir extends TreeObj implements Propable {
 
    /** Génération et exécution de la requête script correspondant au protocole HiPS */
    protected void loadHips() {
-      String trg = getDefaultTarget();
+      String trg=null;
+      
+      // Si cette ressource n'est pas hors champ, on prend le centre de la vue courante
+      if( getIsIn()!=0 ) {
+         trg = getDefaultTarget();
+         
+      // Sinon on laisse vide
+      } else {
+         Aladin.trace(4,"TreeObjDir.loadHips(): default target out of HiPS field => no target");
+      }
+      
       String s = trg==null ? "" : " "+trg+" "+getDefaultRadius();
-     exec( getHipsCmd()+s );
+      exec( getHipsCmd()+s );
    }
    protected String getHipsBkm() { return getHipsCmd()+" $TARGET $RADIUS"; }
    protected String getHipsCmd() {

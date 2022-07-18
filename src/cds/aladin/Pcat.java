@@ -128,7 +128,6 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       this.plan = plan;
       this.c=c;                        // Couleur du plan
       nb_o = 0;
-      //      nRa=nDec=-1;
    }
 
    protected void free() {
@@ -1457,7 +1456,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       return i;
    }
    
-   /**Insertion de la source après la dernière source de même légende, sinon à la fin */
+   /** Insertion de la source après la dernière source de même légende, sinon à la fin */
    protected void insertSource(Source src) {
       for( int i=nb_o-1; i>=0; i-- ) {
          if( !o[i].asSource() ) continue;

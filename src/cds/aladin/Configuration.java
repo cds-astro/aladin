@@ -298,6 +298,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private int previousTheme=0;                   // Indice du thème au démarrage
    private int previousUiScale=0;                   // Indice du facteur d'échelle au démarrage
    private JCheckBox hideTapSchema = null;			//Hide tapschema tables on tap clients or not.
+   
+   private Point initWinLocXY=new Point();          // Position initiale de la fenêtre
+   private Dimension initWinLocWH=new Dimension();  // Dimension initiale de la fenêtre
+   private int initFullWin=0;                       // 0-non, 1-fullWin, 2-FullScreen
+//   private int initMesureHeight=0;                  // Hauteur de la fenêtre des mesures
+
 
    protected void createChaine() {
       TITLE = aladin.chaine.getString("UPTITLE");
@@ -1302,27 +1308,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return size;
    }
 
-   private Point initWinLocXY=new Point();          // Position initiale de la fenêtre
-   private Dimension initWinLocWH=new Dimension();  // Dimenison initiale de la fenêtre
-   private boolean initFullWin=false;               // true si la fenêtre initiale couvre tout l'écran
-   private int initMesureHeight=0;                  // Hauteur de la fenêtre des mesures
-//   private int initZoomHeight=0;                    // Hauteur de la fenêtre du zoom
-//   private int initZoomWidth=0;                     // Largeur de la fenêtre du zoom
-//   private int initHipsWidth=0;                     // Largeur de la fenêtre du HiPS market
-
    /** Retourne true si la fenêtre d'Aladin n'a ni bougé, ni été redimensionnée */
    private boolean sameWinParam() {
       if( aladin.isApplet() ) return true;  // pas de gestion de positionnement en mode applet
       Dimension d = aladin.f.getSize();
       Point p = aladin.f.getLocation();
-//      int mesureHeight = aladin.splitMesureHeight.getSplit();
-//      int zoomHeight = aladin.splitZoomHeight.getPos();
-//      int zoomWidth = aladin.splitZoomWidth.getPos();
-//      int hipsWidth = aladin.splitHiPSWidth.getPos();
-      return initWinLocXY.equals(p) && initWinLocWH.equals(d) 
-//            && initMesureHeight==mesureHeight 
-//            && initHipsWidth!=hipsWidth && initZoomHeight==zoomHeight && initZoomWidth==zoomWidth
-            ;
+      return initWinLocXY.equals(p) && initWinLocWH.equals(d);
    }
 
    /** Retourne la position et la taille de la fenêtre Aladin. Mémorise
@@ -1337,31 +1328,24 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
                Integer.parseInt(st.nextToken()),
                Integer.parseInt(st.nextToken())
                );
-         boolean fullWin = st.hasMoreTokens() && st.nextToken().equals("-");
+         
+         int fullWin=0;
+         if( st.hasMoreTokens() ) {
+            s = st.nextToken();
+            fullWin = s.equals("-") ? 1 : s.equals("--") ? 2 : 0;
+         }
          setInitWinLoc(r.x,r.y,r.width,r.height,fullWin);
          return r;
       } catch( Exception e ) { }
       return null;
    }
    
-   /** Retourne true si la fenêtre Aladin couvre la totalité de l'écran */
-   protected boolean getWinFull() {
+   /** Retourn 0-pas de FullWin, 1-FullWin, 2-Full Screen */
+   protected int getWinFull() {
       getWinLocation();
       return initFullWin;
    }
 
-   /** Retourne la proportion de la fenêtre des mesures d'Aladin. Mémorise
-    * cette position pour vérifier qu'à la fin de la session on a bougé ou non */
-//   protected int getWinDivider() {
-//      String s;
-//      int mesureHeight=150;
-//      try { s = get(MHEIGHT);
-//         mesureHeight=Integer.parseInt(s);
-//      } catch( Exception e ) {}
-//      setInitMesureHeight(mesureHeight);
-//      return mesureHeight;
-//   }
-   
    protected int getSplitMesureHeight() {
       try {
          int m=Integer.parseInt( get(MHEIGHT));
@@ -1388,18 +1372,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Mémorisation de la position et de la taille de la fenêtre initiale d'Aladin en vue
     * de comparaison (voir save())*/
-   protected void setInitWinLoc(int x,int y,int width, int height,boolean fullWin) {
+   protected void setInitWinLoc(int x,int y,int width, int height,int fullWin) {
       initWinLocXY.x=x;
       initWinLocXY.y=y;
       initWinLocWH.width=width;
       initWinLocWH.height=height;
       initFullWin=fullWin;
-   }
-
-   /** Mémorisation de limite de séparation de la fenêtre initiale des mesures d'Aladin en vue
-    * de comparaison (voir save())*/
-   protected void setInitMesureHeight(int mesureHeight) {
-      this.initMesureHeight=mesureHeight;
    }
 
    /** Etend le tableau des langues si nécessaire de n cases et
@@ -2160,17 +2138,23 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( p.y<0 ) p.y=0;
 
          if( aladin.LOCATION==null ) {
-            String full = aladin.isFullScreen()?" -":"";
+            String fullWin="";
+            
+            // Fullwin fenêtré (=> suffixe "-") ? ou plein écran (=> suffixe "--") ?
+            if( aladin.isFullScreen() ) {
+               fullWin = aladin.fullScreen.getMode()==FrameFullScreen.WINDOW ? " -": " --";
+            }
             
             // Test pour éviter les valeurs incongrues
-            if( full.length()==0 || Math.abs(p.x)>aladin.SCREENSIZE.width
-                  || Math.abs(p.y)>aladin.SCREENSIZE.height
-                  || d.width<100 || d.width>aladin.SCREENSIZE.width*1.5
-                  || d.height<100 || d.height>aladin.SCREENSIZE.height*1.5
-                  ) remove(WINLOC);
-            else {
-               set(WINLOC,p.x+" "+p.y+" "+(max?-d.width:d.width)+" "+(max?-d.height:d.height)+full);
-            }
+// NE MARCHE PAS EN CAS DE MULTI ECRANS -> J'ENLEVE PF 15/07/2022
+//            if( fullWin.length()==0 || Math.abs(p.x)>aladin.SCREENSIZE.width
+//                  || Math.abs(p.y)>aladin.SCREENSIZE.height
+//                  || d.width<100 || d.width>aladin.SCREENSIZE.width*1.5
+//                  || d.height<100 || d.height>aladin.SCREENSIZE.height*1.5
+//                  ) remove(WINLOC);
+//            else {
+               set(WINLOC,p.x+" "+p.y+" "+(max?-d.width:d.width)+" "+(max?-d.height:d.height)+fullWin);
+//            }
          }
       }
 
@@ -2210,7 +2194,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       
       // Je sauvergarde les 40 dernières target
       i=1;
-      for( String target : aladin.targetHistory.list ) {
+      for( String target : aladin.targetHistory.getList() ) {
          String key = LASTTARGET+(i++);
          bw.write(Util.align(key, 20) + target);
          bw.newLine();

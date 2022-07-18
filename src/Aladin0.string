@@ -1410,6 +1410,7 @@ VWMSTICKON	Sticked panel
 VWMLABELOFF	Unlabel the selected objects
 VWMLABELON	Label the selected objects
 VWMCOPY     Copy the reticle location in the clipboard
+VWMTARGETHISTORY Add the reticule position in the history
 VWMLOOK     Astronomical object exploration (Simbad & VizieR)
 VWMCOPYIMG  Copy the current view in the clipboard
 VWMOREVIEWS	Create one view per image
@@ -1453,6 +1454,7 @@ VWMSTICKON.fr	Panneau scotché
 VWMLABELON.fr	Afficher l'identificateur des objets sélectionnés
 VWMLABELOFF.fr	Cacher l'identificateur des objets sélectionnés
 VWMCOPY.fr     Copier la position du réticule dans le presse-papier
+VWMTARGETHISTORY.fr Ajouter la position du réticule dans l'historique
 VWMLOOK.fr	Exploration de l'objet astronomique (Simbad & VizieR)
 VWMCOPYIMG.fr     Copier la vue courante dans le presse-papier
 VWMOREVIEWS.fr	Créer une vue par image
@@ -3757,6 +3759,10 @@ MEMOLOCDUP This label is already used for another position. This will delete the
 MEMOLOCDUP.fr Ce label est déjà utilisée pour une autre position. Cela supprimera la précédente mémorisation. Voulez-vous tout de même continuer ?
 MEMOLOCHELP Save a position, either by indicating its coordinates or a name of an astronomical object. In order to retrieve it easily, especially in the case of coordinates, it is possible to associate a "label" to this position
 MEMOLOCHELP.fr Mémorise une position, soit en indiquant ses coordonnées, soit un nom d'objet astronomique. Afin de la retrouver aisément, notamment dans le cas des coordonnées, il est possible d'associé un "label" à cette position
+MEMOCLEAN Reset history
+MEMOCLEAN.fr Réinit. historique
+MEMOLOCCONFRESET Do you really want to delete your target history?
+MEMOLOCCONFRESET.fr Souhaitez-vous réellement supprimer votre historiques de positions ?
 
 XMATCH_RADIUS_TITLE	Xmatch separation (arcsec)
 XMATCH_RADIUS_TITLE.fr	Séparation angulaire du Xmatch (arcsec)

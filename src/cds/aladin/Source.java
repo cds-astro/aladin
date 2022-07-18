@@ -712,7 +712,7 @@ public class Source extends Position implements Comparator {
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
       if( !inTime( v )  ) return false;
       
-      if( plan.aladin.isAnaglyph ) {
+      if( plan.aladin.TESTANAGLYPH ) {
          if( drawAnaglyph(g, v) ) return true;
       }
       

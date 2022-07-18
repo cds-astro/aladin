@@ -220,7 +220,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean flagHighlight=false;       // true si on est en mode highlight des sources (voir hist[] dans ZommView)
 
    static protected String NOZOOM,MSTICKON,MSTICKOFF,MOREVIEWS,
-   MLABELON,MCOPY,MCOPYIMG,MLOOK,MLABELOFF,/*MROI,*/MNEWROI,MPLOT,MDELROI,MSEL,MDELV,
+   MLABELON,MCOPY,MTARGETHISTORY,MCOPYIMG,MLOOK,MLABELOFF,/*MROI,*/MNEWROI,MPLOT,MDELROI,MSEL,MDELV,
    VIEW,ROIWNG,ROIINFO,HCLIC,HCLIC1,NIF,NEXT;
 
    protected void createChaine() {
@@ -230,6 +230,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       MCOPYIMG  = aladin.chaine.getString("VWMCOPYIMG");
       MLOOK     = aladin.chaine.getString("VWMLOOK");
       MCOPY     = aladin.chaine.getString("VWMCOPY");
+      MTARGETHISTORY = aladin.chaine.getString("VWMTARGETHISTORY");
       MLABELON  = aladin.chaine.getString("VWMLABELON");
       MLABELOFF = aladin.chaine.getString("VWMLABELOFF");
       MOREVIEWS = aladin.chaine.getString("VWMOREVIEWS");

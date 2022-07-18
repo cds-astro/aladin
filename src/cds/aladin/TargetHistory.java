@@ -31,6 +31,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
@@ -40,43 +42,55 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import cds.aladin.prop.PropPanel;
 import cds.tools.Util;
 
 /**
  * Pour gérer l'historique des cibles successives et pouvoir y revenir facilement
+ * Format d'enregistrement: [label :] coord [FOX] | object
+ * exemple => Ici : 1 2 3 +4 5 6 ICRS
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.1 : (jul 2022) Ajout du formulaire de saisie et du label en préfixe
  * @version 1.0 : (oct 2017) Creation
  */
 public class TargetHistory {
-   Aladin aladin;
-   ArrayList<String> list;
+   
+   static final String SEP = ": ";          // La chaine séparant le label de la position
+   static final String LAST = "Last"+SEP;   // Le préfixe complet pour la dernière position
+   
+   private Aladin aladin;
+   private ArrayList<String> list;           // L'historique des positions
+   private FrameMemoLoc frameMemoLoc=null;   // Le formulaire de saisie
    
    protected TargetHistory(Aladin aladin) {
       this.aladin = aladin;
       list = new ArrayList<>();
    }
+
+   /** Fournit la liste de  l'historique des position (tel que) */
+   protected ArrayList<String> getList() { return list; }
    
    /** Retourne le label (optionnel) en préfixe d'un target, null sinon
     * ex: Ma position: 1 2 3 +4 5 6 ICRS => "Ma position"
     */
    static protected String getLabel( String target ) {
       if( target==null ) return null;
-      int i = target.indexOf(SEPARATOR);
+      int i = target.indexOf(SEP);
       if( i<0 ) return null;
       return target.substring(0,i).trim();
    }
    
-   /** Retourne la location d'un target = supprime un éventuel préxife, null sinon
+   /** Retourne la position d'un target = supprime un éventuel préfixe, null sinon
     * ex: Ma position: 1 2 3 +4 5 6 ICRS  => "1 2 3 +4 5 6 ICRS"
     */
    static protected String getLoc( String target ) {
       if( target==null ) return null;
-      int i = target.indexOf(SEPARATOR);
+      int i = target.indexOf(SEP);
       if( i<0 ) return target;
-      return target.substring(i+SEPARATOR.length()).trim();
+      return target.substring(i+SEP.length()).trim();
    }
    
    /** Ajoute le target à la liste. Ce target peut être ou non préfixé par un nom.
@@ -112,14 +126,14 @@ public class TargetHistory {
       target = loc;
       
       // Ajout en préfixe d'un nom (optionel)
-      if( label!=null && label.length()>0 ) target=label+SEPARATOR+loc;
+      if( label!=null && label.length()>0 ) target=label+SEP+loc;
       
       list.add( target );
    }
    
    /** Conversion de coordonnées sexagésimales avec séparateur 'espace'
     * en expression sexa avec séparateur ':' */
-   static private String sexaCommaSep(String loc) {
+   private String sexaCommaSep(String loc) {
       if( Localisation.notCoord(loc) ) return loc;
       
       String fox="";
@@ -150,26 +164,14 @@ public class TargetHistory {
       return res1+" "+res2+fox;
    }
    
-   protected void memoTarget(String target) {
-      createFrame(target,"");
-   }
-   
-   static final String SEPARATOR = ": ";
-   static final String CURRENTPOS = "Last"+SEPARATOR;
-   
+   /** Ajoute sur la liste la position courante avec le préfixe LAST */
    protected void setCurrentPos(String loc) {
       removeCurrentPos();
-      list.add(CURRENTPOS+loc);
+      list.add(LAST+loc);
    }
    
    /** Supprime le target "Last : ..." */
-   private void removeCurrentPos() { removeLabel(CURRENTPOS); }
-//      int i;
-//      for( i=0; i<list.size(); i++ ) {
-//         if( list.get(i).startsWith(CURRENTPOS) ) break;
-//      }
-//      if( i<list.size() ) list.remove(i);
-//   }
+   private void removeCurrentPos() { removeLabel(LAST); }
    
    /** Supprime toutes les occurences de la position du target (sans tenir compte
     * d'un éventuel nom en préfixe)
@@ -184,7 +186,7 @@ public class TargetHistory {
    
    /** Retourne l'indice de la première occurence de la position du target (sans tenir
     * compte d'un éventuel nom en préfixe) */
-   protected int findLoc( String target ) {
+   private int findLoc( String target ) {
       String loc = getLoc( target);
       for( int i=0; i<list.size(); i++ ) {
          if( getLoc( list.get(i) ).equals( loc ) ) return i;
@@ -205,19 +207,28 @@ public class TargetHistory {
    
    /** Retourne l'indice de la première occurence du label (sans tenir
     * de la position associée) - case insensitive  */
-   protected int findLabel( String target ) {
+   private int findLabel( String target ) {
       String label = getLabel( target);
       if( label==null ) return -1;
       for( int i=0; i<list.size(); i++ ) {
-         if( label.equalsIgnoreCase( getLabel( list.get(i) )) ) return i;
+         if( label.equals( getLabel( list.get(i) )) ) return i;
       }
       return -1;
    }
    
-   protected int size() { return list.size(); }
+   /** Supprime le suffixe Fox si non nécessaire */
+   protected String removeFox(String loc) {
+      String fox = " "+aladin.localisation.getFrameFox();
+      if( loc!=null && loc.endsWith(fox) ) loc=loc.substring(0,loc.length()-fox.length());
+      return loc;
+   }
    
-   /** Retourne la dernière target mémorisée */
-   protected String getLast() { return list.size()==0 ? "" : getLoc( list.get( list.size()-1 ) ); }
+   /** Retourne la dernière target mémorisée sans le suffixe Fox si pas nécessaire*/
+   protected String getLast() {
+      if( list.size()==0 ) return "";
+      String s = getLoc( list.get( list.size()-1 ) );
+      return removeFox(s);
+   }
    
    /** Retourne une liste de nb targets à partir de l'indice index. l'index 0 est celui
     * de la dernière target insérée, 1 pour l'avant-dernière, etc...
@@ -225,7 +236,7 @@ public class TargetHistory {
     * @param nb
     * @return
     */
-   protected ArrayList<String> getTargets(int index, int nb) {
+   protected ArrayList<String> getTargets4Menu(int index, int nb) {
       ArrayList<String> a = new ArrayList<>(nb);
       int n=list.size()-1-index;
       for( int i=0; i<nb && n>=0; i++, n-- ) {
@@ -236,10 +247,8 @@ public class TargetHistory {
       return a;
    }
    
-   
-   private FrameMemoLoc frameMemoLoc=null;
-   
-   private void createFrame(String loc, String name) {
+   /** Creation et affichage du formulaire de saisie */
+   protected void createFrame(String loc, String name) {
       if( frameMemoLoc==null ) frameMemoLoc=new FrameMemoLoc(aladin);
       else frameMemoLoc.setVisible(true);
       frameMemoLoc.set(loc,name);
@@ -247,16 +256,13 @@ public class TargetHistory {
    
    /**
     * Petit formulaire pour la mémorisation d'une position spécifique
-    *
-    * @author Pierre Fernique [CDS]
-    * @version 1.0 : (juillet 2022) creation
     */
    class FrameMemoLoc extends JFrame {
       
       protected Aladin aladin;
       
-      private JTextField fieldLocation;   // Le champ de saisie de la position
-      private JTextField fieldName;       // Le nom associé à cette position
+      private JTextField fieldLoc;     // Le champ de saisie de la position
+      private JTextField fieldLabel;   // Le nom associé à cette position
       
       protected FrameMemoLoc(Aladin aladin) {
          super();
@@ -270,6 +276,13 @@ public class TargetHistory {
          getContentPane().add( getPanelBottom(), BorderLayout.SOUTH);
          pack();
          setVisible(true);
+         final JTextField t = fieldLabel;
+         SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                  t.grabFocus();
+                  t.requestFocus();
+              }
+         });
       }
       
       public void processWindowEvent(WindowEvent e) {
@@ -290,30 +303,40 @@ public class TargetHistory {
          p.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
          p.setLayout(g);
          
-         
          JLabel label;
          JPanel p3;
          
-         label = new JLabel( aladin.chaine.getString("MEMOLOCNAME")+": " );
-         label.setFont( label.getFont().deriveFont(Font.BOLD));
-         p3 = new JPanel( new GridLayout(1,2) );
-         fieldName = new JTextField(25);
-         p3.add( fieldName );
-         PropPanel.addCouple(p,label,p3, g,c);
-         
+         // La position
          label = new JLabel( aladin.chaine.getString("MEMOLOC")+": " );
          label.setFont( label.getFont().deriveFont(Font.BOLD));
          p3 = new JPanel( new GridLayout(1,2) );
-         fieldLocation = new JTextField(25);
-         p3.add( fieldLocation );
+         fieldLoc = new JTextField(25);
+         p3.add( fieldLoc );
+         PropPanel.addCouple(p,label,p3, g,c);
+         
+         // Le label
+         label = new JLabel( aladin.chaine.getString("MEMOLOCNAME")+": " );
+         label.setFont( label.getFont().deriveFont(Font.BOLD));
+         p3 = new JPanel( new GridLayout(1,2) );
+         fieldLabel = new JTextField(25);
+         fieldLabel.addKeyListener( new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+               if( e.getExtendedKeyCode()==KeyEvent.VK_ENTER
+                     && fieldLoc!=null && fieldLoc.getText().length()>1 ) {
+                  submit();
+               }
+            }
+         });
+         p3.add( fieldLabel );
          PropPanel.addCouple(p,label,p3, g,c);
 
          return p;
       }
       
-      void set(String loc, String name) {
-         fieldLocation.setText(loc);
-         fieldName.setText(name);
+      // Positionne les valeurs des champs dans le formulaire
+      void set(String loc, String label) {
+         fieldLoc.setText(loc);
+         fieldLabel.setText(label);
       }
       
       /** Construction du panel des boutons de validation
@@ -325,19 +348,21 @@ public class TargetHistory {
          JButton b;
          p.add( b=new JButton(aladin.chaine.getString("MEMOSUBMIT"))); 
          b.addActionListener( new ActionListener() {
-            public void actionPerformed(ActionEvent e) { 
-               submit(); 
-               frameMemoLoc=null;
-               dispose();
-            }
+            public void actionPerformed(ActionEvent e) { submit(); }
          });
-         p.add( b=new JButton(aladin.chaine.getString("CLEAR"))); 
-         b.addActionListener( new ActionListener() { public void actionPerformed(ActionEvent e) { reset(); }} );
-         p.add( b=new JButton(aladin.chaine.getString("UPCLOSE"))); 
+
+         p.add( b=new JButton(aladin.chaine.getString("SFCANCEL"))); 
          b.addActionListener( new ActionListener() { 
             public void actionPerformed(ActionEvent e) { 
                frameMemoLoc=null;
                dispose(); }
+         });
+         
+         p.add( b=new JButton(aladin.chaine.getString("MEMOCLEAN"))); 
+         b.addActionListener( new ActionListener() { public void actionPerformed(ActionEvent e) {
+            resetList();
+            frameMemoLoc=null;
+            dispose(); }
          });
          
          JButton h = Util.getHelpButton(this,aladin.chaine.getString("MEMOLOCHELP"));
@@ -347,12 +372,12 @@ public class TargetHistory {
       }
       
       private void submit() {
-         String name = fieldName.getText().trim();
-         String loc = fieldLocation.getText().trim();
+         String label = fieldLabel.getText().trim();
+         String loc   = fieldLoc.getText().trim();
          
          // Utilise-t-on déjà le même label, mais avec une localisation différente ?
-         if( name.length()>0 ) {
-            int indiceLabel = findLabel(name+SEPARATOR);
+         if( label.length()>0 ) {
+            int indiceLabel = findLabel(label+SEP);
             if( indiceLabel>=0 ) {
                String s = getLoc( list.get(indiceLabel) );
                if( !loc.equals(s) ) {
@@ -362,14 +387,17 @@ public class TargetHistory {
          }
          
          String target= loc;
-         if( name.length()>0 ) target = name+SEPARATOR+loc;
+         if( label.length()>0 ) target = label+SEP+loc;
          aladin.targetHistory.add( target );
+         
+         frameMemoLoc=null;
+         dispose();
       }
 
-      // Reset complet du formulaire
-      private void reset() {
-         fieldLocation.setText("");
-         fieldName.setText("");
+      // Reset de tout l'historique
+      private void resetList() {
+         if( !aladin.confirmation(this,aladin.chaine.getString("MEMOLOCCONFRESET")) ) return;
+         list.clear();
       }
    }
 
