@@ -1737,10 +1737,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       boolean testv12 = Aladin.TESTV12;
       if( testv12 ) Aladin.TESTV12=false;
       
-      // Si on est en mode script, il faut creer manuellement l'image de la vue. 
       BufferedImage img = new BufferedImage(rv.width, rv.height,
             pref.isImage() && ((PlanImage)pref).isTransparent() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
       Graphics2D g = (Graphics2D)img.getGraphics();
+      
+      // Si on est en mode script, il faut générer manuellement l'image de la vue. 
       if( aladin.NOGUI ) {
          PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
          getImgView(pi);

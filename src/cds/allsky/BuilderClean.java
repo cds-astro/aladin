@@ -39,7 +39,16 @@ public class BuilderClean extends Builder {
    public Action getAction() { return Action.CLEAN; }
 
    public void run() throws Exception {
+      resetCheckCode();
+      context.setPropriete(Constante.KEY_HIPS_ESTSIZE, null );
+      context.setPropriete(Constante.KEY_HIPS_NB_TILES, null );
+      context.writePropertiesFile(null);
+
       deleteDir(new File(context.getOutputPath()));
+   }
+   
+   public void resetCheckCode() {
+      context.setPropriete(Constante.KEY_HIPS_CHECK_CODE, null );
    }
    
    public void validateContext() throws Exception {      

@@ -72,6 +72,8 @@ public abstract class Builder {
          case CLEANPNG:  return new BuilderCleanPng(context);
          case CLEANDATE: return new BuilderCleanDate(context);
          case CLEANWEIGHT:return new BuilderCleanWeight(context);
+         case CHECKCODE:       return new BuilderCheckCode(context);
+         case CHECK:     return new BuilderCheck(context);
          case LINT:      return new BuilderLint(context);
 //         case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);
@@ -204,7 +206,7 @@ public abstract class Builder {
 
       File f = new File(output);
       if( f.exists() && (!f.isDirectory()  || !f.canRead())) throw new Exception("Ouput directory not available ["+output+"]");
-      context.info("the output directory will be "+output);
+      context.info("the output directory is "+output);
       
       
       context.setValidateOutput(true);

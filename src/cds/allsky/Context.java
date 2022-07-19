@@ -146,6 +146,8 @@ public class Context {
    protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
    protected String creator=null;          // Le nom de la personne qui a fait le HiPS
    protected String status=null;             // status du HiPs (private|public clonable|unclonable|clonableOnce)
+   protected String hipsCheckCode=null;                // La ligne CRC associé au HiPS
+   protected boolean hipsCheckForce=false;     // true si on a le droit de recalculer les CRC
    protected String redInfo;                 // Information de colormap lors de la génération d'un HIPS RGB (composante red)
    protected String greenInfo;               // Information de colormap lors de la génération d'un HIPS RGB (composante green)
    protected String blueInfo;                // Information de colormap lors de la génération d'un HIPS RGB (composante blue)
@@ -708,6 +710,17 @@ public class Context {
       if( i==1 || i>2 ) throw new Exception("pixelCut parameter error");
    }
    public void setPilot(int nbPilot) { this.nbPilot=nbPilot; }
+   
+   /** Mémorisation de la chaine des check codes (ex: "png:452738951 fit:184622110") */
+   public void setCheckCode( String hipscrc) { this.hipsCheckCode= hipscrc; }
+   
+   /** retourne la chaine des check codes (ex: "png:452738951 fit:184622110")
+    * ou null si non connue */ 
+   public String getCheckCode() { return hipsCheckCode; }
+   
+   /// true si on peut modifier les Check codes
+   public void setCheckForce(boolean flag) { hipsCheckForce=flag; }
+   public boolean getCheckForce() { return hipsCheckForce; }
    
    public void setPixelGood(String sGood) throws Exception {
       StringTokenizer st = new StringTokenizer(sGood," ");
@@ -1964,9 +1977,22 @@ public class Context {
          keyAddProp = new Vector<>();
          valueAddProp = new Vector<>();
       }
+      
+      // Suppression ?
+      if( value==null ) {
+         int i = keyAddProp.indexOf(key);
+         if( i!=-1 ) {
+            keyAddProp.remove(i);
+            valueAddProp.remove(i);
+         }
+      }
+      
+      // Insertion en première position
       if( flagInsert ) {
          keyAddProp.insertElementAt(key,0);
          valueAddProp.insertElementAt(value,0);
+         
+      // Insertion à la fin
       } else {
          keyAddProp.addElement(key);
          valueAddProp.addElement(value);
@@ -2287,33 +2313,37 @@ public class Context {
          if( greenInfo!=null ) setPropriete(Constante.KEY_HIPS_RGB_GREEN,greenInfo);
          if( blueInfo!=null )  setPropriete(Constante.KEY_HIPS_RGB_BLUE,blueInfo);
       }
+      
+      // Check Code ?
+      if( hipsCheckCode!=null ) setPropriete(Constante.KEY_HIPS_CHECK_CODE,hipsCheckCode);
 
-      SMoc m = moc!=null ? moc : mocIndex;
-      double skyFraction = m==null ? 0 : m.getCoverage();
-      if( skyFraction>0 ) {
-
-         setPropriete(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( skyFraction ) );
-
-         long nbpix = CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder());
-         long tileSizeFits = Math.abs(bitpix/8) * nbpix + 2048L;
-         long tileSizeJpeg = nbpix/15;
-         long tileSizePng = (long)(tileSizeJpeg*1.5);
-         double coverage = m.getCoverage();
-         long numberOfTiles =  CDSHealpix.pow2(order) *  CDSHealpix.pow2(order) * 12L;
-         
-//         System.out.println("nbpix="+nbpix+" TileSizeFits="+Util.getUnitDisk(tileSizeFits)+ " tileSizeJpeg="+Util.getUnitDisk(tileSizeJpeg)+" tileSizePng="+Util.getUnitDisk(tileSizePng)
-//         +" nbTiles="+numberOfTiles+" depth="+depth);
-         long fitsSize = (long)( ( tileSizeFits*numberOfTiles * 1.4 * coverage) )/1024L;
-         long jpegSize = (long)( ( tileSizeJpeg*numberOfTiles * 1.4 * coverage) )/1024L;
-         long pngSize = (long)( ( tileSizePng*numberOfTiles * 1.4 * coverage) )/1024L;
-         long size = (fmt.indexOf("fits")>=0 ? fitsSize : 0)
-               + (fmt.indexOf("jpeg")>=0 ? jpegSize : 0)
-               + (fmt.indexOf("png")>=0 ? pngSize : 0)
-               + 8;
-         size *= depth;
-//         System.out.println("fmt="+fmt+" => full size="+Util.getUnitDisk(size*1024L)+" => estsize="+size);
-         setPropriete(Constante.KEY_HIPS_ESTSIZE, size+"" );
-      }
+// DESORMAIS MAJ PAR L'ACTION CRC - PF 19 JUILLET 2022
+//      SMoc m = moc!=null ? moc : mocIndex;
+//      double skyFraction = m==null ? 0 : m.getCoverage();
+//      if( skyFraction>0 ) {
+//
+//         setPropriete(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( skyFraction ) );
+//
+//         long nbpix = CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder());
+//         long tileSizeFits = Math.abs(bitpix/8) * nbpix + 2048L;
+//         long tileSizeJpeg = nbpix/15;
+//         long tileSizePng = (long)(tileSizeJpeg*1.5);
+//         double coverage = m.getCoverage();
+//         long numberOfTiles =  CDSHealpix.pow2(order) *  CDSHealpix.pow2(order) * 12L;
+//         
+////         System.out.println("nbpix="+nbpix+" TileSizeFits="+Util.getUnitDisk(tileSizeFits)+ " tileSizeJpeg="+Util.getUnitDisk(tileSizeJpeg)+" tileSizePng="+Util.getUnitDisk(tileSizePng)
+////         +" nbTiles="+numberOfTiles+" depth="+depth);
+//         long fitsSize = (long)( ( tileSizeFits*numberOfTiles * 1.4 * coverage) )/1024L;
+//         long jpegSize = (long)( ( tileSizeJpeg*numberOfTiles * 1.4 * coverage) )/1024L;
+//         long pngSize = (long)( ( tileSizePng*numberOfTiles * 1.4 * coverage) )/1024L;
+//         long size = (fmt.indexOf("fits")>=0 ? fitsSize : 0)
+//               + (fmt.indexOf("jpeg")>=0 ? jpegSize : 0)
+//               + (fmt.indexOf("png")>=0 ? pngSize : 0)
+//               + 8;
+//         size *= depth;
+////         System.out.println("fmt="+fmt+" => full size="+Util.getUnitDisk(size*1024L)+" => estsize="+size);
+//         setPropriete(Constante.KEY_HIPS_ESTSIZE, size+"" );
+//      }
 
       // Mise en place effective des proprétés
       String k[] = new String[ keyAddProp==null ? 0 : keyAddProp.size() ];
@@ -3017,5 +3047,71 @@ public class Context {
       }
 
    }
+   
+   /** Supprime le Check code concernant un format spécifique du hipsCheckCode du context
+    * Par exemple "png:46574930 fits:2847219305 jpg:853095383" => "png:46574930 jpg:853095383"
+    * @param fmt Le format dont on veut supprimer le check code
+    */
+   public void resetCheckCode(String fmt) {
+      hipsCheckCode = resetCheckCode( fmt, hipsCheckCode ); 
+   }
+
+   /** Ajoute/remplace le Check code concernant un format spécifique du hipsCheckCode du context
+    * Par exemple "png:46574930 jpg:853095383" => "png:46574930 fits:2847219305 jpg:853095383"
+    * @param fmt Le format dont on veut ajouter/modfier le check code
+    * @param checkCode  (sous la forme d'un entier 32 bits = clé de hash)
+    */
+   public void addCheckCode(String fmt, int checkCode) { 
+      hipsCheckCode = addCheckCode( fmt, checkCode, hipsCheckCode ); 
+   }
+
+   
+   /** Extrait le Check code correspondant au format indiqué à partir d'une chaine hipsCheckCode
+    * du genre "png:46574930 fits:2847219305"
+    * @param fmt Le format souhaité (ex:png)
+    * @param hipsCheckCode la chaine contenant tous les check codes format par format
+    * @return le check code du format spécifié (int sous la forme d'un String)
+    */
+   static public String getCheckCode(String fmt, String hipsCheckCode) {
+      Tok tok = new Tok(hipsCheckCode," ,");
+      while( tok.hasMoreTokens() ) {
+         String s = tok.nextToken();
+         if( s.startsWith(fmt+":") ) return s.substring(fmt.length()+1);
+      }
+      return null;
+   }
+   
+   /** Supprime le Check code concernant un format spécifique d'une chaine hhipsCheckCode
+    * Par exemple "png:46574930 fits:2847219305 jpg:853095383" => "png:46574930 jpg:853095383"
+    * @param fmt Le format dont on veut supprimer le check code
+    * @param hipsCheckCode la chaine hips_crc en entrée
+    * @return la chaine hips_check_code en sortie, ou null si plus aucun Check code
+    */
+   static public String resetCheckCode(String fmt, String hipsCheckCode) {
+      if( hipsCheckCode==null ) return null;
+      StringBuilder r=null;
+      Tok tok = new Tok(hipsCheckCode," ,");
+      while( tok.hasMoreTokens() ) {
+         String s = tok.nextToken();
+         if( s.startsWith(fmt+":") ) continue;
+         if( r==null ) r = new StringBuilder();
+         else r.append(' ');
+         r.append( s );
+      }
+      return r.toString();
+   }
+
+   /** Ajoute/remplace le CRC concernant un format spécifique d'une chaine hipsCheckCode
+    * Par exemple "png:46574930 jpg:853095383" => "png:46574930 fits:2847219305 jpg:853095383" 
+    * @param fmt Le format dont on veut ajouter/modifier le check code
+    * @param checkCode le check code (sous la fvorme d'un entier 32 bits = clé de hash)
+    * @param hipsCheckCode la chaine hips_crc ou null en entrée
+    * @return la chaine hipsCheckCode en sortie
+    */
+   static public String addCheckCode(String fmt, int checkCode, String hipsCheckCode) {
+      hipsCheckCode = resetCheckCode(fmt,hipsCheckCode);
+      return (hipsCheckCode==null ? "":hipsCheckCode+" ") + fmt+":"+checkCode;
+   }
+
 
 }

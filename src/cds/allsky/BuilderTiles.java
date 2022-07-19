@@ -87,6 +87,8 @@ public class BuilderTiles extends Builder {
    public void run() throws Exception {
       context.info("Creating "+context.getTileExt()+" tiles and allsky (max depth="+context.getOrder()+")...");
       context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
+      
+      context.resetCheckCode( context.getTileExt());
 
       // Un peu de baratin
       if( !context.isColor() ) {

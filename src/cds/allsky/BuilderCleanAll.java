@@ -31,5 +31,8 @@ public class BuilderCleanAll extends BuilderClean {
    public BuilderCleanAll(Context context) { super(context); }
    
    public boolean mustBeDeleted(File f) { return true; }
+   
+   public void resetCheckCode() { context.setCheckCode(null); };
+
 
 }

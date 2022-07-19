@@ -34,6 +34,8 @@ public enum Action {
    MOCINDEX  ("(Re)build the index MOC (MultiOrder Coverage map) in HpxFinder directory"),
    MOCHIGHT  ("Build a high resolution output coverage map (MOC order=pixelRes)"),
    ALLSKY    ("(Re)build all Allsky files + index.html"),
+   CHECKCODE ("Compute the check codes (and the size) associated to the target HiPS"),
+   CHECK     ("Verify the HiPS based on original check codes"),
    GZIP      ("Compress some FITS tiles and Allsky.fits"),                                 // DEPRECATED
    GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),                                    // DEPRECATED
    CLEAN     ("Delete all Hips files (except properties file)"),

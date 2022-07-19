@@ -39,6 +39,8 @@ public class BuilderCleanFits extends BuilderClean  {
       if( !name.startsWith("Npix") ) return false;
       return true;
    }
+   
+   public void resetCheckCode() { context.resetCheckCode("fits"); };
 
    public void run() throws Exception {
       deleteDirExceptIndex(new File(context.getOutputPath()));

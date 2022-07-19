@@ -332,7 +332,14 @@ public class BuilderMirror extends BuilderTiles {
 
          prop.remove(Constante.KEY_HIPS_SERVICE_URL);
          prop.remove(Constante.KEY_MOC_ACCESS_URL);
-         prop.remove(Constante.KEY_HIPS_ESTSIZE);
+         
+         // ON DEVRAIT FAIRE CELA PLUS FINEMENT DANS LE CAS OU L'ON LAISSE DE COTE TOUT UN FORMAT
+         // MAIS BON...
+         if( isPartial ) {
+            prop.remove(Constante.KEY_HIPS_ESTSIZE);
+            prop.remove(Constante.KEY_HIPS_NB_TILES);
+            prop.remove(Constante.KEY_HIPS_CHECK_CODE);
+         }
 
          double skyFraction = context.moc.getCoverage();
          prop.replaceValue(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( skyFraction ) );

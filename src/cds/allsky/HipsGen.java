@@ -61,6 +61,7 @@ public class HipsGen {
     private boolean flagRGB=false;
     private boolean flagGunzip=false;
     private boolean flagMapFits=false;
+    private boolean flagCrc=false;
     private boolean flagAbort=false,flagPause=false,flagResume=false;
     public Context context;
 
@@ -517,6 +518,8 @@ public class HipsGen {
                     if( a==Action.ZIP )    flagZip=true;
                     if( a==Action.UPDATE ) flagUpdate=true;
                     if( a==Action.GUNZIP ) flagGunzip=true;
+                    if( a==Action.CHECKCODE )    flagCrc=true;
+                    if( a==Action.CHECK )  flagCrc=true;
                     if( a==Action.LINT )   flagLint=true;
                     if( a==Action.TMOC )   flagTMoc=true;
                     if( a==Action.TINDEX ) flagTIndex=true;
@@ -596,6 +599,7 @@ public class HipsGen {
                     actions.add(Action.PNG);
                     if( !flagMapFits ) actions.add(Action.DETAILS);
                 }
+                actions.add(Action.CHECKCODE);
             }
 
         }
@@ -619,7 +623,7 @@ public class HipsGen {
                 } catch( Exception e ) { }
             }
 
-            if( !flagConcat && !flagMirror   && !flagZip  && !flagUpdate && !flagLint && !flagGunzip
+            if( !flagConcat && !flagMirror   && !flagZip  && !flagUpdate && !flagLint && !flagGunzip && !flagCrc
                             && !flagMocError && !flagProp && !flagTMoc   && !flagTIndex ) {
                 String s = context.checkHipsId(context.hipsId);
                 context.setHipsId(s);
@@ -666,7 +670,7 @@ public class HipsGen {
             else {
                 for( int i=0; i<actions.size() ;i++ ) {
                     Action a = actions.get(i);
-                    if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
+                         if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
                     else if( a==Action.TINDEX )  { actions.add(i, Action.CLEANTINDEX);  i++; }
                     else if( a==Action.MIRROR )  { actions.add(i, Action.CLEANALL);     i++; }
                     else if( a==Action.DETAILS ) { actions.add(i, Action.CLEANDETAILS); i++; }
@@ -676,6 +680,7 @@ public class HipsGen {
                     else if( a==Action.PNG )     { actions.add(i, Action.CLEANPNG);     i++; }
                     else if( a==Action.RGB )     { actions.add(i, Action.CLEAN);        i++; }
                     else if( a==Action.CUBE )    { actions.add(i, Action.CLEAN);        i++; }
+                    else if( a==Action.CHECKCODE ) context.setCheckForce(true);
                 }
             }
         }
@@ -706,7 +711,7 @@ public class HipsGen {
                 // Suppression du cache disque si nécessaire
                 if( cacheRemoveOnExit ) MyInputStreamCached.removeCache();
 
-                if( !flagMirror && !flagLint && !flagZip ) {
+                if( !flagMirror && !flagLint && !flagZip && !flagCrc ) {
                     String id = context.getHipsId();
                     if( id==null || id.startsWith("ivo://UNK.AUT") ) {
                         context.warning("a valid HiPS IVOID identifier is strongly recommended"

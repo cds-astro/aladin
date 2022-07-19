@@ -39,5 +39,7 @@ public class BuilderCleanPng extends BuilderCleanFits {
       if( !name.startsWith("Npix") ) return false;
       return true;
    }
+   
+   public void resetCheckCode() { context.resetCheckCode("png"); };
 
 }

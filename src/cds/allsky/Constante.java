@@ -96,6 +96,7 @@ public class Constante {
    static public final String KEY_OBS_DESCRIPTION       = "obs_description";
    static public final String OLD_OBS_DESCRIPTION       = "verboseDescription";
    static public final String OLD1_OBS_DESCRIPTION      = "descriptionVerbose";
+   static public final String KEY_HIPS_CHECK_CODE       = "hips_check_code";
    static public final String KEY_HIPS_TILE_FORMAT      = "hips_tile_format";
    static public final String KEY_HIPS_SERVICE_URL      = "hips_service_url";
    static public final String KEY_HIPS_MASTER_URL       = "hips_master_url";
@@ -107,6 +108,7 @@ public class Constante {
    static public final String KEY_HIPS_SKYVAL_VALUE     = "hips_skyval_value";
    static public final String KEY_HIPS_PROCESS_HIERARCHY= "hips_hierarchy";
    static public final String KEY_HIPS_ESTSIZE          = "hips_estsize";
+   static public final String KEY_HIPS_NB_TILES         = "hips_nb_tiles";
    static public final String OLD_HIPS_TILE_FORMAT      = "format";
    static public final String KEY_HIPS_ORDER            = "hips_order";
    static public final String OLD_HIPS_ORDER            = "maxOrder";

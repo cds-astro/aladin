@@ -3300,7 +3300,7 @@ public class PlanBG extends PlanImage {
       if( now ) {
          BufferedImage img = new BufferedImage(v.rv.width,v.rv.height, BufferedImage.TYPE_INT_ARGB_PRE);
          Graphics g = img.getGraphics();
-         v.drawBackground(g);    // impossible si NOGUI (JE NE COMPRENDS PAS PF - juin 2022)
+//         v.drawBackground(g);    // impossible si NOGUI (JE NE COMPRENDS PAS PF - juin 2022)
          drawLosanges(g,v,now, img);
          adjustCM( img );
          g.dispose();
