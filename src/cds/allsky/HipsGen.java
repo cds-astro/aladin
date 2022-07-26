@@ -597,9 +597,10 @@ public class HipsGen {
                 if( !context.isColor() ) {
 //                    actions.add(Action.GZIP);    // JE NE GZIPPE PLUS PAR DEFAUT
                     actions.add(Action.PNG);
-                    if( !flagMapFits ) actions.add(Action.DETAILS);
                 }
                 actions.add(Action.CHECKCODE);
+                
+                if( !context.isColor() && !flagMapFits ) actions.add(Action.DETAILS);
             }
 
         }
@@ -796,11 +797,12 @@ public class HipsGen {
         System.out.println("       java -jar "+launcher+" -param=configfile\n");
         System.out.println("The config file must contain these following options, or use them\n" +
                 "directly on the comand line :\n");
-        System.out.println("\nAvailable actions (by default: \"INDEX TILES PNG DETAILS\"):" + "\n" +
+        System.out.println("\nAvailable actions (by default: \"INDEX TILES PNG CHECKCODE DETAILS\"):" + "\n" +
               "   INDEX      "+Action.INDEX.doc() + "\n" +
               "   TILES      "+Action.TILES.doc() + "\n" +
               "   JPEG       "+Action.JPEG.doc() + "\n" +
               "   PNG        "+Action.PNG.doc() + "\n" +
+              "   CHECKCODE  "+Action.CHECKCODE.doc() + "\n" +
               "   RGB        "+Action.RGB.doc() + "\n" +
               "   MOC        "+Action.MOC.doc() + "\n" +
               //            "   MOCERROR   "+Action.MOCERROR.doc() + "\n" +
@@ -816,6 +818,8 @@ public class HipsGen {
               "   MAP        "+Action.MAP.doc() + "\n" +
               "   MIRROR     "+Action.MIRROR.doc() + "\n"+
               "   UPDATE     "+Action.UPDATE.doc() + "\n"+
+              "   CHECK      "+Action.CHECK.doc() + "\n" +
+              "   CHECKDATASUM  "+Action.CHECKDATASUM.doc() + "\n" +
               "   LINT       "+Action.LINT.doc() + "\n"
               );
         System.out.println(
@@ -926,8 +930,6 @@ public class HipsGen {
                 "\n    java -jar "+launcher+" in=/MyImg hips_pixel_bitpix=16 hips_pixel_cut=\"-1 100 log\"" +
                 "\n           The FITS tiles will be coded in short integers, the preview tiles" +
                 "\n           will map the physical values [-1..100] with a log function contrast in [0..255]." +
-                "\n    java -jar "+launcher+" in=/MyImg blank=0 border=\"100 50 100 50\" mode=REPLACETILE   " + "\n" +
-                "           => recompute tiles. The original pixels in the border or null will be ignored."+
                 "\n    java -jar "+launcher+" in=HiPS1 out=HiPS2 CONCAT => Concatenate HiPS1 to HiPS2"
                 //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
                 );
@@ -945,5 +947,6 @@ public class HipsGen {
         HipsGen generator = new HipsGen();
         generator.launcher="HipsGen";
         generator.execute(args);
+//        System.out.println("Time DATASUM computing => "+(Fits.D/1000000L)+"ms");
     }
 }

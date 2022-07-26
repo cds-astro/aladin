@@ -2189,7 +2189,10 @@ public class PlanHealpix extends PlanBG {
          }
       }
       if( empty ) out=null;
-      else out.writeFITS(file);
+      else {
+         out.addDataSum();
+         out.writeFITS(file);
+      }
 
       return out;
    }

@@ -79,6 +79,7 @@ final public class BuilderAllsky  extends Builder {
    protected void postJob() throws Exception {
       validateLabel();
       validateBitpix();
+      context.resetCheckCode();
       context.writeMetaFile();
    }
 
@@ -162,13 +163,17 @@ final public class BuilderAllsky  extends Builder {
 
       // Ecriture du FITS (true bits)
       String filename = getFileName(path, order,z);
+      out.addDataSum();
       out.writeFITS(filename+".fits");
 
       // Dans le cas d'un cube, il est possible que le Allsky.fits n'ait pas été créé (vide),
       // on va alors dupliquer le premier Allsky_nnn.fits en Allsky.fits pour s'en sortir
       if( z>1 ) {
          String f = getFileName(path,order,0);
-         if( !(new File(f+".fits")).isFile() ) out.writeFITS(f+".fits");
+         if( !(new File(f+".fits")).isFile() ) {
+            out.addDataSum();
+            out.writeFITS(f+".fits");
+         }
       }
 
       Aladin.trace(2,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale

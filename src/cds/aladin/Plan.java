@@ -899,8 +899,10 @@ public class Plan implements Runnable {
                } catch( Exception e ) {
                   nError++;
                   if( nError>100 ) {
-                     if( aladin.levelTrace>=3 ) e.printStackTrace();
-                     aladin.error("Too many error during proper motion computation !\n"
+                     if( aladin.levelTrace>=3 ) {
+                        e.printStackTrace();
+                     }
+                     aladin.warning("Too many error during proper motion computation !\n"
                            + e.getMessage());
                      break;
                   }

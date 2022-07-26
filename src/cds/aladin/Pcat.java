@@ -45,6 +45,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import cds.astro.Unit;
+import cds.moc.Healpix;
+import cds.moc.SMoc;
 import cds.tools.Astrodate;
 import cds.tools.ConfigurationReader;
 import cds.tools.ScientificUnitsUtil;
@@ -192,7 +194,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       }
 
       // Test sur le recouvrement des champs
-      if( /* Projection.isOk(proj) && */plan.type!=Plan.TOOL && plan.type!=Plan.APERTURE
+      if( plan.type!=Plan.TOOL && plan.type!=Plan.APERTURE
             && !(plan.isSimpleCatalog() && (plan.hasXYorig || v.isPlot()) )
             && !proj.agree(plan.projd,v) ) return;
 
@@ -520,7 +522,6 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    private StringBuilder line = new StringBuilder(500);
    private Map<Integer, Field> standardisedColumns = new HashMap<>();
    
-
    /** Demande d'interruption d'un parsing en cours */
    public void interrupt() throws Exception { res.interrupt(); }
 
@@ -1193,43 +1194,87 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       return ok && nb_o>=0?nb_o:-1;
    }
 
-   /** (Re)génération de la projection par défaut associée à la liste des objets en prenant
-    * comme centre de projection le barycentre */
    protected void createDefaultProj() {
-      for( int i=0; i<nb_o; i++ ) {
-         Position s = (Position)o[i];
-         if( i==0 || s.raj < minRa )  minRa  = s.raj;
-         if( i==0 || s.raj > maxRa )  maxRa  = s.raj;
-         if( i==0 || s.dej < minDec ) minDec = s.dej;
-         if( i==0 || s.dej > maxDec ) maxDec = s.dej;
+      if( nb_o==0 ) { 
+         rajc=dejc=0; 
+         rm=7*60.;
+         
+      } else if( nb_o==1 ) {
+         Position s = (Position)o[1];
+         rajc = s.raj;
+         dejc = s.dej;
+         rm=7*60.;
+         
+      } else {
+         try {
+            // Si toute tombe dans la même cellule MOC de 1°, on fera une projection limitée à 1°
+            // sinon on fera large (on ne s'embête plus car généralement il y a un HiPS en dessous)
+            Healpix hpx = new Healpix();
+            SMoc moc = new SMoc(6);    // cellule de 1°
+            moc.bufferOn();
+            
+            int gap = 1;
+            if( nb_o>1000 ) gap = nb_o/1000;
+            
+            Position target=null;
+            for( int i=0; i<nb_o; i+=gap ) {
+               Position s = (Position)o[i];
+               moc.add(hpx, s.raj, s.dej);
+               if( i==0 ) target=s;
+            }
+            moc.bufferOff();
+            rajc = target.raj;
+            dejc = target.dej;
+            rm = (moc.getNbValues()==1 ? 2: 90)*60.;
+            Aladin.trace(3,"computeTarget by Moc =>"+rajc+","+dejc+" rm=["+rm+"] moc.getNbValues="+moc.getNbValues( ));
+
+         } catch( Exception e ) {
+            e.printStackTrace();
+         }
       }
-      computeTarget();
       postJob(rajc,dejc,rm,false);
    }
-
-   /** Determine le target des donnees en fonction.
-    * en fonction de minRa, maxRa, minDec, maxDec et
-    * met a jour rajc, dejc et rm en fonction
-    */
-   private void computeTarget() {
-//      if( maxDec-minDec>90 ) {
-      if( maxDec-minDec>90 || maxRa-minRa>180.) {
-         dejc=rajc=0;
-         rm=180*60.;
-      } else {
-         if( maxRa-minRa>180. ) {
-            double alpha = 360-maxRa;
-            rajc = (minRa+alpha)/2 - alpha;
-         } else rajc = (minRa+maxRa)/2;
-         dejc = (minDec+maxDec)/2;
-//         double r = Math.max(Math.abs(minRa-rajc)*Math.cos( (dejc*Math.PI)/180.0 ), Math.abs(minDec-dejc));
-//         rm = (nb_o==1 || r==0.)?7:r*60.0*1.4142;
-         double r = Coord.getDist( new Coord(minRa, minDec), new Coord(maxRa, maxDec) )/2;
-         rm = (nb_o==1 || r==0.)?7:r*60.0;
-
-      }
-      Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+".."+maxDec+"]=>"+dejc+" rm=["+rm+"]");
-   }
+   
+   private void computeTarget() { createDefaultProj(); }
+   
+   
+   /** (Re)génération de la projection par défaut associée à la liste des objets en prenant
+    * comme centre de projection le barycentre */
+//   protected void createDefaultProj() {
+//      for( int i=0; i<nb_o; i++ ) {
+//         Position s = (Position)o[i];
+//         if( i==0 || s.raj < minRa )  minRa  = s.raj;
+//         if( i==0 || s.raj > maxRa )  maxRa  = s.raj;
+//         if( i==0 || s.dej < minDec ) minDec = s.dej;
+//         if( i==0 || s.dej > maxDec ) maxDec = s.dej;
+//      }
+//      computeTarget();
+//      postJob(rajc,dejc,rm,false);
+//   }
+//   
+//   /** Determine le target des donnees en fonction.
+//    * en fonction de minRa, maxRa, minDec, maxDec et
+//    * met a jour rajc, dejc et rm en fonction
+//    */
+//   private void computeTarget() {
+////      if( maxDec-minDec>90 ) {
+//      if( maxDec-minDec>90 || maxRa-minRa>180.) {
+//         dejc=rajc=0;
+//         rm=180*60.;
+//      } else {
+//         if( maxRa-minRa>180. ) {
+//            double alpha = 360-maxRa;
+//            rajc = (minRa+alpha)/2 - alpha;
+//         } else rajc = (minRa+maxRa)/2;
+//         dejc = (minDec+maxDec)/2;
+////         double r = Math.max(Math.abs(minRa-rajc)*Math.cos( (dejc*Math.PI)/180.0 ), Math.abs(minDec-dejc));
+////         rm = (nb_o==1 || r==0.)?7:r*60.0*1.4142;
+//         double r = Coord.getDist( new Coord(minRa, minDec), new Coord(maxRa, maxDec) )/2;
+//         rm = (nb_o==1 || r==0.)?7:r*60.0;
+//
+//      }
+//      Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+".."+maxDec+"]=>"+dejc+" rm=["+rm+"]");
+//   }
 
    // Analyse de la chaine indiquant le target
    // REMARQUE : Cette procedure a ete ecrite en deux temps trois mouvements, il faudra

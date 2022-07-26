@@ -459,11 +459,30 @@ public class PlanCatalog extends Plan {
       if( getNbTable()>1 ) aladin.calque.splitCatalog(this);
       
       setActivated(true);
-      aladin.view.setRepere(this);
+      
+      // Déplacement de la vue principale si aucune source dedans
+//      aladin.view.setRepere(this);
+      setFirstLocation();
 
      callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.SUCCESS, null));
      
      return true;
+   }
+   
+   // Positionne la vue
+   private void setFirstLocation() {
+     ViewSimple v = aladin.view.getCurrentView();
+     
+     Iterator<Obj> it = pcat.iterator();
+     while( it.hasNext() ) {
+        Obj o = it.next();
+        if( v.isInView(o.raj, o.dej) ) {
+           return;  // Au-moins un objet déjà visible dans la vue
+        }
+     }
+     
+     // Rien de visible ? on zoome sur le premier objet
+     if( v.getProj().agree(projd, v))  aladin.view.setRepere(this);
    }
    
    /** Désactive tous les filtres dédiées */

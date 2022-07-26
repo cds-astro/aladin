@@ -1277,7 +1277,10 @@ public class BuilderTiles extends Builder {
    protected void write(String file, Fits out) throws Exception {
       String filename = file+context.getTileExt();
       if( isColor ) out.writeCompressed(filename,0,0,null, Constante.TILE_MODE[ context.targetColorMode ]);
-      else out.writeFITS(filename);
+      else {
+         out.addDataSum();
+         out.writeFITS(filename);
+      }
    }
 
    /** Création d'un losange terminal

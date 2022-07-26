@@ -197,6 +197,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> Fixed the automatic refocusing of a small catalogue.
  * @beta    <LI> Corrected boolean data type SAMP bug
  * @beta    <LI> Fix -noconsole bug with execAsync() [thanks to G.Eychaner]
  * @beta    <LI> Fix pixel access methods via plugin avoiding memory cache release.
@@ -238,7 +239,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.913";
+   static public final    String VERSION = "v11.916";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4296,7 +4297,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    protected void newPlanTool() {
-      Plan p = calque.createPlanTool(null);
+      
+      // On déselectionne les éventuelles objets graphiques avant de créer le nouveau plan Tool
+      Plan p = calque.getFirstSelectedPlan();
+      if( p instanceof PlanTool ) view.deSelect(p);
+      
+      p = calque.createPlanTool(null);
       console.printCommand("draw newtool("+Tok.quote(p.label)+")");
    }
 

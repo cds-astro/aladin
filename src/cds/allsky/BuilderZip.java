@@ -35,8 +35,7 @@ import cds.tools.pixtools.Util;
 
 
 /**
- * Permet la compression de certaines tuiles Fits (les 3 premiers niveaux et le Allsky.fits)
- * Rq : Ne compresse jamais le niveau le plus profond
+ * PROTO - En cours d'élaboration - mise en ZIP de tous un HiPS
  * @author P. Fernique [CDS]
  * @version 1.0 - mai 2012 - création
  */
@@ -46,16 +45,12 @@ public class BuilderZip extends Builder {
       super(context);
    }
    
-   public Action getAction() { return Action.GZIP; }
+   public Action getAction() { return Action.ZIP; }
 
    public void validateContext() throws Exception {
       validateOutput();
    }
    
-   /** Gzippe toutes les tuiles FITS ainsi que le fichier Allsky.fits qui se trouve
-    * dans le répertoire Allsky repéré par root.
-    * Attention: ne change pas pour autant les extensions des fichiers (toujours.fits)
-    */
    public void run() throws Exception { 
       try {
          zip();
@@ -65,8 +60,6 @@ public class BuilderZip extends Builder {
       }
    }
    
-   // lance le gzip (resp gunzip) récursivement sur tous les répertoire Norder??
-   // Dans le cas où un fichier est déjà gzippé (resp. gunzippé), le fichier est simplement ignoré
    protected void zip() throws Exception {
       String path = context.getOutputPath();
       int maxOrder = Util.getMaxOrderByPath(path);

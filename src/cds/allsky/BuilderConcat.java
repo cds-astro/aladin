@@ -61,6 +61,8 @@ public class BuilderConcat extends BuilderTiles {
 
    public void run() throws Exception {
       build();
+      
+      context.resetCheckCode();
 
       // Regeneration de l'arborescence pour la zone concernée
       (new BuilderTree(context)).run();

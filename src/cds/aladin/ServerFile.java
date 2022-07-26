@@ -1088,7 +1088,7 @@ public class ServerFile extends Server implements XMLConsumer {
             String val = (String)atts.get(key);
             if( key.equals("sregion") && val.equals("true") ) {
                footprintIdx = vField.size();
-               System.out.println("footprint in "+footprintIdx+" on "+f);
+//               System.out.println("footprint in "+footprintIdx+" on "+f);
             }
             else f.addInfo(key,val);
          }
@@ -1109,9 +1109,11 @@ public class ServerFile extends Server implements XMLConsumer {
                if( pdf==null ) pdf = new Vector();
                pdf.addElement(plan);
             }
-
-            // Post-traitement sur le plan CATALOG
-            //            if( typePlan==Plan.CATALOG || typePlan==CATALOGTOOL ) plan.pcat.postJob(ra,de,rm,true);
+            
+            // Post-traitement sur les plans catalogues HiPS
+            if( typePlan==Plan.ALLSKYCAT ) {
+               ((PlanBGCat)plan).loadGenericLegende();
+            }
 
             // Post-traitement sur le plan IMAGE
             if( typePlan==Plan.IMAGE || typePlan==Plan.IMAGEMOSAIC

@@ -339,6 +339,7 @@ final public class ThreadBuilderTile {
             fits.setPixelDouble(x,y,weight[i++]);
          }
       }
+      fits.addDataSum();
       fits.writeFITS(file+"_w.fits");
    }
 

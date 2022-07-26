@@ -41,6 +41,7 @@ public class CacheFitsWriter extends CacheFits {
       FitsFile f = find(name);
       
       Util.createPath(name);
+      f.fits.addDataSum();
       f.fits.writeFITS(name);
       map.remove(name);
    }

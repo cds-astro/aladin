@@ -40,9 +40,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.zip.GZIPOutputStream;
 
@@ -59,6 +62,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.MyInputStream;
+import cds.allsky.Constante;
 import cds.allsky.MyInputStreamCached;
 import cds.allsky.MyInputStreamCachedException;
 import cds.image.Hdecomp;
@@ -1112,6 +1116,93 @@ final public class Fits {
    // os.close();
    // this.setFilename(filename);
    // }
+   
+   /** Check le DATASUM présent dans l'entête, par rapport aux données
+    * @return 1-ok, 0-pas ok, -1-pas de DATASUM préalable
+    */
+   public int checkDataSum() {
+      String dataSum = headerFits.getDataSum();
+      if( dataSum==null ) return -1;
+      long v = Long.parseLong(dataSum.trim());
+      long sum32 = computeDataSum(pixels,0);
+      return v==sum32 ? 1 : 0;
+   }
+   
+   /** Calcul et mémorise le DATASUM et sa date en vue d'une sauvegarde dans l'entête */
+   public void addDataSum() {
+      String dataSum = getDataSum(pixels);
+      String dataSumComment = Constante.getDate();
+      headerFits.addDataSum(dataSum,dataSumComment);
+   }
+   
+   static final public String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+   static final public SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
+   static {
+      TimeZone utc = TimeZone.getTimeZone("UTC");
+      sdf.setTimeZone(utc);
+   }
+
+   /** Retourne le temps passé en paramètre au format ISO8601 à la mode FITS*/
+   static public String getDate() { return getDate( System.currentTimeMillis() ); }
+   static public String getDate(long time) { return sdf.format(new Date(time)); } //+"Z"; }
+
+   
+   /**
+    * Calcul du DATASUM pour un buffer de données (cf computeDataSum(...)) et
+    * le retourne sous la forme d'une chaine comme préconisée dans le document
+    * FITS 4.0 (unsigned int 32)
+    * @param buf Les données à checker (taille buf nécessairement multiple de 4)
+    * @return le DATASUM sous forme d'une chaine de digits
+    * @throws Exception
+    */
+   static String getDataSum(byte [] buf) {
+      long sum32 = computeDataSum(buf,0);
+      return (sum32 & 0xFFFFFFFFL) +"";
+   }
+   
+   /** Calcul/Maj du DATASUM pour un buffer de données. Utilise l'algorithme
+    * préconisée dans le standards FITS 4.0 - repris du document original
+    * suivant : https://fits.gsfc.nasa.gov/registry/checksum/checksum.pdf
+    * @param buf les données à checker (taille du buf pas nécessairement multiple de 4)
+    * @param sum32 la précédente valeur du DATASUM, 0 si aucune donnée déjà checkée
+    * @return la nouvelle valeur du DATASUM prenant en compte le buffer de données
+    * @throws Exception
+    */
+   static long computeDataSum(byte [] buf, long sum32) {
+      long hi,lo,hicarry,locarry;
+      
+      // Si jamais le buffer des données n'est pas un multiple de 4
+      // on va le réécrire avec du bourrage au bout (cas inexistant pour les tuiles HiPS)
+      int m = buf.length%4;
+      if( m!= 0 ) {
+         byte [] buf1 = new byte [ buf.length+m ];
+         System.arraycopy(buf, 0, buf1, 0, buf.length);
+         buf=buf1;
+      }
+
+      
+      hi = sum32 >>> 16;
+      lo = sum32 & 0xFFFF;
+      hi=lo=0;
+      
+      for( int i=0; i<buf.length; i+=4 ) {
+         hi += ( (buf[i] & 0xFF) << 8) | (buf[i+1] & 0xFF);
+         lo += ( (buf[i+2] & 0xFF) << 8) | (buf[i+3] & 0xFF);
+      }
+      
+      hicarry = hi >>> 16;
+      locarry = lo >>> 16;
+      while( hicarry!=0 || locarry!=0 ) {
+         hi = (hi & 0xFFFF) + locarry;
+         lo = (lo & 0xFFFF) + hicarry;
+         hicarry = hi >>> 16;
+         locarry = lo >>> 16;
+      }
+      
+      sum32 = ((hi & 0xFFFF) << 16 ) | (lo & 0xFFFF);
+      
+      return sum32;
+   }
 
    static public byte[] getBourrage(int currentPos) {
       int n = currentPos % 2880;

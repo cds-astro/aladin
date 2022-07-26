@@ -72,8 +72,11 @@ public abstract class Builder {
          case CLEANPNG:  return new BuilderCleanPng(context);
          case CLEANDATE: return new BuilderCleanDate(context);
          case CLEANWEIGHT:return new BuilderCleanWeight(context);
-         case CHECKCODE:       return new BuilderCheckCode(context);
+         case UPDATE:    return new BuilderUpdate(context);
+         case CHECKCODE: return new BuilderCheckCode(context);
+         case UPDATEDATASUM: return new BuilderUpdateDataSum(context);
          case CHECK:     return new BuilderCheck(context);
+         case CHECKDATASUM: return new BuilderCheckFits(context);
          case LINT:      return new BuilderLint(context);
 //         case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);
@@ -84,7 +87,6 @@ public abstract class Builder {
          case CUBE:      return new BuilderCube(context);
          case DETAILS:   return new BuilderDetails(context);
          case MAPTILES:  return new BuilderMapTiles(context);
-         case UPDATE:    return new BuilderUpdate(context);
          case PROP:      return new BuilderProp(context);
          case MIRROR:    return new BuilderMirror(context);
          case MAP:       return new BuilderMap(context);

@@ -530,6 +530,7 @@ public final class HeaderFits {
    /** Surcharge ou ajout d'un mot clé */
    public void setKeyword(String key,String value,String description) {
       header.put(key,value);
+      if( !keysOrder.contains(key) ) keysOrder.add(key);
       headDescr.put(key,description);
    }
 
@@ -626,6 +627,17 @@ public final class HeaderFits {
       if( !hasKey(key) ) keysOrder.addElement(key);
       header.put(key, value);
    }
+   
+   /** Retourne le DATASUM de l'entête si présent */
+   public String getDataSum() { return (String)header.get("DATASUM"); }
+   
+   /** Mémorise le DATASUM et la date associée
+    * @param dataSum  Le DATASUM sous la forme d'une chaine équivalente à UINT32
+    * @param dateISO le commentaire correspondant à la date ISO de génération de ce DATASUM
+    */
+   public void addDataSum(String dataSum, String dateISO) {
+      setKeyword("DATASUM",dataSum,dateISO);
+   }
 
    /** Ecriture de l'entête FITS des mots clés mémorisés. L'ordre est conservé
     * comme à l'origine - les commentaires sont restitués 
@@ -691,7 +703,7 @@ public final class HeaderFits {
         a = value.toCharArray();
 
         // Valeur numérique => alignement à droite
-        if( !isFitsString(value) ) {
+        if( !isFitsString(value) && !key.equals("DATASUM") ) {
            for( j=0; j<20-a.length; j++)  b[i++]=(byte)' ';
            for( j=0; i<80 && j<a.length; j++,i++) b[i]=(byte)a[j];
 

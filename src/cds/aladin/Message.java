@@ -250,13 +250,6 @@ public class Message extends Panel {
            dialog.pack();
         }
         
-//        dialog.getRootPane().registerKeyboardAction(new ActionListener() {
-//              public void actionPerformed(ActionEvent e) { dialog.dispose(); }
-//           }, 
-//           KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),
-//           JComponent.WHEN_IN_FOCUSED_WINDOW
-//        );
-
         dialog.setVisible(true);
         
         // Juste pour passer la main à un autre thread

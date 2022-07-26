@@ -53,6 +53,8 @@ public class BuilderCube extends Builder {
 
    public void run() throws Exception {
       build();
+      
+      context.resetCheckCode();
 
       if( !context.isTaskAborting() ) {
          BuilderMoc bm = new BuilderMoc(context);

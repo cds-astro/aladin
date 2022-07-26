@@ -37,6 +37,8 @@ public class BuilderCleanTiles extends BuilderClean {
    
    public Action getAction() { return Action.CLEANTILES; }
    
+   public void resetCheckCode() { context.resetCheckCode(); };
+   
    public void validateContext() throws Exception { 
       super.validateContext();
       if( context instanceof ContextGui ) {
@@ -45,6 +47,7 @@ public class BuilderCleanTiles extends BuilderClean {
          bar.setString("Cleaning previous survey...");
       }
    }
+   
    
    public void run() throws Exception {
       if( context instanceof ContextGui ) Util.pause(1000); // Pour faire beau

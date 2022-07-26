@@ -69,7 +69,7 @@ public class BuilderSMoc extends Builder {
       build();
    }
 
-   // Valide la cohérence des paramètres pour la création des tuiles JPEG
+   // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
       validateOutput();
       validateIndex();

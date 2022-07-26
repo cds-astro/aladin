@@ -80,6 +80,8 @@ public class BuilderGzip extends Builder {
       int maxOrder = Util.getMaxOrderByPath(path);
       int order;
       
+      context.resetCheckCode("fits");
+      
       // Parcours de tous les répertoire Norder?? trouvés
       for( File nOrder : (new File(path)).listFiles() ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");

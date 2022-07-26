@@ -1756,6 +1756,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
    
    protected boolean isTooLarge(PointD b[], int N) throws Exception {
+//      if( planBG.maxOrder>=order && order>3 ) return false;
+      
       if( planBG.aladin.isAnimated() ) N *=6;
       N *= N;
       double d1,d2;

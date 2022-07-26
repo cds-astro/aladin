@@ -37,7 +37,7 @@ public class BuilderTree extends BuilderTiles {
       context.info("Creating "+context.getTileExt()+" tree and allsky (max depth="+context.getOrder()+")...");
       context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
       build();
-      //      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
+      context.resetCheckCode();
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.done("ALLSKY file done"); }
    }
    

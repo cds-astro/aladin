@@ -943,5 +943,5 @@ public final class Legende extends AbstractTableModel  {
    }
 
    // Juste pour de debuging
-   public String toString() { return field[0].name+" "+field[0].ucd+" ..."; }
+   public String toString() { return "Field[0]:\n"+field[0]+" ..."; }
 }

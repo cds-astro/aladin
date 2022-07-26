@@ -734,8 +734,9 @@ public class Save extends JFrame implements ActionListener {
                case Plan.ALLSKYTMOC: 
                case Plan.ALLSKYSTMOC: appendPlanMOCXML(p);   break;
               
-               case Plan.ALLSKYCUBE: 
+               
                case Plan.ALLSKYCAT:
+               case Plan.ALLSKYCUBE: 
                case Plan.ALLSKYIMG: appendPlanBGXML(p);      break;
                case Plan.FILTER:    appendPlanFilterXML(p);  break;
                case Plan.FOLDER:    appendPlanFolderXML(p);  break;
@@ -1075,7 +1076,7 @@ public class Save extends JFrame implements ActionListener {
       appendXMLHeadPlan(p);
       append("  </PLANE>"+CR);
    }
-
+   
    /** Sauvegarde du plan Filter p sous forme XML (utilise le buffer f) */
    protected void appendPlanFilterXML(Plan p) throws java.io.IOException {
       appendXMLHeadPlan(p);
@@ -1152,14 +1153,14 @@ public class Save extends JFrame implements ActionListener {
    /** retourne l'entete XML d'une table */
    protected String getXMLHeadTable(Source o,Legende leg) {
       int i;
-      StringBuffer s = new StringBuffer();
+      StringBuilder s = new StringBuilder();
 
       // Entete de la table
       s.append("    <TABLE>"+CR);
       
       //Un Footprint associé ?
       int fovIdx = o.getIdxFootprint();
-
+      
       // Legende
       for( i=0; i<leg.field.length; i++ ) {
          Field f=leg.field[i];
@@ -1189,7 +1190,7 @@ public class Save extends JFrame implements ActionListener {
 
       return s.toString();
    }
-
+   
    /** retourne l'entete XML d'un plan */
    private void appendXMLHeadPlan(Plan p) throws java.io.IOException {
       int i;

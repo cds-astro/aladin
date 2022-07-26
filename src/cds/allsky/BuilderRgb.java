@@ -80,6 +80,7 @@ public class BuilderRgb extends BuilderTiles {
    public void run() throws Exception {
       Fits.setToolKit();
       build();
+      context.resetCheckCode();
       context.setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, context.getJpegMethod().toString().toLowerCase());
 
       if( !context.isTaskAborting() ) (new BuilderMoc(context)).createMoc(output);
@@ -215,7 +216,7 @@ public class BuilderRgb extends BuilderTiles {
             // Ajustement de la région qu'il faudra calculer
             SMoc m = moc[c] = loadMoc( inputs[c] );
             if( context.moc==null ) context.moc = m;
-            else context.moc = (SMoc)context.moc.union(m);
+            else context.moc = context.moc.union(m);
 
             // Vérification de la cohérence des systèmes de coordonnées
             String f = getFrameFromProp( prop[c] );
@@ -272,7 +273,7 @@ public class BuilderRgb extends BuilderTiles {
       }
 
       // détermination de la zone à calculer
-      if( context.mocArea!=null ) context.moc = (SMoc)context.moc.intersection( context.mocArea );
+      if( context.mocArea!=null ) context.moc = context.moc.intersection( context.mocArea );
       
       // Faut-il un filtre gaussien
       if( context.gaussFilter ) context.info("Gauss filter activated...");

@@ -3048,12 +3048,26 @@ public class Context {
 
    }
    
+   /** Supprime toutes les métriques (en cas de modif/update d'un HiPS */
+   public void resetMetrics() {
+      setPropriete(Constante.KEY_HIPS_CHECK_CODE, null );
+      setPropriete(Constante.KEY_HIPS_ESTSIZE, null );
+      setPropriete(Constante.KEY_HIPS_NB_TILES, null );
+   }
+   
+   /** Supprime tous les check codes */
+   public void resetCheckCode() {
+      hipsCheckCode=null;
+      resetMetrics();
+   }
+   
    /** Supprime le Check code concernant un format spécifique du hipsCheckCode du context
     * Par exemple "png:46574930 fits:2847219305 jpg:853095383" => "png:46574930 jpg:853095383"
     * @param fmt Le format dont on veut supprimer le check code
     */
    public void resetCheckCode(String fmt) {
       hipsCheckCode = resetCheckCode( fmt, hipsCheckCode ); 
+      resetMetrics();
    }
 
    /** Ajoute/remplace le Check code concernant un format spécifique du hipsCheckCode du context
@@ -3073,6 +3087,7 @@ public class Context {
     * @return le check code du format spécifié (int sous la forme d'un String)
     */
    static public String getCheckCode(String fmt, String hipsCheckCode) {
+      if( hipsCheckCode==null ) return null;
       Tok tok = new Tok(hipsCheckCode," ,");
       while( tok.hasMoreTokens() ) {
          String s = tok.nextToken();

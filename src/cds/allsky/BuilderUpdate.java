@@ -42,8 +42,10 @@ public class BuilderUpdate extends Builder {
       fillupContext();
       if( !context.isTaskAborting() ) builderMoc(); 
       if( !context.isTaskAborting() ) builderGunzip();
-      if( !context.isTaskAborting() ) builderHighOrder();
+      if( !context.isTaskAborting() ) builderDataSum();
+      if( !context.isTaskAborting() ) builderLowOrder();
       if( !context.isTaskAborting() ) builderAllsky();
+      if( !context.isTaskAborting() ) builderCheck();
    }
    
    private void fillupContext() throws Exception {
@@ -104,7 +106,22 @@ public class BuilderUpdate extends Builder {
       BuilderMirror.copyLocal(f, f+".1");
    }
    
-   
+   private void builderDataSum() throws Exception {
+      context.info("Scanning and adding (or updating) DATASUM on FITS tiles...");
+      (b=new BuilderUpdateDataSum(context)) .run();
+      context.done("Datasum done");
+      b=null; 
+   }
+
+   private void builderCheck() throws Exception {
+      context.info("Adding/upgrading check codes...");
+      context.setCheckForce(true);
+      (b=new BuilderCheckCode(context)) .build();
+      context.done("Check code done");
+      b=null; 
+   }
+
+
    private void builderGunzip() throws Exception {
       context.info("Scanning and gunzipping required tiles (order<=5)...");
       (b=new BuilderGunzip(context)) .run();
@@ -159,7 +176,7 @@ public class BuilderUpdate extends Builder {
       ((BuilderAllsky)b).postJob();
    }
 
-   private void builderHighOrder() throws Exception {
+   private void builderLowOrder() throws Exception {
       int [] minmax = context.findMinMaxOrder();
       if( minmax[0]==0 ) return;   // inutile car déjà fait 
       if( context.getMinOrder()==minmax[0] ) return;  // ca commence explicitement au-dela de Norder0
@@ -187,7 +204,7 @@ public class BuilderUpdate extends Builder {
       context.bitpixOrig = bitpixOrig;
       context.order = order;
       if( flagFits && bitpixOrig!=0 ) {
-         context.info("Building Norder0,1 and 2 for fits tiles...");
+         context.info("Building Norder0, 1 and 2 for fits tiles...");
          (b=new BuilderTree(context)).build();
       }
       

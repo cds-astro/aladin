@@ -57,7 +57,7 @@ public class BuilderAppend extends Builder {
       super(context);
    }
 
-   public Action getAction() { return Action.CONCAT; }
+   public Action getAction() { return Action.APPEND; }
 
    public void run() throws Exception {
       createAddHips();
