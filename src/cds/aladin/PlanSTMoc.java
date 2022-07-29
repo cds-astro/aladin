@@ -538,7 +538,8 @@ public class PlanSTMoc extends PlanTMoc {
    }
 
    protected void planReadyPost() {
-      aladin.view.createView4TMOC(this);
+      // PF - JUL 2022 - EN FAIT C'EST MIEUX DE NE PAS DEMARRER UNE FENETRE TEMPORELLE
+//      aladin.view.createView4TMOC(this);
    }
 
 
