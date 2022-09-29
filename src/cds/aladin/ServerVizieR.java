@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -99,7 +99,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       createChaine();
       type = CATALOG;
       aladinLogo = "VizieRLogo.gif";
-      docUser="http://vizier.u-strasbg.fr";
+      docUser="http://vizier.cds.unistra.fr";
       gluTag = "VizieRXML++1";
       aladinLabel="VizieR";
       

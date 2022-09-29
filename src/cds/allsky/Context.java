@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -318,7 +318,11 @@ public class Context {
    public int getTileSide() { return (int) CDSHealpix.pow2( getTileOrder() ); }
    public int getDepth() { return depth; }
    public boolean isCDSLint() { return cdsLint; }
+   public boolean isPartitioning() { return partitioning; }
+   public int getPartitioning() { return Constante.ORIGCELLWIDTH; }
 
+   
+   
    // Setters
    public void setMirrorCheck(boolean flag) { this.mirrorCheck = flag; }
    public void setLive(boolean flag) { live=flag; }
@@ -2004,7 +2008,7 @@ public class Context {
          "<HTML>\n" +
                "<HEAD>\n" +
                "   <script type=\"text/javascript\" src=\"https://code.jquery.com/jquery-1.10.1.min.js\"></script>\n" +
-               "   <link rel=\"stylesheet\" href=\"https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css\" >\n" +
+               "   <link rel=\"stylesheet\" href=\"https://aladin.cds.unistra.fr/AladinLite/api/v2/latest/aladin.min.css\" >\n" +
                "   <script type=\"text/javascript\">var jqMenu = jQuery.noConflict();</script>\n" +
                "   <script type=\"text/javascript\">\n" +
                "var hipsDir=null;</script>\n" +
@@ -2020,7 +2024,7 @@ public class Context {
          "<TABLE>\n" +
          "<TR>\n" +
          "<TD>\n" +
-         "   <script type=\"text/javascript\" src=\"https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js\" charset=\"utf-8\"></script>\n" +
+         "   <script type=\"text/javascript\" src=\"https://aladin.cds.unistra.fr/AladinLite/api/v2/latest/aladin.min.js\" charset=\"utf-8\"></script>\n" +
          "<div id=\"aladin-lite-div\" style=\"width:70vw;height:70vh;\"></div>\n" +
          "<script type=\"text/javascript\">\n" +
          "//var hipsDir = location.href;\n" +
@@ -2042,14 +2046,14 @@ public class Context {
          "</TR>\n" +
          "</TABLE>\n" +
 
-         "This survey can be displayed by <A HREF=\"https://aladin.u-strasbg.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
-         "by <A HREF=\"https://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading\">Aladin Desktop</A> client\n" +
+         "This survey can be displayed by <A HREF=\"https://aladin.cds.unistra.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
+         "by <A HREF=\"https://aladin.cds.unistra.fr/java/nph-aladin.pl?frame=downloading\">Aladin Desktop</A> client\n" +
          "(just open the base URL)<BR>or any other HiPS aware clients.\n" +
          "<HR>\n" +
          "<I>(*) HiPS is a recommended <A HREF=\"www.ivoa.net\">International Virtual Observatory Alliance</A> standard:"
          + "<A HREF=\"www.ivoa.net/documents/HiPS\">HiPS REC</A>. \n" +
          "The HiPS technology allows a dedicated client to access an astronomical survey at any location and at any scale. \n" +
-         "HiPS has been invented by <A HREF=\"https://aladin.u-strasbg.fr/hips\">CDS-Universit&eacute; de Strasbourg/CNRS</A> (<A HREF=\"http://cdsads.u-strasbg.fr/abs/2015A%26A...578A.114F\">2015A&amp;A...578A.114F</A>). "
+         "HiPS has been invented by <A HREF=\"https://aladin.cds.unistra.fr/hips\">CDS-Universit&eacute; de Strasbourg/CNRS</A> (<A HREF=\"https://ui.adsabs.harvard.edu/abs/2015A%26A...578A.114F/abstract\">2015A&amp;A...578A.114F</A>). "
          + "It is based on HEALPix sky tessellation and it is designed for astronomical scientifical usages (low distorsion, true pixel values...).</I>" +
          "<script type=\"text/javascript\">\n" +
          "document.getElementById(\"hipsBase\").innerHTML=hipsDir;\n" +

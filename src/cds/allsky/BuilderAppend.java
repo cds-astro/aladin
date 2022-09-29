@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -68,11 +68,16 @@ public class BuilderAppend extends Builder {
    // Generation du HiPS additionnel
    private void createAddHips() throws Exception  {
       HipsGen hi = new HipsGen();
+      String spart=" partitioning="+(context.isPartitioning()?context.getPartitioning():"false");
+      String sbitpix = "";
+      if( bitpix!=null ) sbitpix=" hips_pixel_bitpix="+bitpix;
+      
       String cmd = "in=\""+context.getInputPath()+"\" out=\""+addHipsPath
             +"\" creator_did="+addendumId
             +" hips_order="+order
-            +" hips_pixel_bitpix="+bitpix
-            +" -live"
+            +spart
+            +sbitpix
+//            +" -live"
             +(skyvalues!=null ?" \"skyvalues="+skyvalues+"\"": skyval!=null ?" skyval="+skyval:"")
             +" INDEX TILES";
       Tok tok = new Tok(cmd);
@@ -116,7 +121,11 @@ public class BuilderAppend extends Builder {
       
       bitpix=getBitpix(outputPath);
 
-      order = Util.getMaxOrderByPath( outputPath );
+      order=-1;
+      try { 
+         order = Util.getMaxOrderByPath( outputPath );
+      } catch( Exception e ) { if( context.getVerbose()>=3 ) e.printStackTrace(); }
+      
       if( order==-1 )  throw new Exception("No HiPS found in ouput dir");
       context.setOrder(order);
       int inputOrder = Util.getMaxOrderByPath( inputPath );

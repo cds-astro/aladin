@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -154,7 +154,7 @@ public class PlanImage extends Plan {
    protected double dataMinFits=0.;   // La valeur DATAMIN indiquée dans l'enête FITS (si elle existe)
    protected double dataMaxFits=0.;   // La valeur DATAMAX indiquée dans l'enête FITS (si elle existe)
    protected double dataMin,dataMax;  // Plus grande et plus petite valeur de pixel effectivement trouvée
-   // (après suppression des pixels erronés) - sans prendre en compte BSACLE et BZERO
+   // (après suppression des pixels erronés) - sans prendre en compte BSCALE et BZERO
    protected double pixelMin,pixelMax;// Les min et max des cuts - sans prendre en compte BSCALE et BZERO
    protected boolean isBlank=false;   // True s'il y a une valeur consideree comme BLANK
    protected double blank;            // La valeur BLANK si elle existe
@@ -2506,7 +2506,7 @@ public class PlanImage extends Plan {
    /** Retourne la vraie valeur du pixel => application du bzero et bscale,
     * et une éventuelle méthode Lupton */
    protected double uncompressPixel(double pixComp) {
-      double pix = bZero + bScale * pixComp;
+      double pix = bScale * pixComp +bZero;
       if( flagLupton ) pix = uncompressLupton(pix,bsoften,boffset);
       return pix;
    }

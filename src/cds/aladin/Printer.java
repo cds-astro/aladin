@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -379,7 +379,7 @@ class Printer implements Runnable {
       int cy = y+fm.getAscent()+2;
       pg.drawString("Produced by Aladin (Centre de Donnees astronomiques de Strasbourg)",cx,cy);
       cy+=fm.getHeight();
-      pg.drawString("http://aladin.u-strasbg.fr",cx,cy);
+      pg.drawString("http://aladin.cds.unistra.fr",cx,cy);
 
 
       // La provenance

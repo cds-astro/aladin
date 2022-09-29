@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -122,8 +122,9 @@ public class PlanMoc extends PlanBGCat {
       boolean isEmpty = m.isEmpty();
       double cov = m.getCoverage();
       String body = getBody();
-      if( body==null ) body="?";
-      ADD( buf, "\n* Space: ",isEmpty?"--empty--": Coord.getUnit(Healpix.SKYAREA*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of "+body);
+      if( body==null || body.equals("?") ) body="";
+      else body=" of "+body;
+      ADD( buf, "\n* Space: ",isEmpty?"--empty--": Coord.getUnit(Healpix.SKYAREA*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"%"+body);
       ADD( buf, "\n* Resolution: ",Coord.getUnit(m.getAngularRes()));
       
       int order = m.getMocOrder();

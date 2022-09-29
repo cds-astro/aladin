@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -116,12 +116,12 @@ public class BuilderJpg extends BuilderTiles {
 
    public boolean isAlreadyDone() {
       if( context.isColor() ) {
-         context.info("Jpeg conversion not required for Healpix colored survey");
+         context.info(fmt+" conversion not required for Healpix colored survey");
          return true;
       }
       if( !context.actionPrecedeAction(Action.INDEX, Action.TILES)) return false;
       if( !context.actionPrecedeAction(Action.TILES, getAction())) return false;
-      context.info("Pre-existing HEALPix JPEG survey seems to be ready");
+      context.info("Pre-existing HEALPix "+fmt+" survey seems to be ready");
       return true;
    }
 

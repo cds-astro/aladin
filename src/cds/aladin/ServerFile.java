@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -1139,7 +1139,9 @@ public class ServerFile extends Server implements XMLConsumer {
       } else if( name.equals("MODEVIEW") )  {
          aladin.view.scrollOn(firstView,0,1);
       } else if( name.equals("SCRIPT") )  { inFilterScript =false;
-      } else if( name.equals("TABLE") )   { leg=null; vField=null; if( flagCatalogSource ) typePlan=CATALOGTOOL;
+      } else if( name.equals("TABLE") )   { 
+         leg=null; vField=null; 
+         if( flagCatalogSource ) typePlan=CATALOGTOOL;
       } else if( name.equals("VALUE") )   {
          inValue=false;
          if( plan instanceof PlanMoc ) {
@@ -1227,7 +1229,7 @@ public class ServerFile extends Server implements XMLConsumer {
     */
    private int getSource(char [] ch, int cur, int end) {
       double ra,de;
-      String id;
+      String id,glu;
 
       // On skippe un eventuel \r
       while( cur<end && (ch[cur]=='\r' || ch[cur]=='\n') ) cur++;
@@ -1235,7 +1237,8 @@ public class ServerFile extends Server implements XMLConsumer {
       // Recuperation des positions et de l'ID
       cur=getSourceField(ch,cur,end);	ra=Double.valueOf(rec).doubleValue();
       cur=getSourceField(ch,cur,end);	de=Double.valueOf(rec).doubleValue();
-      cur=getSourceField(ch,cur,end);	id=rec;
+      cur=getSourceField(ch,cur,end);   id=rec;
+      cur=getSourceField(ch,cur,end);   glu=rec;
 
       // Recuperation des infos
       int start=cur;
@@ -1246,6 +1249,9 @@ public class ServerFile extends Server implements XMLConsumer {
 
       // Ajout de l'objet dans le plan courant
       Source o = (leg!=null)?new Source(plan,ra,de,id,rec,leg): new Source(plan,ra,de,id,rec);
+      
+      // Par défaut on active l'affichage du label des tags (du grand bricolage PF 5/9/2022)
+      if( typePlan==CATALOGTOOL && glu!=null && glu.endsWith("|Tags>")) o.setWithLabel(true);
       
       // Génération d'un footprint associé à la source
       if( footprintIdx!=-1 ) {
@@ -1315,7 +1321,7 @@ public class ServerFile extends Server implements XMLConsumer {
       if( o!=null ) {
          o.raj=ra; o.dej=de;
          o.x=x;    o.y=y;
-
+         
          // Suivi de ligne
          try {
             if( prevFlagSuite ) {

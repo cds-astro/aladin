@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Universit� de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Donn�es
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.

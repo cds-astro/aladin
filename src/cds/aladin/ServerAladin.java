@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -378,7 +378,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
 
          // Particularité pour allsky
          if( isAllSky(criteria) ) {
-            aladin.calque.newPlan("http://aladin.u-strasbg.fr/java/AllSky.fits","AllSky","Aladin image server");
+            aladin.calque.newPlan("http://aladin.cds.unistra.fr/java/AllSky.fits","AllSky","Aladin image server");
 
             // Le cas général
          } else {

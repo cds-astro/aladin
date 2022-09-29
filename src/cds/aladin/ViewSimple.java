@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -5613,10 +5613,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       
       try {
          Coord c = getBeamCentre(proj);
-         Ellipse o = new Ellipse(null, c, pimg.beam.bmaj, pimg.beam.bmin, pimg.beam.bpa+90.);
+         Ellipse o = new Ellipse(null, c, pimg.beam.bmaj/2, pimg.beam.bmin/2, pimg.beam.bpa+90.);
          o.setColor(view.infoColor);
          o.projection(this);
-         if( Math.max(o.getClip(this).width ,o.getClip(this).height)>rv.width/4.5 ) return;
+         if( Math.max(o.getClip(this).width ,o.getClip(this).height)>(rv.width/4.5) ) return;
          o.draw(g,this,0,0);
       } catch( Exception e) {}
    }

@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -106,12 +106,12 @@ public final class Glu implements Runnable {
    /** URL d'envoi des logs */
    protected static String LOGSCRIPT = "nph-alalog.pl";
 
-   protected static String ALADINLOG = "http://aladin.u-strasbg.fr/java/"
+   protected static String ALADINLOG = "http://aladin.cds.unistra.fr/java/"
          + LOGSCRIPT;
 
    protected static String NPHGLU = "nph-glu.pl";
 
-   protected static String NPHGLUALADIN = "http://aladin.u-strasbg.fr/java/"
+   protected static String NPHGLUALADIN = "http://aladin.cds.unistra.fr/java/"
          + NPHGLU;
    //   protected static String NPHGLUALADIN = "vizier.iucaa.ernet.in/"
    //      + NPHGLU;
@@ -3044,7 +3044,8 @@ public final class Glu implements Runnable {
       // les trucs inutiles ou un peu trop indiscrets
       if( id.equals("VizX") ) return;
       if( id.equals("Load") /* || id.equals("Http") */ ) params="";
-      if( id.equals("Http") && params!=null && params.indexOf("u-strasbg.fr")<0 ) params="";
+      if( id.equals("Http") && params!=null 
+            && (params.indexOf("u-strasbg.fr")<0 || params.indexOf("unistra.fr")<0) ) params="";
 
       try {
          waitLock(); // verrouillage

@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -3572,6 +3572,7 @@ public final class Command implements Runnable {
       // else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       if( cmd.equalsIgnoreCase("macro") ) execMacro(param);
       // else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
+      else if( cmd.equalsIgnoreCase("testbigfile") ) bigFile(param);
       else if( cmd.equalsIgnoreCase("anaglyph") ) anaglyph(param);
       else if( cmd.equalsIgnoreCase("testv12") ) testv12(param);
       else if( cmd.equalsIgnoreCase("testfading") ) testFading(param);
@@ -5082,7 +5083,7 @@ public final class Command implements Runnable {
       a.console.clearPad();
       a.console.printInPad(TEST.replace(';', '\n'));
       execScript(TEST);
-      a.glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/Testscript.png", true);
+      a.glu.showDocument("Http", "http://aladin.cds.unistra.fr/java/Testscript.png", true);
    }
 
    /**
@@ -5591,5 +5592,136 @@ public final class Command implements Runnable {
          e.printStackTrace();
       }
    }
+   
+   static final int BUF = 128*128*4;
+   static final String FILE = "/bigcube";
+   
+   private void bigFile(String param) {
+      try {
+         StringTokenizer st = new StringTokenizer(param);
+         String cmd=st.nextToken();
+         param=st.hasMoreTokens() ? st.nextToken(): null;
+         if( param==null || param.length()==0 ) param="/tmp";
+         int nb=6000;
+         if( cmd.equals("create") ) bigFileCreate(nb,param+FILE);
+         else if( cmd.equals("clean") ) bigFileClean(nb,param+FILE);
+         else if( cmd.equals("clean1") ) bigFileClean1(nb,param+FILE);
+         else if( cmd.equals("readseq") ) bigFileReadSeq(nb,param+FILE);
+         else if( cmd.equals("readrand") ) bigFileReadRand(nb,param+FILE);
+         else if( cmd.equals("delete") ) (new File(param+FILE)).delete();
+         else throw new Exception("Unknown command");
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
+   
+   // Nettoyage du cache par saturation
+   private void bigFileClean(int nb,String name)  throws Exception {
+      System.out.print("Cleaning OS pages");
+      long t = System.currentTimeMillis();
+      for( int i=0; i<2; i++ ) {
+         bigFileCreate(nb, name+i,false);
+         bigFileReadSeq(nb, name+i,false);
+         bigFileReadSeq(nb, name+i,false);
+         (new File(name+i)).delete();
+      }
+      long t1 = System.currentTimeMillis();
+      System.out.println(" => "+(t1-t)+"ms");
+   }
+   
+   // Nettoyage du cache par suppression du fichier (après copie)
+   private void bigFileClean1(int nb,String name)  throws Exception {
+      System.out.print("Cleaning OS pages for "+name);
+      long t = System.currentTimeMillis();
+      File f1 = new File(name);
+      File f2 = new File(name+".tmp");
+      RandomAccessFile fa = new RandomAccessFile(f1, "r");
+      RandomAccessFile fb = new RandomAccessFile(f2, "rw");
+      long len = nb*1024*1024;
+      long a = len;
+      byte buf[] = new byte[BUF];
+      while( a>0 ) {
+         fa.read(buf);
+         fb.write(buf);
+         a-=(buf.length/1024);
+      }
+      fa.close();
+      fb.close();
+      f1.delete();
+      Util.pause(200);
+      f2.renameTo(f1);
+      long t1 = System.currentTimeMillis();
+      System.out.println(" => "+(t1-t)+"ms");
+   }
+   
+  
+   // creation d'un gros fichiers
+   private void bigFileCreate(int nb, String name) throws Exception { bigFileCreate(nb,name,true); }
+   private void bigFileCreate(int nb, String name,boolean verbose) throws Exception {
+      byte buf[] = new byte[BUF];
+      long len = nb*buf.length;
+      if( verbose ) System.out.print("Creation "+name);
+      long t = System.currentTimeMillis();
+      long a = len;
+      int j=0;
+      RandomAccessFile f = new RandomAccessFile(name, "rw");
+      
+      while( a>0 ) {
+         for( int i=0;i<buf.length; i++) buf[i]=(byte)((i+j)%256);
+         f.write(buf);
+         a-=buf.length;
+         j++;
+      }
+      f.close();
+      long t1 = System.currentTimeMillis();
+      if( verbose ) System.out.println(" => "+(t1-t)+"ms");
+   }
+   
+   // lecture séquentielle
+   private void bigFileReadSeq(int nb, String name) throws Exception { bigFileReadSeq(nb,name,true); }
+   private void bigFileReadSeq(int nb, String name,boolean verbose) throws Exception {
+      long t = System.currentTimeMillis();
+      byte buf[] = new byte[BUF];
+      long len = nb*buf.length;
+      RandomAccessFile f = new RandomAccessFile(name, "r");
+      if( verbose ) System.out.print("Reading sequential "+name);
+      long a=len;
+      int i=0;
+      int tot=0;
+      while( a>0 ) {
+         a-=f.read(buf);
+         i++;
+         int n1 = (buf[0]<<24) | (buf[1]<<16) | (buf[2]<<8) | (buf[3]);
+         tot += n1;
+      }
+      f.close();
+      long t1 = System.currentTimeMillis();
+      if( verbose ) System.out.println(" => "+(t1-t)+"ms for "+i+" slices (tot="+tot+")");
+  }
+
+   // lecture aléatoire
+   private void bigFileReadRand(int nb, String name) throws Exception {
+      long t = System.currentTimeMillis();
+      byte buf[] = new byte[BUF];
+      long len = nb*buf.length;
+      RandomAccessFile f = new RandomAccessFile(name, "r");
+      System.out.print("Reading seek "+name+" "+(len/(1024*1024))+"Go");
+      long a=len;
+      byte ch[] = new byte[4];
+      int i=0;
+      int tot=0;
+      while( a>0 ) {
+         f.read(ch);
+         f.skipBytes(buf.length-ch.length);
+         a-=buf.length;
+         i++;
+         int n1 = (ch[0]<<24) | (ch[1]<<16) | (ch[2]<<8) | (ch[3]);
+         tot += n1;
+      }
+      f.close();
+      long t1 = System.currentTimeMillis();
+      System.out.println(" => "+(t1-t)+"ms for "+i+" slices (tot="+tot+")");
+  }
+
 
 }

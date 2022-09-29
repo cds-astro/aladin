@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -44,7 +44,7 @@ public class ServerXmatch extends ServerMocQuery  {
       aladinLabel = "X-match";
       title1      = "Choose a local table";
       title2      = "Catalog to x-match";
-      baseUrl     = "http://cdsxmatch.u-strasbg.fr/xmatch/api/v1/sync";
+      baseUrl     = "http://cdsxmatch.cds.unistra.fr/xmatch/api/v1/sync";
    }
 
    protected void createChaine() {

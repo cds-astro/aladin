@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -369,11 +369,11 @@ public final class TreeView extends JFrame implements WindowListener, ActionList
       double radiusDeg = Server.getAngleInArcmin(radius,Server.RADIUS)/60.0;
       try {
         if( server instanceof ServerAladin ) {
-			url = new URL("http://aladin.u-strasbg.fr/cgi-bin/nph-HTTP.cgi?out=qualifier&position="+URLEncoder.encode(getDeciCoord(target))+"&radius="+radiusDeg+"&mode=xml_votable");
+			url = new URL("http://aladin.cds.unistra.fr/cgi-bin/nph-HTTP.cgi?out=qualifier&position="+URLEncoder.encode(getDeciCoord(target))+"&radius="+radiusDeg+"&mode=xml_votable");
 
 		}
 		else if( server instanceof ServerVizieR) {
-			url = new URL("http://vizier.u-strasbg.fr/cgi-bin/votable/-w?-meta&-c="+URLEncoder.encode(target)+"&-c.r="+radiusDeg+"&-c.u=degree&-c.eq=J2000");
+			url = new URL("http://vizier.cds.unistra.fr/cgi-bin/votable/-w?-meta&-c="+URLEncoder.encode(target)+"&-c.r="+radiusDeg+"&-c.u=degree&-c.eq=J2000");
 		}
 
 		else

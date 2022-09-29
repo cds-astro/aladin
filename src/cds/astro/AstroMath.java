@@ -1,3 +1,24 @@
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
+// astronomiques de Strasbourgs (CDS).
+// The Aladin Desktop program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+//This file is part of Aladin Desktop.
+//
+//    Aladin Desktop is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Desktop is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Desktop.
+//
+
 package cds.astro;
 
 /**
@@ -784,11 +805,6 @@ public class AstroMath {
 
     if(na==36) 
       for(i=0; i<9; i+=3) for(j=0; j<3; j++) for(int o=0; o<36; o+=(o&1)==0?3:15) {
-        // A₀ A₁  B 0     A₀B A₁B
-        // A₂ A₃  0 B     A₂B A₃B
-        //             or
-        // A₀ A₁  B  0     A₀B+A₁Bd A₁B
-        // A₂ A₃  Bd B     A₂B+A₃Bd A₃B
         int oi = o+2*i;
         R[oi+j] = A[oi]*B[j] + A[oi+1]*B[j+3] + A[oi+2]*B[j+6];
         if(nb==9) continue;
@@ -798,11 +814,6 @@ public class AstroMath {
       }
     else if(nb==36) 
       for(i=0; i<9; i+=3) for(j=0; j<3; j++) for(int o=0; o<36; o+=(o&1)==0?3:15) {
-        // A 0    B₀ B₁  : AB₀ AB₁
-        // 0 A    B₂ B₃  : AB₂ AB₃
-        //             or
-        // A  0   B₀ B₁  : AB₀      AB₁
-        // Ad A   B₂ B₃  : AB₂+AdB₀ AB₃+AdB₁
         int oj = o+j;
         R[oj+2*i] = A[i]*B[oj] + A[i+1]*B[oj+6] + A[i+2]*B[oj+12];
         //System.out.print(" (o=" + o + ")");
@@ -825,8 +836,6 @@ public class AstroMath {
    * The formula :  W(i,j) = Σ(k)Σ(l) T(i,k).V(k,l).T(j,l).
    * In the case where (T) is 3x3 and V is (6x6), the result is made of 4 sub-matrices:
    * <pre>
-   * | T V₀ T'   T V₁ T' |
-   * | T V₂ T'   T V₃ T' |
    * </pre>
    * @param  T 3x3 (9 elements) or 6x6 (36 elements) transformation matrix
    * @param  V 3x3 or 6x6 covariance matrix, squared or symmetrically stored.
@@ -976,8 +985,6 @@ public class AstroMath {
    * The formula :  W(i,j) = Σ(k)Σ(l) T(i,k).T(j,l).V(k,l)
    * In the case T[n/2,n/2], V is made of 4 sub-matrices, the result is
    * <pre>
-   * | T V₀ T'   T V₁ T' |
-   * | T V₂ T'   T V₃ T' |
    * </pre>
    * @param  T square transformation matrix
    * @param  V nxn covariance matrix, squared or symmetrically stored.
@@ -1304,8 +1311,6 @@ public class AstroMath {
         }
         for(int i=0; i<18; i+=6) for(int j=0; j<6; j++) 
             M[i+j] += t*M[i+j+18];
-            // Result is | M₀+M₂t  M₁+M₃t |
-            //           |    M₂      M₃  |
         return(true);
     }
    */
@@ -1321,8 +1326,6 @@ public class AstroMath {
         if(M==U6matrix) return(motion(t, M));
         for(int i=0; i<36; i+=6) for(int j=0; j<3; j++) 
             M[i+j+3] += t*M[i+j];
-            // Result is | M₀  M₁+M₀t |
-            //           | M₂  M₃+M₂t |
         return(true);
     }
    */
@@ -1346,8 +1349,6 @@ public class AstroMath {
     else T = m6(M);
     for(int i=0; i<18; i+=6) for(int j=0; j<6; j++) 
       T[i+j] += t*T[i+j+18];
-    // Result is | M₀+M₂t  M₁+M₃t |
-    //           |    M₂      M₃  |
     return(T);
   }
 
@@ -1369,8 +1370,6 @@ public class AstroMath {
     else T = m6(M);
     for(int i=0; i<36; i+=6) for(int j=0; j<3; j++) 
       T[i+j+3] += t*T[i+j];
-    // Result is | M₀  M₁+M₀t |
-    //           | M₂  M₃+M₂t |
     return(T);
   }
 

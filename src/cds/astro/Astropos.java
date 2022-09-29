@@ -1,11 +1,32 @@
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
+// astronomiques de Strasbourgs (CDS).
+// The Aladin Desktop program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+//This file is part of Aladin Desktop.
+//
+//    Aladin Desktop is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Desktop is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Desktop.
+//
+
 package cds.astro ;
 
 /*==================================================================
                 Astropos Class  (Coo -> Astrocoo -> Astropos)
  *==================================================================*/
-
-import java.io.*;
-import java.text.*; 	 // for parseException
+import java.io.Serializable;
+// for parseException
+import java.text.ParseException;
 import java.util.Arrays;
 
 /**
@@ -202,21 +223,21 @@ public class Astropos extends Astrocoo implements Serializable {
 			1.0,   1000.0, 1000.0, 0.001,   1.0,   0.001,       0.001,    0.001, 1.e-6 };
 	/** Symbols recognized to introduce a data: */
 	static public final String[] datasymb = {
-			"pm=", "\u00B5=", "\u03BC=",	// µ
-			"plx=", "\u03D6=", "\u03C0=",	// ϖ π
+			"pm=", "\u00B5=", "\u03BC=",
+			"plx=", "\u03D6=", "\u03C0=",
 			"Vr=", "rv=", "RV=",
-			"sigma=", "err=", "\u03C3=",	// σ
-			"corr=", "cor=", "\u03C1=",	// ρ
-			"Ep=", "Epoch=", "epoch=", 	// epoch
-			"meanEp=", "mean=",          	// mean epoch
+			"sigma=", "err=", "\u03C3=",
+			"corr=", "cor=", "\u03C1=",
+			"Ep=", "Epoch=", "epoch=", 
+			"meanEp=", "mean=",     
 	};
 	static public final short[] datatype = {
-			HASpm,  HASpm,  HASpm,         	// µ
-			HASplx, HASplx, HASplx,        	// ϖ π
-			HASrv,  HASrv,  HASrv,		// RV
-			HASerr, HASerr, HASerr,       	// σ
-			HAScorr, HAScorr, HAScorr,     	// ρ
-			HASep,  HASep,  HASep,	        // epoch
+			HASpm,  HASpm,  HASpm,  
+			HASplx, HASplx, HASplx,  
+			HASrv,  HASrv,  HASrv,	
+			HASerr, HASerr, HASerr, 
+			HAScorr, HAScorr, HAScorr, 
+			HASep,  HASep,  HASep,	
 			HASmep, HASmep,
 	};
 	/** Conversion factor for variances from mas² to rad²
@@ -1135,7 +1156,6 @@ public class Astropos extends Astrocoo implements Serializable {
 		if(DEBUG) System.out.println("#     specif=0x" + Integer.toHexString(specif) + "; epochs=" + epochs[0] + ", " + epochs[1]
 				+ "\n#...Parsing(3): " + txt);
 
-		// The remaining data (µ ϖ RV σ ρ) may be introduced by a datatype
 		mu1 = mu2 = 0./0.;
 		while(ok && (txt.pos<txt.length)) {
 			posini = txt.pos;
@@ -1275,17 +1295,13 @@ public class Astropos extends Astrocoo implements Serializable {
 					AstroMath.printMatrix("σ ", sigma); System.out.println(""); 
 				}
 				break;
-			case  HAScorr:	// ρ
+			case  HAScorr:	
 				corr = new double[10];
 				n = txt.parseArray(corr);
 				if(n!=10) {
 					txt.setError("[Astropos.parse]: " + n + "/10 correlations");
 					while(n<10) corr[n++]=0;
 					ok = false;
-				}
-				if(DEBUG) {
-					System.out.println("#...Parsing(ρ): " + txt + " => n=" + n);
-					AstroMath.printMatrix("ρ ", corr);
 				}
 				// Verify within [-1,+1] (done in set)
 				break;
@@ -2225,7 +2241,7 @@ public class Astropos extends Astrocoo implements Serializable {
 			if((this.ready&0x10)==0) this.compute_loc();
 			if((a.ready&0x10)==0) a.compute_loc();
 		}
-		if(!super.equals((Astrocoo)o)) return(res);
+		if(!super.equals(o)) return(res);
 		res = this.xd == a.xd && this.yd == a.yd && this.zd == a.zd;
 		return res;
 	}
@@ -2695,134 +2711,5 @@ public class Astropos extends Astrocoo implements Serializable {
 		return(true);
 	}
 
-	/**
-	 * Testing the functions of Astroframe.
-	 * or of a matrix (3x3, 2x3x3 or 6x6).
-	 * @param   level   a depth level 
-	 * @param   verbose a verbosity level, number with 0 = less verbose, 1 = more verbose, ...
-	 * @return  true if ok.
-	 */
-	public static boolean test(int verbose, int level) {
-		System.out.println("#===Astropos.test: verbosity=" + verbose + ", level=" + level + "; ε=" + eps);
-		// Tests convert from IAU name
-		if(verbose>1) { DEBUG=true; Astrocoo.DEBUG=true; Astroframe.DEBUG=true; Coo.DEBUG=true; }
-		// Galactic coordinates according to Gaia-DR2
-		AstroMath.printMatrix("#===Galactic trasformation in Gaia-2:\n", AstroMath.rotation("zyz", 192.85948, 90-27.12825, 90-32.93192));
-		Astropos IAUpos; double[] errell = new double[3];
-		System.out.println("#===Get from IAU name:");
-		try { IAUpos=new Astropos("B1234567-123456"); IAUpos.dump("B1234567-123456\n"); }
-		catch(Exception e) { IAUpos=null; System.out.println("****" + e); System.out.println(e); }
-		// Find values of positions, errors, etc
-		System.out.print("Various results for B1234567-123456: pos=" + IAUpos.getLon() + IAUpos.getLat());
-		IAUpos.copyErrorEllipse(errell); AstroMath.printMatrix("; σ=", errell);
-		System.out.println("; µ=" + IAUpos.getProperMotionLon() + "," + IAUpos.getProperMotionLat());
-		System.out.println("B1234567-123456=" + IAUpos);
-		double[] sigcor = new double[15];
-		boolean status = IAUpos.copySigmas(sigcor); AstroMath.printMatrix("#...sigma + correlations, status=" + status + ":\n", sigcor);
-		// Barycentric position from Gaia-DR2, J2015.5
-		Astropos posGaia = new Astropos(Astroframe.Gaia2()); 
-		posGaia.setEditing("fEMF=");	// Edit frame and full precision
-		posGaia.dump("#---empty posGaia: ");
-		String HIP171 = "000.54658486761 +27.07777882300 RV=-35.57[0.35]km/s ϖ=79.0696 µ=723.110 -933.754 σ=(0.7703 0.7097 0.5621 1.482 1.341) ρ=(0.1642 -0.3296 -0.8897 -0.1816 -0.3140 -0.1682 -0.8858 0.4461 0.4526 0.2460)";
-		String Q3C273 = "187.27791587249 +02.05238861030 ϖ=0.0108 µ=0.122 0.010 σ=(0.0336 0.0248 0.0408 0.092 0.055) ρ=(-0.6753 0.0358 -0.1282 0.2022 0.0375 0.0867 -0.3852 0.0518 -0.2152 -0.3987)";
-		String V1234Cyg = " 318.19749084859 +41.39588184767 ϖ=-0.2339 µ=-2.394 -3.766 σ=(0.2121 0.2585 0.3081 0.505 0.525) ρ=(0.0424 -0.0000 0.0512 -0.0833 0.1836 -0.1425 -0.1025 -0.2482 0.0909 0.0654)  RV=-51.85[0.19]";
-		String Barnard = " 269.44861435804 +04.73798076559 ϖ=547.4506 µ=-802.803 10362.542 σ=(0.2229 0.3042 0.2899 0.638 0.360) ρ=(-0.7567 0.7359 -0.9222 0.7777 -0.9412 0.8805 -0.9270 -0.8648 0.8367 -0.8657)";
-		String Barn = "269.44861435804 +04.73798076559 ϖ=547.4506[0.29] µ=(-0.802803,+10.362542)\"/yr σ=(0.2229 0.3042 0.2899 0.638 0.360)";
-		String[] stars = { "HIP171", "3C273", "V1234Cyg", "Barnard" };
-		String[] gaiadata = { HIP171, Q3C273,  V1234Cyg,   Barnard  };
-		Astroframe Gaia2 = Astroframe.Gaia2();
-		boolean ok=true;
-		// Various frames
-		Astroframe[] frame= {
-				ICRS.create(), FK5.create(), Ecliptic.create(), FK4.create(), 
-				Galactic.create(), Galactic.create(2015.5), Galactic.Gaia2(),
-				Supergal.create(), FK5.create(1950.,2015.5), FK4.create(2000.), FK4.create(1875.),
-				Ecliptic.create(1900.), Astroframe.Hipparcos(), Ecliptic.Gaia2() } ; 
-		Astropos[] fpos = new Astropos[frame.length];
-		for(int i=0; i<fpos.length; i++) { System.out.println("#...set fpos#" + i + ": " + frame[i]); fpos[i] = new Astropos(frame[i]); fpos[i].setEditing("fEMF="); }
-		Astroframe.dumpAll("\n#=== All Saved Astroframes:");
-		// HIP171
-		System.out.println("\n#=== Deal with star: HIP171: " + HIP171);
-		try { posGaia.set(HIP171); }
-		catch(Exception e) { System.out.println("#***" + e); System.out.println(e); }
-		posGaia.dump("HIP 171");
-		System.out.println("#===Edition of HIP171: " + posGaia); posGaia.dump("[HIP171]");
-		Astropos pos = (Astropos)posGaia.clone();
-		//System.out.println("#===Edition of  clone: " + pos);     pos.dump("#---clone");
-		pos.printDifferences("[posGaia and clone]", posGaia);
-		// Edit with various precisions...
-		pos.setEditing("");
-		int precision = pos.getPrecision();
-		for(int i=8; i<=16; i++) for(int j=0; j<=7; j++) {
-			System.out.println("\n#---edition of HIP171 (" + pos.frame + ") with precision=" + i + ", errprec=" + j + ":");
-			pos.setPrecision(i); pos.setErrorPrecision(j);
-			System.out.println("    " + pos);
-			//pos.getVariance(i%6, j%6);
-		}
-		pos.setPrecision(precision);
-		for(int i=0; i<frame.length; i++) {
-			Astroframe pf = pos.frame;
-			System.out.println("\n#---Moving from " + pos.frame + " to " + frame[i]);
-			double dmax=36*AstroMath.eps*AstroMath.amax(posGaia.cov);
-			double[] cov_in = pos.cov.clone();
-			AstroMath.checkArray("#...comparing cov_in/pos.cov:", cov_in, pos.cov, dmax);
-			double[] T0 = Astroframe.convertMatrix(pf, frame[i]);
-			double[] T1 = Astroframe.convertMatrix(frame[i], pf);	// Inverse of T0
-			AstroMath.checkUnity("#---Matrices " + pos.frame + " <==> " + frame[i], AstroMath.mp(T0, T1));
-			pos.dump("[Input position]");
-			AstroMath.printMatrix("#....T0 ", T0);
-			AstroMath.printMatrix("#cov_in ", cov_in);
-			if(T0.length==36) AstroMath.printMatrix("#=>prod ", AstroMath.mpt(T0, cov_in));
-			Astropos converted = new Astropos(frame[i]); converted.setEditing("fEMFc=");
-			Astropos.convert(pos, converted); System.out.println("#...converted computed, ready=" + converted.ready);
-			if(T0.length==36) AstroMath.checkArray("#...diff. convert..cov with direct:", AstroMath.mpt(T0, cov_in), converted.cov, dmax);
-			pos.convertTo(frame[i]);  System.out.println("#...convertTo computed, ready=" + pos.ready);
-			if(T0.length==36) AstroMath.checkArray("#...diff. convertTocov with direct:", AstroMath.mpt(T0, cov_in), pos.cov, dmax);
-			converted.dump("[converted position]" + frame[i]);
-			pos.dump("[convertTo position]" + frame[i]);
-			//AstroMath.checkArray("#...comparing cov_in/cov_out:", cov_in, pos.cov, dmax);
-			System.out.println("#===Position via convert..: " + converted);
-			System.out.println("#===Position via convertTo: " + pos);
-			pos.printDifferences("[Compare computations via convertTo and convert]", converted);
-			if(T0.length==36) {
-				AstroMath.printMatrix("#...T0. ", T0);
-				AstroMath.printMatrix("#cov_in ", cov_in);
-				AstroMath.printMatrix("#=>prod ", AstroMath.mpt(T0, cov_in));
-				AstroMath.printMatrix("#pos.cov", pos.cov);
-				AstroMath.checkArray("#...T1T0VT'0T'1 :", AstroMath.mpt(T1, AstroMath.mpt(T0, cov_in)), cov_in, dmax);
-			}
-			System.out.println("#...moving back to " + pf + ":");
-			pos.convertTo(pf); pos.dump("[Converted back]");
-			//pos.printDifferences("[Diff. with original posGaia]" + (pos.equals(posGaia) ? ":" : " ***differs*** "), posGaia);
-			pos.compute_cor();
-			pos.printDifferences("[Diff. with original posGaia, local frame computed]", posGaia);
-		}
-		try { posGaia.set(Barn); }
-		catch(Exception e) { System.out.println("#***" + e); System.out.println(e); }
-		System.out.println("#===Barnnard's star: " + posGaia);
-		posGaia.dump("[Barnard's star]");
-
-		// Tour among the stars 
-		DEBUG=false;
-		for(int istar=0; istar<stars.length; istar++) {
-			System.out.println("\n===Tour with: " + stars[istar]);
-			try { posGaia.set(gaiadata[istar]); }
-			catch(Exception e) { System.out.println("#***" + e); System.out.println(e); }
-			System.out.println("#...input is: " + stars[istar]);
-			for(int i=0; i<fpos.length; i++) {
-				Astropos.convert(posGaia, fpos[i]);
-				System.out.println(fpos[i].toString());
-			}
-			// Compare the transformations back
-			System.out.println("---Tour back with: " + stars[istar]);
-			posGaia.compute_cor();
-			for(int i=0; i<fpos.length; i++) {
-				Astropos.convert(fpos[i], pos);	// Conversion back
-				pos.compute_cor();
-				pos.printDifferences("[Diff. with original posGaia from " + fpos[i].frame + "]: ", posGaia);
-			}
-		}
-		return(ok);
-	}
 	
 }

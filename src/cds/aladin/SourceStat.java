@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -93,6 +93,9 @@ public class SourceStat extends SourceInfo {
   }
    
    protected void resumeMesures() { }
+   
+   /** Propriétés additionnelles => Pour les objets dérivés */
+   protected void otherProp( Vector prop) {}
 
    /** Retourne la liste des Propriétés éditables */
    public Vector getProp() {
@@ -120,6 +123,9 @@ public class SourceStat extends SourceInfo {
          }
       };
       propList.add( Prop.propFactory("radius","Radius","",testRadius,updateRadius,changRadius) );
+      
+      // Pour les objets dérivés;
+      otherProp( propList );
       
       // Déplaçable/etirable ou non ?
       final JCheckBox lockCheck =  new JCheckBox("mouse locked");
@@ -257,7 +263,7 @@ public class SourceStat extends SourceInfo {
 
       int D=l;
       clip = unionRect(clip, p.x-D,p.y-D,D*2,D*2);
-      if( isSelected() )  clip = unionRect(clip, p.x-l-DS,p.y-l-DS,l*2+DDS,l*2+DDS);
+      if( isSelected() )  clip = unionRect(clip, p.x-l-DS,p.y-l-DS,l*2+DDS+2,l*2+DDS+2);
       if( isWithLabel() ) clip = unionRect(clip, p.x-dw/2,p.y-L-1-dh-1,dw,dh);
       if( isWithStat() )  clip = unionRect(clip,getStatPosition(v));
       return clip;

@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -3727,7 +3727,13 @@ public class PlanBG extends PlanImage {
          }
       }
       
-      if( Aladin.TESTV12 ) drawHoles(imgb, v, allsky.getPixList());
+      if( Aladin.TESTV12 )  {
+         try {
+            drawHoles(imgb, v, allsky.getPixList());
+         } catch( Exception e ) {
+            if( aladin.levelTrace>= 3 ) e.printStackTrace();
+         }
+      }
    }
 
    // le synchronized permet d'éviter que 2 draw simultanés s'entremèlent (sur un crop par exemple)

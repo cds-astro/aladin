@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -1076,8 +1076,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             double degrad = Math.toDegrees(1.0);
             double skyArea = 4.*Math.PI*degrad*degrad;
             String body = plan.getBody();
-            if( body==null ) body="?";
-            PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of "+body+" => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
+            if( body==null || body.equals("?") ) body="";
+            else body=" of "+body;
+            PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"%"+body+" => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
             PropPanel.addCouple(p,"Best ang.res: ",new JLabel(Coord.getUnit(((SMoc)pmoc.getMoc()).getAngularRes())
                   +" (order="+((SMoc)pmoc.getMoc()).getMocOrder()+")"),g,c);
 

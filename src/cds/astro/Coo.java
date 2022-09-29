@@ -1,3 +1,24 @@
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
+// astronomiques de Strasbourgs (CDS).
+// The Aladin Desktop program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+//This file is part of Aladin Desktop.
+//
+//    Aladin Desktop is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Desktop is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Desktop.
+//
+
 package cds.astro ;
 
 /*==================================================================
@@ -424,17 +445,17 @@ public class Coo implements Serializable, Cloneable {
     * @return distance in degrees in range [0, 180]
    **/
     public static final double distance(double lon1, double lat1,
-                                  double lon2, double lat2) {
-      double c1 = AstroMath.cosd(lat1);
-      double c2 = AstroMath.cosd(lat2);
-      double w, r2;
-	w = c1 * AstroMath.cosd(lon1) - c2 * AstroMath.cosd(lon2);
-	r2 = w * w;
-	w = c1 * AstroMath.sind(lon1) - c2 * AstroMath.sind(lon2);
-	r2 += w * w;
-	w = AstroMath.sind(lat1) - AstroMath.sind(lat2);
-	r2 += w * w; // 4.sin^2(r/2)
-	return (2. * AstroMath.asind(0.5 * Math.sqrt(r2)));
+          double lon2, double lat2) {
+       double c1 = AstroMath.cosd(lat1);
+       double c2 = AstroMath.cosd(lat2);
+       double w, r2;
+       w = c1 * AstroMath.cosd(lon1) - c2 * AstroMath.cosd(lon2);
+       r2 = w * w;
+       w = c1 * AstroMath.sind(lon1) - c2 * AstroMath.sind(lon2);
+       r2 += w * w;
+       w = AstroMath.sind(lat1) - AstroMath.sind(lat2);
+       r2 += w * w; // 4.sin^2(r/2)
+       return (2. * AstroMath.asind(0.5 * Math.sqrt(r2)));
     }
 
   /**

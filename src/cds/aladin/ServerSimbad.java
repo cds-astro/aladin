@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -53,7 +53,7 @@ public class ServerSimbad extends Server  {
       aladinLabel     = "Simbad database";
       gluTag  = "SimbadXML1";
       aladinLogo    = "SimbadLogo.gif";
-      docUser = "http://simbad.u-strasbg.fr/guide/ch15.htx";
+      docUser = "http://simbad.cds.unistra.fr/guide/ch15.htx";
 //      maxRadius=30*60;
       maxRadius=-1;
 

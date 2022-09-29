@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -217,6 +217,7 @@ SwingWidgetFinder, Widget {
                firstRepere=false;
                return null;
             }
+//            SourceStat r = new SourceStatRing(plan,v,x,y,null);
             SourceStat r = new SourceStat(plan,v,x,y,null);
             return r;
          case SPECT:

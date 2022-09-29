@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -1379,11 +1379,13 @@ final public class Fits {
             System.arraycopy(this.rgb, 0, rgb, 0, rgb.length);
             invImageLine(widthCell, heightCell, rgb);
          }
+         /* IL FAUT SUPPRIMER CETTE DEPENDANCE AU TOOLKIT - PF SEPT 2022 */
          imgSrc = kit.createImage( new MemoryImageSource(widthCell, heightCell, rgb, 0, widthCell));
          imgTarget = new BufferedImage(width, height, typeInt);
       } else {
          int targetPixMode = format.equals("png") ? PIX_255 : PIX_256;
          byte[] pix8 = toPix8(pixelMin, pixelMax, tcm, targetPixMode);
+         /* IL FAUT SUPPRIMER CETTE DEPENDANCE AU TOOLKIT - PF SEPT 2022 */
          imgSrc = kit.createImage(
                new MemoryImageSource(widthCell, heightCell, getCM(targetPixMode), pix8, 0, widthCell));
          //          imgTarget = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel) getCM(targetPixMode));
@@ -2431,7 +2433,7 @@ final public class Fits {
                return (int) Float.intBitsToFloat(getInt(t, i * 4));
             case -64:
                i *= 8;
-               long a = ((getInt(t, i)) << 32)
+               long a = (((long)getInt(t, i)) << 32)
                      | ((getInt(t, i + 4)) & 0xFFFFFFFFL);
                return (int) Double.longBitsToDouble(a);
          }
@@ -2457,7 +2459,7 @@ final public class Fits {
                return ((t[i]) & 0xFF);
             case -64:
                i *= 8;
-               long a = ((getInt(t, i)) << 32)
+               long a = (((long) getInt(t, i)) << 32)
                      | ((getInt(t, i + 4)) & 0xFFFFFFFFL);
                return Double.longBitsToDouble(a);
          }

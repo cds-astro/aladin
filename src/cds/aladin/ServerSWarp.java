@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -52,7 +52,7 @@ public class ServerSWarp extends Server  {
     private JComboBox comboProj;
 
 //    private String baseUrl = "http://alasky.u-strasbg.fr/cgi/SWarp/nph-SWarp.py";
-    private String baseUrl = "http://aladin.u-strasbg.fr/java/post.pl";
+    private String baseUrl = "http://aladin.cds.unistra.fr/java/post.pl";
 
     // TODO : liste complète à valider avec Caro et Mark
     private String[] availableProjections = {"TAN", "SIN", "ARC", "AIT",

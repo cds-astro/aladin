@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -829,6 +829,8 @@ final public class TableParser implements XMLConsumer {
       return sizeOf * n;
    }
 
+   
+   static private int MAXVECT = 4096;
 
    /**
     * Conversion d'un champ d'octets en valeur sous la forme d'un String
@@ -850,12 +852,16 @@ final public class TableParser implements XMLConsumer {
       if( n==1 ) return getBinField(t,i,type,prec,tzero,tscale,hasNull,tnull);
 
       StringBuilder a=null;
+      boolean tooLong=false;
+      
+      // On n'extrait pas les vecteurs trop longs (de toutes façons inutilisables dans Aladin);
+      if( n>MAXVECT ) { tooLong=true; n=MAXVECT; }
       for( int j=0; j<n; j++ ) {
          if( j==0 ) a = new StringBuilder();
          else if( type!='U' ) a.append(' ');
          a.append( getBinField(t,i+binSizeOf(type,j),type,prec,tzero,tscale,hasNull,tnull) );
       }
-      return a+"";
+      return a+(tooLong ? "... (too long)":"");
    }
 
 //   final private String getBinField(byte t[],int i, char type,int prec,double tzero,double tscale,

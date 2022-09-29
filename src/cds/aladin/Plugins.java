@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -312,14 +312,14 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
           b.setToolTipText(aladin.chaine.getString("PLUGDOWNLOADTIP"));
           b.addActionListener(new ActionListener() {
              public void actionPerformed(ActionEvent e) {
-                aladin.glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=plugRep", true);
+                aladin.glu.showDocument("Http", "http://aladin.cds.unistra.fr/java/nph-aladin.pl?frame=plugRep", true);
              }
           });
           p1.add(b=new JButton(aladin.chaine.getString("PLUGUPLOAD")));
           b.setToolTipText(aladin.chaine.getString("PLUGUPLOADTIP"));
           b.addActionListener(new ActionListener() {
              public void actionPerformed(ActionEvent e) {
-                aladin.glu.showDocument("mailto:plugin@aladin.u-strasbg.fr?" +
+                aladin.glu.showDocument("mailto:plugin@aladin.cds.unistra.fr?" +
                       "Subject=Aladin plugin&Body=%0A%0ADear Aladin team,%0A%0A" +
                       "You will find, joined to this mail, my Aladin plugin source code%0A%0A" +
                       "By this letter, I certify that this code does not content any spyware " +
@@ -345,7 +345,7 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
           b.setToolTipText(aladin.chaine.getString("PLUGMOREINFOTIP"));
           b.addActionListener(new ActionListener() {
              public void actionPerformed(ActionEvent e) {
-                 aladin.glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=plugins", true);
+                 aladin.glu.showDocument("Http", "http://aladin.cds.unistra.fr/java/nph-aladin.pl?frame=plugins", true);
              }
           });
           p1.add(b=new JButton(aladin.chaine.getString("CLOSE")));

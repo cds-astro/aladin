@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2022 - Universite de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnees
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -225,7 +225,7 @@ public class FrameMacro extends JFrame {
 		panel.add(buttons, BorderLayout.NORTH);
 
 		// ajout de la JTable représentant la liste des paramètres
-		paramTable = new TwoColorJTable();
+        paramTable = new TwoColorJTable();
 		// couleur des lignes séparatrices
 		paramTable.setGridColor(Color.lightGray);
 		// on n'autorise la sélection que d'une ligne à la fois
