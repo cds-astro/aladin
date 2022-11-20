@@ -163,12 +163,19 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> MOC inline in VOTable (xtype=moc)
+ * @beta    <LI> Planet in dev.mode (without projection compatibility test)
+ * @beta    <LI> Hipsgen improvements: hhh support for FITS files
+ * @beta </UL>
+ * @beta <B>Fixed bugs:</B>
+ * @beta <UL>
+ * @beta    <LI> Fixed the bug that in some situations blocked the display of galactic MOCs on small fields
+ * @beta    <LI> Fixed conesearch "redo" function for previous queries without results.
+ * @beta    <LI> EPNTAP coordinates from c1,c2 barycenter instead of c1min,c2min
+ * @beta    <LI> Transfer of a single object by SAMP (bug on the calculation of the projection centre)
  * @beta </UL>
  * @beta <P>
- * @beta <B>Bug fixed:</B>
- * @beta <UL>
- * @beta </UL>
- *
+  *
  */
 public class Aladin extends JApplet
 implements ExtApp,VOApp,VOObserver,ClipboardOwner,
@@ -185,11 +192,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final boolean LSCREEN= true; //SCREENSIZE.width>1000;
 
    /** Nom de l'application */
-   static protected final String TITRE   = "Aladin";
+   static protected final String TITRE       = "Aladin";
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v12.012";
+   static public final    String VERSION = "v12.020";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -208,7 +215,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean MOCLOCAL=false; // true si on tourne sur un MocServer local
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
    public static int PLANET=-1;          // 0-sans planeto, 1-avec planeto, -1-selon configuration utilisateur
-   public static boolean BETA=false;        // true si on tourne en mode BETA
+   public static boolean BETA=true;        // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
@@ -220,6 +227,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public final boolean TESTTIME=true;    // true pour le test sur le développement des controles temporels avancés
    static public final boolean TESTFADING = false;      // true pour le test des affichages HiPS avec fading effect
    static public final boolean TESTANAGLYPH = false; // true pour les tests d'affichage GAIA en mode anaglyphe (stéréo couleur)
+   static public final boolean TESTBLINKING=false; // true pour les tests de clignotements des plan en double clic sur la pile
    static public boolean TESTV12 = true;         // true pour le test des affichages HiPS 2 étapes
    
    static {
@@ -7389,6 +7397,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          String ucd=f.ucd;
          j=writeAttribute(s,j,3,indent,"ucd",ucd);
          if( f.utype!=null && f.utype.length()>0 ) j=writeAttribute(s,j,3,indent,"utype",f.utype);
+         if( f.xtype!=null && f.xtype.length()>0 ) j=writeAttribute(s,j,3,indent,"xtype",f.xtype);
          if( f.datatype==null ) {
             j=writeAttribute(s,j,3,indent,"datatype","char");
             if( f.arraysize==null ) j=writeAttribute(s,j,3,indent,"arraysize","*");

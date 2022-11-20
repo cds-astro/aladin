@@ -105,6 +105,7 @@ final public class TableParser implements XMLConsumer {
    private int nField;	      	      // Numéro de champ courant
    private int nRecord;               // Numéro de l'enregistrement courant
    private int nRA,nDEC;              // Numéro de la colonne RA et DEC (-1 si non encore trouvée)
+   private int nRAmax,nDECmax;        // Numéro de la colonne RA et DEC max (typiquement c1max et C2max) -1 si non affecté 
    private int nPMRA,nPMDEC;          // Numéro de la colonne PMRA et PMDEC (-1 si non encore trouvée)
    private int nX,nY;	      	      // Numéro de la colonne X et Y (-1 si non encore trouvée)
    private int nTime;                 // Numéro de la colonne Time (-1 si non encore trouvée)
@@ -1125,6 +1126,7 @@ final public class TableParser implements XMLConsumer {
     */
    private void initTable() {
       nRA=nDEC=nPMRA=nPMDEC=nX=nY=nRADEC=nTime=-1;
+      nRAmax=nDECmax=-1;
       qualRA=qualDEC=qualRA=qualDEC=qualX=qualY=qualPMRA=qualPMDEC=qualTime=1000; // 1000 correspond au pire
       timeFormat = -1;
       timeField = null;
@@ -1534,8 +1536,15 @@ final public class TableParser implements XMLConsumer {
          inSEDGroup=false;
       }
       
+      // Cas particulier de EPNTAP. On détecte les coordonnées max en longitude et latitude
+      // pour pouvoir calculer le barycentre
       if( (typeFmt & MyInputStream.EPNTAP)!=0 ) {
-         consumer.tableParserInfo("   -EPNTAP VOTABLE => c1min,c2min used as longitude,latitude");
+         consumer.tableParserInfo("   -EPNTAP VOTABLE => barycenter c1min..c1max,c2min..c2max used as longitude,latitude");
+         for( int i=0; i<memoField.size() && (nRAmax==-1 || nDECmax==-1); i++ ) {
+            Field f = memoField.get(i);
+            if( "c1max".equals(f.name) ) nRAmax=i;
+            else if( "c2max".equals(f.name) ) nDECmax=i;
+         }
       }
 
       // Par défaut, ce sera du ICRS en TCB-BARYCENTRER-sans offset
@@ -2662,6 +2671,18 @@ final public class TableParser implements XMLConsumer {
                if( i<0 ) throw new Exception("Unsupported syntax for coordinates expressed as an unique field");
                ra = s.substring(0,j).trim();
                dec= s.substring(i).trim();
+            }
+            
+            // EPNTAP
+            if( nRAmax!=-1 ) {
+               try {
+                  double raMin = Double.parseDouble(rec[nRA]);
+                  double deMin = Double.parseDouble(rec[nDEC]);
+                  double raMax = Double.parseDouble(rec[nRAmax]);
+                  double deMax = Double.parseDouble(rec[nDECmax]);
+                  ra = ""+( (raMin+raMax)/2 );
+                  dec = ""+( (deMin+deMax)/2 );
+               } catch( Exception e ) { }
             }
             
             format = getRaDec(c,ra,dec,format,unit);

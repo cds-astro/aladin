@@ -205,6 +205,12 @@ public final class Legende extends AbstractTableModel  {
       return -1;
    }
    
+   /** Retourne l'indice du premier champ qui a l'xtype indiqué */
+   protected int findXtype(String xtype) {
+      for( int i=0; i<field.length; i++ ) if( xtype.equals(field[i].xtype) ) return i;
+      return -1;
+   }
+   
    /** Retourne l'indice du champ TIME (JD,MJD ou ISOTIME), sinon -1 */
    protected int getTime() {
       for( int i=0; i<field.length; i++ ) if( field[i].isTime() ) return i;
@@ -433,6 +439,16 @@ public final class Legende extends AbstractTableModel  {
       return   (f.utype!=null?f.utype:"");
    }
    
+   /** Retourne le xtype associee au champ.
+    * @param i numero du champ
+    * @return le xtype, "" si erreur ou non decrit
+    */
+   protected String getXtype(int i) {
+      if( i>=field.length ) return null;
+      Field f = field[i];
+      return   (f.xtype!=null?f.xtype:"");
+   }
+   
    /** Retourne l'unitée associée au champ.
     * @param i numero du champ
     * @return l'unité, "" si erreur ou non decrit
@@ -550,10 +566,10 @@ public final class Legende extends AbstractTableModel  {
    /*******************************  Structure de la JTable *******************************/
 
    static final private String [] HEAD = {
-      "","Visible","Ref","Name","Description","Unit","Datatype","UCD","Utype","Width","Arraysize","Precision"
+      "","Visible","Ref","Name","Description","Unit","Datatype","UCD","Utype","Xtype","Width","Arraysize","Precision"
    };
 
-   static final private int [] WHEAD = { 30, 50, 50,100, 190, 50, 70, 110, -1, 40,40,40 };
+   static final private int [] WHEAD = { 30, 50, 50,100, 190, 50, 70, 110, -1, -1, 40,40,40 };
 
    static final private int N=0;
    static final private int VISIBLE=1;
@@ -564,9 +580,10 @@ public final class Legende extends AbstractTableModel  {
    static final public int DATATYPE=6;
    static final public int UCD=7;
    static final public int UTYPE=8;
-   static final public int WIDTH=9;
-   static final public int ARRAYSIZE=10;
-   static final public int PRECISION=11;
+   static final public int XTYPE=9;
+   static final public int WIDTH=10;
+   static final public int ARRAYSIZE=11;
+   static final public int PRECISION=12;
 
    private JTable table;
    private Aladin aladin;
@@ -685,6 +702,7 @@ public final class Legende extends AbstractTableModel  {
          case DESCRIPTION: return field[i].description;
          case UCD:         return field[i].ucd;
          case UTYPE:       return field[i].utype;
+         case XTYPE:       return field[i].xtype;
          case DATATYPE:    return Field.typeFits2VOTable(field[i].datatype);
          case WIDTH:       return field[i].width;
          case ARRAYSIZE:   return field[i].arraysize;
@@ -716,6 +734,7 @@ public final class Legende extends AbstractTableModel  {
          case DESCRIPTION: field[i].description = (String)value; break;
          case UCD:         field[i].ucd = (String)value; break;
          case UTYPE:       field[i].utype = (String)value; break;
+         case XTYPE:       field[i].xtype = (String)value; break;
          case DATATYPE:    field[i].datatype = Field.typeVOTable2Fits( (String)value); break;
          case WIDTH:       field[i].width = (String)value; field[i].computeColumnSize(); break;
          case ARRAYSIZE:   field[i].arraysize = (String)value; field[i].computeColumnSize(); break;

@@ -6729,16 +6729,20 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                }
 
                if( !(p instanceof PlanMoc) && p.pcat==null || !p.active ) continue;
-               float opacity = p.getOpacityLevel();
-               if( opacity >0.05 ) {
-                  if( p.getOpacityLevel()<0.9 && g instanceof Graphics2D && !(p instanceof PlanField) ) {
-                     Graphics2D g2d = (Graphics2D)g;
-                     Composite saveComposite = g2d.getComposite();
-                     Composite myComposite = Util.getImageComposite(opacity);
-                     g2d.setComposite(myComposite);
-                     p.pcat.draw(g2d,clip,vs,flagActive,dx,dy);
-                     g2d.setComposite(saveComposite);
-                  } else p.pcat.draw(g,clip,vs,flagActive,dx,dy);
+               try {
+                  float opacity = p.getOpacityLevel();
+                  if( opacity >0.05 ) {
+                     if( p.getOpacityLevel()<0.9 && g instanceof Graphics2D && !(p instanceof PlanField) ) {
+                        Graphics2D g2d = (Graphics2D)g;
+                        Composite saveComposite = g2d.getComposite();
+                        Composite myComposite = Util.getImageComposite(opacity);
+                        g2d.setComposite(myComposite);
+                        p.pcat.draw(g2d,clip,vs,flagActive,dx,dy);
+                        g2d.setComposite(saveComposite);
+                     } else p.pcat.draw(g,clip,vs,flagActive,dx,dy);
+                  }
+               } catch( Exception e ) {
+                  continue;
                }
             }
 

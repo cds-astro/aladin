@@ -340,7 +340,9 @@ public class MyInputStream extends FilterInputStream {
             int naxis1 = Integer.parseInt(snaxis1);
             int naxis2 = Integer.parseInt(snaxis2);
             int npix = Integer.parseInt(getFitsValue("BITPIX"));
-            if( (long)naxis1*naxis2*(Math.abs(npix)/8) > Aladin.LIMIT_HUGEFILE ) type |= HUGE;
+            long mem = (long)naxis1*naxis2*(Math.abs(npix)/8);
+//            System.out.println("Huge limit="+Util.getUnitDisk(Aladin.LIMIT_HUGEFILE)+" image size="+Util.getUnitDisk(mem));
+            if( mem > Aladin.LIMIT_HUGEFILE ) type |= HUGE;
          }catch( Exception e ) {}
       }
 

@@ -145,7 +145,7 @@ public class BuilderIndex extends Builder {
          if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
          try {
             Fits file = new Fits( context.getHDU() );
-            file.loadHeaderFITS(img);
+            file.loadHeaderFITS(img,true);
             if( file.getCalib()==null ) throw new Exception("null calib");
 
             // Recherche des fitsKey à garder par défaut
@@ -234,6 +234,8 @@ public class BuilderIndex extends Builder {
       String pathDest = context.getHpxFinderPath();
 
       create(input, pathDest, order);
+      
+      context.addPixelIn(statPixSize);
    }
 
    // Initialisation des statistiques

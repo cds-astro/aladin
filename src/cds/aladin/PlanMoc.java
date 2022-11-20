@@ -33,6 +33,7 @@ import cds.moc.Moc1D;
 import cds.moc.MocCell;
 import cds.moc.SMoc;
 import cds.moc.STMoc;
+import cds.moc.TMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
@@ -608,9 +609,11 @@ public class PlanMoc extends PlanBGCat {
       
       lastLowMoc=null;
       
+      boolean mocEquatorial = "C".equals( moc.getSpaceSys());
+      
       // Pour les petits champs, on travaille sans cache, en découpant le MOC à la bonne
       // résolution et à la bonne taille.
-      if( v.getTaille()<20 ) {
+      if( mocEquatorial && v.getTaille()<20 ) {
          try {
             // On améliore un peu la résolution
 //            if( order<moc.getSpaceOrder() ) order++;
@@ -623,7 +626,7 @@ public class PlanMoc extends PlanBGCat {
             Moc1D mv = v.getMoc();
             
             // POUR LE MOMENT ON NE PREND PAS EN COMPTE LE SYSTEME DE REFERENCE
-            mocP.setSpaceSys( mv.getSpaceSys());
+//            mocP.setSpaceSys( mv.getSpaceSys());
             
             // On découpe la zone concernée
             Moc moclow = mocP.intersection( mv );
@@ -900,6 +903,53 @@ public class PlanMoc extends PlanBGCat {
    
    protected float factorOpacity = 0.5f;
    protected float getFactorOpacity() { return factorOpacity; }
+   
+   
+   static public void main(String []argv) {
+      int n,ncol,nlig;
+      
+      // SMOC resolutions
+      System.out.println("\nSpace Moc resolution table:");
+//      System.out.print("\\n \\n \\nSpace Moc resolution table:\\n \\n");
+      n = SMoc.MAXORD_S;
+      ncol = 4;
+      nlig = n/ncol + (n%ncol>0?1:0);
+      for( int i=0; i<nlig; i++ ) {
+         for( int j=0; j<ncol; j++ ) {
+            int order=i+j*nlig;
+            if( order>n ) continue;
+            double res = Math.sqrt( Healpix.getPixelArea(order));
+            String s = String.format("   %2d:%-10s", order, 
+                  Coord.getUnit(res));
+//            Coord.getUnit(res).replace("°","deg").replace("µ","mu"));
+            System.out.print(s);
+         }
+         System.out.println();
+//         System.out.print("\\n");
+      }
+      
+      // SMOC resolutions
+      System.out.println("\nTime Moc resolution table:");
+//      System.out.print("\\n \\nTime Moc resolution table:\\n \\n");
+      n = TMoc.MAXORD_T;
+      ncol = 4;
+      nlig = n/ncol + (n%ncol>0?1:0);
+      for( int i=0; i<nlig; i++ ) {
+         for( int j=0; j<ncol; j++ ) {
+            int order=i+j*nlig;
+            if( order>n ) continue;
+            long res = TMoc.getDuration(order);
+            String s = String.format("  %2d:%-11s", order, 
+                  Util.getTemps(res));
+//            Util.getTemps(res).replace("µ","mu"));
+            System.out.print(s);
+         }
+//         System.out.print("\\n");
+         System.out.println();
+      }
+   }
+   
+   
    
 }
 

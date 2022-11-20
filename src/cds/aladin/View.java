@@ -1518,9 +1518,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( p==null ) return Double.NaN;
       if( !p.hasAvailablePixels() ) return Double.NaN;
       repere.projection(viewSimple[currentView]);
-      int x = (int)Math.round(repere.xv[currentView]-1);
-      int y = (int)Math.round(repere.yv[currentView]);
-      //      return ((PlanImage)p).getPixelInDouble(x,y);
+      
+      // Correction proposée par Glenn Eychaner du LBTO - Nov 2022
+      // => Intégrer => A vérifier
+//      int x = (int)Math.round(repere.xv[currentView]-1);
+//      int y = (int)Math.round(repere.yv[currentView]);
+      int x = (int)Math.round(repere.xv[currentView]-0.5);
+      int y = (int)Math.round(repere.yv[currentView]-0.5);
+      
       return ((PlanImage)p).getPixelOriginInDouble(x,((PlanImage)p).naxis2-y-1);
    }
    

@@ -699,6 +699,9 @@ public final class Projection {
       // Pas d'affichage des données planétaires => jamais d'incompatibilité sur les corps
       if( !Aladin.aladin.configuration.isPlanet() ) return 1;
       
+      // Planet mais sans test de compatibilité de projection ?
+      else if( Aladin.aladin.configuration.isPlanetNotCheck() ) return 1;
+      
       String body = getBody();
       String pbody= p.getBody();
       

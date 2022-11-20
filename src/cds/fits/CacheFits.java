@@ -42,109 +42,95 @@ import cds.tools.Util;
  * Classe de manipulation d'un cache de fichiers FITS/JPEG ouverts.
  * Permet d'éviter les ouvertures et réouvertures inutiles lors d'un traitement nécessitant plusieurs fois
  * l'accès aux mêmes images.
- * Il faut mentionner à la création la taille max allouée au cache, en Mo (par défaut 512Mo) et en Nb de fichiers (par défaut 10000)
+ * 
+ * Il faut mentionner à la création la taille max allouée au cache, en Mo et en Nb de fichiers, ainsi que la borne max en volume, resp en nombre max en cas de modification
+ * dynamique de la capacité du cache. Ainsi lorsque le cache sature, et qu'il n'arrive pas à être purger sans virer des fichiers encore très récemment utilisés,
+ * la capacité du cache va automatiquement augmenté d'un tiers (sans dépasser les bornes indiquées). Cette augmentation ne sera que temporairie dans la mesure du possible
+ * et cette capacité sera peu à peu diminuer pour reprendre les valeurs déclarées au départ.
+ * 
  * L'accès à un fichier Fits se fait par Fits getFits(filename)( ou getFits(filename,true) pour du JPEG)
  *
  * Rq: Le rajouti d'Anaïs sur la soustraction du skyvalName ne devrait pas être dans cette classe (selon moi)
  * => A voir si on le déplace
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.3 - novembre 2022 - ajout de la variation dynamique de la capacité du cache
  * @version 1.2 - novembre 2014
  * @version 1.1 - juillet 2012
  * @version 1.0 - sept 2011
  */
 public class CacheFits {
+   
+   static final private long DELAYINCREASE = 5 * 60000L;  // Délai avant d'éventuellement diminuer les capacités du cache (5mn)
+   private long timeLastIncrease=0L;                      // Date de la dernière augmentation des capacités du cache
+   
+   static private final long DEFAULT_MAXMEM=512*1024*1024L;   // Taille max courante du cache par défaut
+   static protected final int DEFAULT_MAXFILE = 500;          // Nbre max d'items du cache par défaut
+   
+   private long LIMITMEM;           // Taille max autorisée
+   private int LIMITFILE;           // Nombre max d'items autorisés
+   
+   private long maxMem;             // Taille max courante (en octets)
+   private int maxFile;             // Nombre max courant d'items
+   
+   private long initMem;             // Taille max courante souhaitée au départ (en octets)
+   private int initFile;             // Nombre max courant d'items souhaité au départ 
 
-   static private final long DEFAULT_MAXMEM=512*1024*1024L;
-   static protected final int MAXFILE = 10000;
-
-   private long maxMem;             // Taille max (en octets)
    private int nextId;              // prochain identificateur unique de fichier
    volatile private boolean cacheOutOfMem;   // En cas de débordement mémoire, on vire totalement le cache
    protected HashMap<String, FitsFile> map;             // Table des fichiers
-   //   private TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
-   Context context;
+   private int nbClean;  // Nombre de purges du cache
+
+   private Context context;
    private Hashtable<String, double[]> cutCache = new Hashtable<>();
    private Hashtable<String, double[]> shapeCache = new Hashtable<>();
-
-
-   //private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment
-   //de la mise dans le cache
 
    protected int statNbOpen,statNbFind,statNbFree;
 
    /**
     * Création d'un cache de fichiers Fits
     */
-   public CacheFits() { this(DEFAULT_MAXMEM); }
+   public CacheFits() { this(DEFAULT_MAXMEM,DEFAULT_MAXFILE,    DEFAULT_MAXMEM*3,DEFAULT_MAXFILE*3); }
+   public CacheFits(long maxMem) { this(maxMem,DEFAULT_MAXFILE, DEFAULT_MAXMEM*3,DEFAULT_MAXFILE*3); }
 
    /**
     * Création d'un cache de fichiers Fits
-    * @param maxMem limite en bytes occupés, ou si négatif,
-    *          nombre de bytes à garder libre par rapport à la RAM dispo
+    * @param maxMem taille max du cache (en bytes)
+    * @param maxFile nombre max de fichier du cache
+    * @param limitMem borne max du cache en cas d'augmentation dynamique de sa taille (voir description de la classe)
+    * @param limitFile borne max en nombre de fichiers en cas d'augmentation dynamique de ses capacités
     * @param rewriteMode true si les fichiers du cache seront réécrits systématiquement
     */
-   public CacheFits(long maxMem) {
-      this.maxMem = maxMem;
+   public CacheFits(long maxMem,int maxFile,long limitMem, int limitFile) {
+      if( maxMem>limitMem ) maxMem=limitMem;
+      if( maxFile>limitFile ) maxFile=limitFile;
+      
+      this.maxMem = this.initMem = maxMem;
+      this.maxFile = this.initFile = maxFile;
+      
+      this.LIMITMEM = limitMem;
+      this.LIMITFILE = limitFile;
+      
       cacheOutOfMem = maxMem==0;
       nextId = 0;
+      nbClean=0;
       statNbFree = statNbOpen = statNbFind = 0;
-      map = new HashMap<>(MAXFILE+MAXFILE/100);
-      //      sortedMap = new TreeMap<String, FitsFile>( new ValueComparator(map) );
+      map = new HashMap<>(maxFile+maxFile/100);
    }
-
-   /** Vérification qu'il reste assez de mémoire RAM, et sinon
-    * on va libérer temporairement les blocs pixels[] non utilisés afin de récupérer
-    * ce qui manque
-    * @param rqMem taille de la mémoire requise
-    * @return true c'est bon, false, faut attendre
-    */
-   //   public boolean needMem(long rqMem) {
-   //      if( rqMem<=0L ) return false;
-   //      long freeMem=getFreeMem();
-   //      if( getFreeMem()>rqMem ) return false;
-   //
-   //      rqMem = rqMem-freeMem;
-   //      long mem = 0L;
-   //      try {
-   //         waitLock();
-   //         for( String key : map.keySet() ) {
-   //            Fits f = map.get(key).fits;
-   //            long m = f.getMem();
-   //            try { f.releaseBitmap();
-   //            } catch( Exception e ) { } mem += m-f.getMem();
-   //            if( mem>rqMem ) break;
-   //         }
-   //      } finally { unlock(); }
-   //      gc();
-   //      return mem>rqMem;
-   //   }
+   
+   /** Retourne la limite courante en mémoire du cache (en bytes) */
+   public long getMaxMem() { return maxMem; }
+   
+   /** Retourne la limite courante en nombre de fichiers du cache */
+   public int getMaxFile() { return maxFile; }
 
    // Gestion d'un lock
    static protected final Object lockObj= new Object();
-   //   transient private boolean lock;
-   //   private void waitLock() {
-   //      while( !getLock() ) sleep(5);
-   //   }
-   //   private void unlock() { lock=false; }
-   //   private boolean getLock() {
-   //      synchronized( lockObj ) {
-   //         if( lock ) return false;
-   //         lock=true;
-   //         return true;
-   //      }
-   //   }
-   //   // Mise en pause
-   //   private void sleep(int delay) {
-   //      try { Thread.currentThread().sleep(delay); }
-   //      catch( Exception e) { }
-   //   }
 
    static public final int FITS = 0; // FITS classique
    static public final int JPEG = 1; // JPEG
    static public final int PNG  = 2; // PNG
    static public final int HHH  = 4; // HHH (combiné avec JPEG ou PNG)
-   
 
    /**
     * Récupération d'un Fits spécifié par son nom de fichier.
@@ -208,9 +194,24 @@ public class CacheFits {
    protected void remove(String name) throws Exception {
       map.remove(name);
    }
-
+   
    private boolean firstChangeOrig=true;
-
+   
+   /** Remplace une extension par une autre dans un nom de ficheir
+    * ex: toto.hhh[xxx] => toto.fits[xxx]
+    * @param filename Le nom du fichier
+    * @param orig l'extension d'origine (sans le point), ou null pour n'importe quelle extension
+    * @param ext la nouvelle extension (sans le point)
+    * @return le nom de fichier avec la nouvelle extension
+    */
+   private String replaceExt(String filename,String orig, String ext) {
+      if( orig==null ) orig="";
+      int pos = filename.lastIndexOf("."+orig);
+      if( pos==-1 ) return filename+"."+ext;
+      return filename.substring(0,pos)+"."+ext+filename.substring(pos+("."+orig).length() );
+      
+   }
+   
    // Ouvre un fichier
    private FitsFile open(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception,MyInputStreamCachedException {
       boolean flagChangeOrig=false;
@@ -233,24 +234,32 @@ public class CacheFits {
       // Il faut lire deux fichiers, le HHH, puis le JPEG ou PNG, voire FITS suivant le cas
       if( (mode&HHH)!=0 ) {
          f.fits.loadHeaderFITS(fileName);
-         String pngFile  = fileName.replaceAll("\\.hhh",".png");
-         String jpgFile  = fileName.replaceAll("\\.hhh",".jpg");
-
+//         String pngFile  = fileName.replaceAll("\\.hhh",".png");
+//         String jpgFile  = fileName.replaceAll("\\.hhh",".jpg");
+         String pngFile   = replaceExt(fileName,"hhh","png");
+         String jpgFile   = replaceExt(fileName,"hhh","jpg");
+         String fitsFile  = replaceExt(fileName,"hhh","fits");
+         
          // On ne connait pas le type de fichier pour les pixels,
          // => on va voir ce qui existe
+         boolean modeSpecialFitsHHH=false;
          if( (mode&(JPEG|PNG))==0 ) {
-            String racJpgFile = jpgFile;
-            String racPngFile = pngFile;
+            String racJpgFile  = jpgFile;
+            String racPngFile  = pngFile;
+            String racFitsFile = fitsFile;
             int i;
-            if( (i= jpgFile.indexOf(".jpg["))>0 )   racJpgFile  = jpgFile.substring(0,i+4);
-            if( (i= pngFile.indexOf(".png["))>0 )   racPngFile  = pngFile.substring(0,i+4);
+            if( (i=  jpgFile.indexOf(".jpg["))>0 )   racJpgFile  = jpgFile.substring(0,i+4);
+            if( (i=  pngFile.indexOf(".png["))>0 )   racPngFile  = pngFile.substring(0,i+4);
+            if( (i= fitsFile.indexOf(".fits["))>0 ) racFitsFile  = fitsFile.substring(0,i+5);
 
             if( (new File(racJpgFile)).exists() ) mode |= JPEG;
             else if( (new File(racPngFile)).exists() ) mode |= PNG;
+            else if( (new File(racFitsFile)).exists() ) modeSpecialFitsHHH=true;
          }
          if( (mode&PNG)!=0  ) fileName=pngFile;
          else if( (mode&JPEG)!=0 ) fileName=jpgFile;
-         else throw new Exception(".hhh file without associated .jpg, .png file");
+         else if( modeSpecialFitsHHH ) fileName=fitsFile;
+         else throw new Exception(".hhh file without associated .jpg, .png or .fits file");
       }
 
       if( (mode&(PNG|JPEG))!=0 ) {
@@ -308,7 +317,7 @@ public class CacheFits {
 
    // Retourne true si le cache est en surcapacité
    protected boolean isOver() {
-      if( map.size()>MAXFILE ) return true;
+      if( map.size()>maxFile ) return true;
       if( maxMem<0 ) {
          //         System.out.println("Cachemem="+Util.getUnitDisk(mem)+" freeMem="+Util.getUnitDisk(getFreeMem())
          //               +" maxMem="+Util.getUnitDisk(-maxMem)
@@ -352,7 +361,7 @@ public class CacheFits {
          long mem = getMem();
          long freeMem = getFreeMem();
          
-         boolean tooManyFile = map.size()>MAXFILE;
+         boolean tooManyFile = map.size()>maxFile;
          boolean tooManyMem = maxMem<0 && freeMem<-maxMem || maxMem>=0 && mem>maxMem;
          if( !tooManyFile && !tooManyMem ) return;
          
@@ -365,7 +374,7 @@ public class CacheFits {
          long now = System.currentTimeMillis();
          long delay=5000;
 
-         int i;
+         int pass;
          try {
             cacheOutOfMem=true;
 
@@ -374,20 +383,20 @@ public class CacheFits {
 
             // en premier tour, on supprime les fits non utilisés
             // depuis plus de 5s, et si pas assez de mémoire, on ne regarde plus la date
-            for( i=0; i<2 && encore; i++) {
+            for( pass=0; pass<2 && encore; pass++) {
                int mapsize=map.size();
 
                for( String key: map.keySet() ) {
                   FitsFile f = map.get(key);
                   if( f.fits.hasUsers() ) continue;
-                  if( i==0 && now-f.timeAccess<delay ) continue;
+                  if( pass==0 && now-f.timeAccess<delay ) continue;
                   m = f.getMem();
                   totMem+=m;
                   nb++;
                   statNbFree++;
 
                   libere.put(key,"");
-                  if( totMem>mem/2L && mapsize-nb < 2*MAXFILE/3 ) { encore=false; break; }
+                  if( totMem>mem/3L && mapsize-nb < 2*maxFile/3 ) { encore=false; break; }
                }
 
                for( String key: map.keySet() ) {
@@ -402,38 +411,86 @@ public class CacheFits {
                }
                
                map=map1;
-
-               //         Enumeration<String> e = map.keys();
-               //         while( e.hasMoreElements() ) {
-               //            String key = e.nextElement();
-               //            FitsFile f = map.get(key);
-               //            if( f.fits.hasUsers() ) continue;
-               //            if( i==0 && now-f.timeAccess<delay ) continue;
-               //            m = f.getMem();
-               //            totMem+=m;
-               //            nb++;
-               //            statNbFree++;
-               //            //            map.remove(key);
-               //            try { remove(key); } catch( Exception e1 ) { }
-               //            if( totMem> mem/2L && map.size()<2*MAXFILE/3 ) { encore=false; break; }
-               //         }
             }
 
-            //      sortedMap.clear();
             gc();
+            
          } finally {
             cacheOutOfMem=false;
          }
 
          long duree = System.currentTimeMillis() - now;
-         String s1 = i>1 ? "s":"";
+         String s1 = pass>1 ? "s":"";
          long freeRam = getFreeMem();
-         if( context!=null ) {
-            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files released ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree*1000L)
+         nbClean++;
+         if( context!=null && context.getVerbose()>=3) {
+            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files released ("+Util.getUnitDisk(totMem)+") in "+pass+" step"+s1+" in "+Util.getTemps(duree*1000L)
             +" => freeRAM="+Util.getUnitDisk(freeRam));
+         }
+         
+         // Modification de la capacité du cache
+         // (augmentation si dernier nettoyage en 2 passes, diminution si ça fait longtemps qu'on n'a pas du augmenter)
+         now = System.currentTimeMillis();
+         if( pass>1 ) { 
+            if( increaseCache() ) timeLastIncrease=now;
+         } else {
+            if( System.currentTimeMillis()-timeLastIncrease>DELAYINCREASE ) decreaseCache();
          }
       }
    }
+   
+   // Augmente la capacité du cache si possible
+   private boolean increaseCache() {
+      if( maxFile>=LIMITFILE || maxMem>=LIMITMEM) return false;
+      long memPerItem = maxMem / maxFile;
+
+      // J'ajoute 50% d'items en plus
+      int maxFile2 = maxFile+ maxFile/2;
+      if( maxFile2>LIMITFILE ) maxFile2=LIMITFILE;
+      long maxMem2 = maxFile2 * memPerItem;
+      if( maxMem2 > LIMITMEM ) maxMem2=maxMem2;
+      maxFile=maxFile2;
+      maxMem=maxMem2;
+      if( context!=null && context.getVerbose()>=3) {
+         context.stat("Cache: increaseCache: items="+maxFile+" mem="+Util.getUnitDisk(maxMem));
+      }
+      return true;
+   }
+   
+   // Diminue la capacité du cache si possible
+   private boolean decreaseCache() {
+      if( maxFile<=initFile || maxMem<=initMem ) return false;
+      
+      int delay=5000;
+      long now = System.currentTimeMillis();
+      
+      // Je vérifie qu'il y a suffisamment d'items que l'on peut effectivement libérer
+      int nb=0;
+      for( String key: map.keySet() ) {
+         FitsFile f = map.get(key);
+         if( f.fits.hasUsers() ) continue;
+         if( now-f.timeAccess<delay ) continue;
+         nb++;
+         if( nb< maxFile/3 ) return false;
+      }
+      
+      long memPerItem = maxMem / maxFile;
+
+      // Je diminue d'un tier d'items
+      int maxFile2 = maxFile- maxFile/3;
+      if( maxFile2  < initFile ) maxFile2=initFile;
+      long maxMem2 = maxFile2 * memPerItem;
+      if( maxMem2 < initMem ) maxMem2=initMem;
+      maxFile=maxFile2;
+      maxMem=maxMem2;
+      if( context!=null && context.getVerbose()>=3) {
+         context.stat("Cache: decreaseCache: items="+maxFile+" mem="+Util.getUnitDisk(maxMem));
+      }
+      return true;
+   }
+   
+   /** Retourne le nombre de fois où le cache a été purgé */
+   public int getNbClean() { return nbClean; }
 
    // Reset totalement le cache
    public void reset() {
@@ -725,12 +782,12 @@ public class CacheFits {
       //      int nbReleased = getNbReleased();
       int n = map.size();
       String s = n>1 ? "s":"";
-      return "Cache: "+n+" cell"+s
+      return "Cache: "+n+" item"+s+"/"+maxFile
             //      +(nbReleased>0 ? "("+nbReleased+" released)" : "")
             +" using "+Util.getUnitDisk(getMem())
             +(maxMem>0 ? "/"+Util.getUnitDisk(maxMem):"["+Util.getUnitDisk(maxMem)+"]")
             +" freeRAM="+Util.getUnitDisk(getFreeMem())
-            +" (opened="+statNbOpen+" reused="+statNbFind+" released="+statNbFree+")";
+            +" (opened="+statNbOpen+" reused="+statNbFind+" released="+statNbFree+" ["+nbClean+"x])";
    }
 
    // retourne le nombre de fichier dans le cache dont le bloc mémoire pixel[]

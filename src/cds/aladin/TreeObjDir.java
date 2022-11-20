@@ -1204,7 +1204,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
  
    /** Génération et exécution de la requête script correspondant au protocole SSA */
-   protected void loadSSA() { loadSSA( getDefaultTarget()+" "+getDefaultRadius(1) ); }
+   protected void loadSSA() { loadSSA( getDefaultTarget()+" "+getDefaultRadius(15) ); }
    protected void loadSSA( String cone ) {
       if( cone==null ) { loadSSA(); return; }
      exec( addBrowse( getSSACmd()+" "+cone) );
@@ -1223,7 +1223,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Génération et exécution de la requête script correspondant à la requête TAp AssocData */
-   protected void loadAssoc() { loadAssoc( getDefaultTarget()+" "+getDefaultRadius(1)); }
+   protected void loadAssoc() { loadAssoc( getDefaultTarget()+" "+getDefaultRadius(15)); }
    protected void loadAssoc( String cone ) { 
       if( cone==null ) { loadAssoc(); return; }
       String ident = "\"AD "+internalId+"\"";
@@ -1235,7 +1235,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Génération et exécution de la requête script correspondant au protocole SIA ou SIA2 */
-   protected void loadSIA() { loadSIA( getDefaultTarget()+" "+getDefaultRadius(1)); }
+   protected void loadSIA() { loadSIA( getDefaultTarget()+" "+getDefaultRadius(15)); }
    protected void loadSIA( String cone ) { 
       if( cone==null ) { loadSIA(); return; }
      exec( addBrowse( getSIACmd()+" "+cone) );

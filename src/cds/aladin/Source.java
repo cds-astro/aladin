@@ -976,7 +976,6 @@ public class Source extends Position implements Comparator {
 
 		//	thomas (AVO 2005)
 		ucd = MetaDataTree.replace(ucd, "\\*", "*", -1);
-
 		ucd = ucd.toUpperCase();
 
     	for(curPos=0; curPos<fields.length; curPos++) {
@@ -991,29 +990,52 @@ public class Source extends Position implements Comparator {
    }
 
    protected int findUtype(String utype) {
-       int curPos;
-       String curUtype = null;
-       
-       if( getLeg()==null ) return -1;
+      int curPos;
+      String curUtype = null;
+      
+      if( getLeg()==null ) return -1;
 
-       Field[] fields = getLeg().field;
-       // utype contient-il des wildcards ?
-       boolean wildcard = useWildcard(utype);
+      Field[] fields = getLeg().field;
+      // utype contient-il des wildcards ?
+      boolean wildcard = useWildcard(utype);
 
-       utype = MetaDataTree.replace(utype, "\\*", "*", -1);
+      utype = MetaDataTree.replace(utype, "\\*", "*", -1);
+      utype = utype.toUpperCase();
 
-       utype = utype.toUpperCase();
+      for(curPos=0; curPos<fields.length; curPos++) {
+          curUtype = fields[curPos].utype;
+          if( curUtype!=null ) curUtype = curUtype.toUpperCase();
+          String myVal;
+          // pour eviter les cas ou l'on prend en compte un utype avec une valeur vide alors qu il en existerait un "bon"
+          if( curUtype == null || ( wildcard && ( (myVal=this.getValue(curPos))==null || myVal.trim().length()==0 ) ) ) continue;
+          if( match(utype, curUtype, wildcard) ) return curPos;
+      }
+      return -1;
+ }
 
-       for(curPos=0; curPos<fields.length; curPos++) {
-           curUtype = fields[curPos].utype;
-           if( curUtype!=null ) curUtype = curUtype.toUpperCase();
-           String myVal;
-           // pour eviter les cas ou l'on prend en compte un utype avec une valeur vide alors qu il en existerait un "bon"
-           if( curUtype == null || ( wildcard && ( (myVal=this.getValue(curPos))==null || myVal.trim().length()==0 ) ) ) continue;
-           if( match(utype, curUtype, wildcard) ) return curPos;
-       }
-       return -1;
-  }
+   protected int findXtype(String xtype) {
+      int curPos;
+      String curXtype = null;
+      
+      if( getLeg()==null ) return -1;
+
+      Field[] fields = getLeg().field;
+      // xtype contient-il des wildcards ?
+      boolean wildcard = useWildcard(xtype);
+
+      xtype = MetaDataTree.replace(xtype, "\\*", "*", -1);
+      xtype = xtype.toUpperCase();
+
+      for(curPos=0; curPos<fields.length; curPos++) {
+          curXtype = fields[curPos].xtype;
+          if( curXtype!=null ) curXtype = curXtype.toUpperCase();
+          String myVal;
+          // pour eviter les cas ou l'on prend en compte un xtype avec une valeur vide alors qu il en existerait un "bon"
+          if( curXtype == null || ( wildcard && ( (myVal=this.getValue(curPos))==null || myVal.trim().length()==0 ) ) ) continue;
+          if( match(xtype, curXtype, wildcard) ) return curPos;
+      }
+      return -1;
+ }
 
 /*
    protected int findUtype(String utype) {

@@ -3585,6 +3585,7 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("testscript") ) testscript(param);
       else if( cmd.equalsIgnoreCase("testperf") ) testperf(param);
       else if( cmd.equalsIgnoreCase("testnet") ) testnet(param);
+      else if( cmd.equalsIgnoreCase("testtrigo") ) testtrigo();
       else if( cmd.equalsIgnoreCase("call") ) execFunction(param);
       else if( cmd.equalsIgnoreCase("=") ) execEval(param);
       else if( cmd.equalsIgnoreCase("convert") ) execConvert(param);
@@ -5084,6 +5085,10 @@ public final class Command implements Runnable {
       a.console.printInPad(TEST.replace(';', '\n'));
       execScript(TEST);
       a.glu.showDocument("Http", "http://aladin.cds.unistra.fr/java/Testscript.png", true);
+   }
+   
+   protected void testtrigo() {
+      Calib.checkTrigo();
    }
 
    /**

@@ -493,7 +493,7 @@ public class Plan implements Runnable {
    /** Gère le clignotement visuel d'un plan lorsque la souris reste qq sec sur la pile */
    private boolean blinking=false;
    protected void setPlanBlink(boolean flag) { blinking=flag; }
-   protected boolean isPlanBlink() { return blinking; }
+   protected boolean isPlanBlink() { return Aladin.TESTBLINKING ? false : blinking; }
 
    /** Il s'agit d'un plan de type Time MOC ou (Space Time Moc) */
    protected boolean isTimeMoc() { return type==ALLSKYTMOC || type==ALLSKYSTMOC; }

@@ -167,7 +167,7 @@ public class MocGen {
          // L'image sera mosaiquée en cellSize x cellSize pour éviter de
          // saturer la mémoire par la suite
          try {
-            int code = f.loadHeaderFITS(currentfile+ (ext==0?"":"["+ext+"]"));
+            int code = f.loadHeaderFITS(currentfile+ (ext==0?"":"["+ext+"]"),true);
             if( flagAllHDU && (code & Fits.HDU0SKIP) != 0 ) continue;
             
            // S'agit-il d'une image calibrée ?
@@ -345,7 +345,7 @@ public class MocGen {
          Fits f = new Fits();
          f.setSkipHDU0( flagFirstHdu );
          try {
-            f.loadHeaderFITS(file.getAbsolutePath()+"["+ext+"]");
+            f.loadHeaderFITS(file.getAbsolutePath()+"["+ext+"]",true);
          }  catch( Exception e ) { return rep; }
          Calib c = f.getCalib();
          if( c==null ) continue;

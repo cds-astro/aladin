@@ -819,7 +819,21 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          int idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION1);
          if( idxSTCS<0 ) idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION2);
          if( idxSTCS<0 ) idxSTCS = indexSTC;
-         if (idxSTCS>=0) {
+         
+         // MOC ASCII attaché ?
+         int idxMOC = source.findXtype(TreeBuilder.XTYPE_MOC);
+         
+         if( idxMOC>=0 ) {
+            try {
+               String val = source.getCodedValue(idxMOC);
+               val = "<&"+"~MOC "+val+"|  Moc>";
+               source.setValue(idxMOC, val);
+               source.getLeg().field[idxMOC].flagMoc=true;
+            } catch( Exception e ) {
+               e.printStackTrace();
+            }
+        
+         } else if (idxSTCS>=0) {
             try {
                String val = source.getValue(idxSTCS);
                
@@ -835,9 +849,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             }
             
          // Peut être un FoV peut être tout de même généré par SIA1 ou SSA ?
-         } else 
-         
-         if( flagSIA && !flagSIAV2 ) {
+         } else if( flagSIA && !flagSIAV2 ) {
             String fov = source.createSIAFoV();
             if( fov!=null ) {
                source.setFootprint(fov);
@@ -1200,7 +1212,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          rm=7*60.;
          
       } else if( nb_o==1 ) {
-         Position s = (Position)o[1];
+         Position s = (Position)o[0];
          rajc = s.raj;
          dejc = s.dej;
          rm=7*60.;

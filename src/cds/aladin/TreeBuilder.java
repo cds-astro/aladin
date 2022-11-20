@@ -145,6 +145,7 @@ public class TreeBuilder {
 
     public static final String UTYPE_STCS_REGION1 = "*ObservationLocation.AstroCoordArea.Region";
     public static final String UTYPE_STCS_REGION2 = "*Char.SpatialAxis.Coverage.Support.Area";
+    public static final String XTYPE_MOC = "Moc";
 
     // variables de travail pour le Fov
     private double xVal, yVal, alphaVal, deltaVal;
@@ -1738,9 +1739,9 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 	    String[] criteria = new String[nbTR];
 	    String[] value = new String[nbTR];
 	    // map nom critère --> valeur
-        Hashtable<String, String> critVal = new Hashtable<String, String>();
+        Hashtable<String, String> critVal = new Hashtable<>();
         // map nom critère --> SavotResource avec infos
-        Hashtable<String, SavotResource> infoVal = new Hashtable<String, SavotResource>();
+        Hashtable<String, SavotResource> infoVal = new Hashtable<>();
         SavotResource storageMapping = null;
         SavotResource storedImage = null;
         SavotResource processedObs = null;

@@ -184,6 +184,13 @@ public class Context {
    protected boolean testClonable=true;
    protected boolean live=false;             // true si on doit garder les tuiles de poids
    protected long bytes=0L;                 // Taille du HiPS généré en Kb
+   
+   protected long timeReadIO=0L;            // Temps cumulé des lectures disques
+   protected long timeWriteIO=0L;           // Temps cumulé des écritures disques
+   protected long timeLeafCPU=0L;           // Temps cumulé des calculs pour les tuiles terminales
+   protected long timeNodeCPU=0L;           // Temps cumulé des calculs pour les tuiles hiérarchiques
+   protected long pixelIn=0L;               // Nombre de pixels en entrée
+   protected long pixelOut=0L;              // Nombre de pixels en sortie
 
    public Context() { 
       
@@ -228,9 +235,24 @@ public class Context {
       luptonM     = new double[] { Double.NaN, Double.NaN, Double.NaN };
       luptonS = new double[] { Double.NaN, Double.NaN, Double.NaN };
       bytes = 0L;
+      resetCounter();
       resetProgressParam();
    }
    
+   /** Remise à zéro des compteurs sauf le pixelIn */
+   public void resetCounter() { 
+      timeReadIO=timeWriteIO=timeLeafCPU=timeNodeCPU=0L;
+      pixelOut=0L;
+   }
+   
+   // Mise à jour des compteurs
+   protected void addTimeReadIO(long t)  { timeReadIO+=t;  }
+   protected void addTimeWriteIO(long t) { timeWriteIO+=t; }
+   protected void addTimeLeafCPU(long t) { timeLeafCPU+=t; }
+   protected void addTimeNodeCPU(long t) { timeNodeCPU+=t; }
+   protected void addPixelIn(long t)  { pixelIn+=t; }
+   protected void addPixelOut(long t) { pixelOut+=t; }
+  
    public void resetProgressParam() {
       lastNorder3=-2;
       live=validateOutputDone=validateInputDone=validateCutDone=validateRegion=false;
@@ -835,7 +857,7 @@ public class Context {
 
       String path = imgEtalon;
       Fits fitsfile = new Fits();
-      int code = fitsfile.loadHeaderFITS( path );
+      int code = fitsfile.loadHeaderFITS( path,true );
       
       // Lupton
       if( (code&cds.fits.Fits.LUPTON)!=0 ) {
@@ -1150,7 +1172,7 @@ public class Context {
 
    public void setCache(CacheFits cache) {
       this.cacheFits = cache;
-      cache.setContext(this);
+      if( cache!=null ) cache.setContext(this);
    }
 
    protected void setMocArea(String s) throws Exception {
@@ -1625,13 +1647,12 @@ public class Context {
       long tempsTotalEstime = nbLowTile==0 ? 0 : nbCells==0 ? 0 :(nbCells*totalTime)/nbLowTile - totalTime;
 
       long nbTilesPerMin = (deltaNbTile*60000L)/deltaTime;
+      int width = getTileSide();
+      String pixPerSec = Util.getUnitDisk( (deltaNbTile*1000L*width*width)/deltaTime ).replace("B","pix");
 
       String s=statNbTile+(statNbEmptyTile==0?"":"+"+statNbEmptyTile)+sNbCells+" tiles + "+statNodeTile+" nodes in "+Util.getTemps(totalTime*1000L)+" ("
-            +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+" tiles/mn EndsIn:"+Util.getTemps(tempsTotalEstime*1000L))+") "
-//            +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
-//            +Util.getTemps(statNodeAvgTime)+"/node"
+            +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+" tiles/mn(="+pixPerSec+"/s) EndsIn:"+Util.getTemps(tempsTotalEstime*1000L))+") "
             +(statNbThread==0 ? "":"by "+statNbThreadRunning+"/"+statNbThread+" threads")
-            //         +" using "+Util.getUnitDisk(usedMem)
             ;
 
       stat(s);

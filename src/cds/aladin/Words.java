@@ -67,6 +67,7 @@ public final class Words implements Runnable {
    boolean pin;         // Epinglette
    boolean archive;	    // Bouton (acces a une archive FITS)
    boolean samp;        // Bouton (utilisera SAMP)
+   boolean moc;         // Bouton (MOC ASCII)
    boolean footprint;   // Footprint associé
 
    // Les variables d'etat
@@ -133,6 +134,7 @@ public final class Words implements Runnable {
       // Les reperes sont des tags GLU dont l'id commence par _
       if( type.equals("_") ) repere=true;
       else if( type.equals("^") ) archive=true;
+      else if( type.equals("~") ) { archive=true; moc=true; }
       else if( type.equals("£") ) { archive=true; samp=true; }
       else return;
 
@@ -313,6 +315,12 @@ public final class Words implements Runnable {
    }
 
    private void callArchive1(Aladin aladin,Obj o) {
+      
+      if( moc ) {
+         aladin.execAsyncCommand("draw MOC "+param);
+         return;
+      }
+      
       String label = param;
       String url=getURL(aladin);
       
@@ -326,6 +334,7 @@ public final class Words implements Runnable {
          aladin.mesure.mcanvas.toSamp(url,x+w/2,y);
          return;
       }
+      
       
 // FOR CHAITRA DALALINK => the getDataLinks flag is no longer required
 //      try {

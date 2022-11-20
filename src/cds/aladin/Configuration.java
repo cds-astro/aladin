@@ -210,6 +210,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    static String NOTACTIVATED = "Not activated";
    static String ACTIVATED = "Activated";
+   static String ACTIVATEDNOTEST = "Activated (dev.mode)";
    static String JAVA = "Java";
    static String OPSYS = "OS native";
 
@@ -1140,6 +1141,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       // Choix forcé par paramètre sur la ligne de commande (ou BETA)
       return Aladin.PLANET==1;
    }
+   
+   /** Retourne true si les données planétaires sont activées, mais sans
+    * prendre en compte les tests de compatibilité des superpositions */
+   protected boolean isPlanetNotCheck() {
+      String s = get(PLANET);
+      return s!=null && s.startsWith(ACTIVATEDNOTEST);
+   }
 
    /** Retourne true si le mode Look & Feel est java (et non operating system) */
    public boolean isLookAndFeelJava() {
@@ -1730,6 +1738,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          planetChoice = new JComboBox();
          planetChoice.addItem(ACTIVATED);
          planetChoice.addItem(NOTACTIVATED);
+         planetChoice.addItem(ACTIVATEDNOTEST);
          
          planetChoice.addItemListener(new ItemListener(){
             public void itemStateChanged(ItemEvent event) { infoPlanet(); }
@@ -1750,7 +1759,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    // Affichage d'un baratin pour prévenir des contraintes sur les affichages des données planétaires
    private void infoPlanet() {
-      if( previousPlanet==1 && planetChoice.getSelectedIndex()==0 ) aladin.info(this,PLANETH);
+      int t = planetChoice.getSelectedIndex();
+      if( previousPlanet==1 && (t==0 || t==2) ) aladin.info(this,PLANETH);
    }
 
    // Nettoyage du cache HPX et du cache GLU
@@ -1904,7 +1914,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
       if( filterHDUChoice!=null) filterHDUChoice.setSelectedIndex( isFilterHDU()?0:1 );
 
-      if( planetChoice!=null) planetChoice.setSelectedIndex( isPlanet()?0:1 );
+      if( planetChoice!=null) planetChoice.setSelectedIndex( isPlanetNotCheck()?2:isPlanet()?0:1 );
 
       if( bxEpoch!=null ) bxEpoch.setSelected( isSliderEpoch() );
       if( bxSize!=null )  bxSize.setSelected( isSliderSize() );
@@ -2358,9 +2368,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          String key = new String(a, 0, i);
          for( j = i; j < a.length && Character.isSpace(a[j]); j++ );
          String value = (new String(a, j, a.length - j)).trim();
+         
          if( key.equals(TRANSOLD) ) key=TRANS;      // Pour compatiblité
          if( key.equals(LOOKANDFEELTHEME) && !value.equals("dark") ) previousTheme=1;
-         if( key.equals(PLANET) && !value.equals(ACTIVATED) ) previousPlanet=1;
+         if( key.equals(PLANET) 
+               && !(value.equals(ACTIVATED) || value.equals(ACTIVATEDNOTEST)) ) previousPlanet=1;
          aladin.trace(6, "Configuration.load() [" + key + "] = [" + value + "]");
          
          if( Aladin.TREEWIDTH!=null && key.equals(HWIDTH) ) value=Aladin.TREEWIDTH;
@@ -2514,7 +2526,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       // Pour le filtrage des données planétaires
       if( planetChoice!=null ) {
          int t = planetChoice.getSelectedIndex();
-         if( planetChoice.getSelectedIndex()==0 ) set(PLANET,(String)planetChoice.getSelectedItem());
+         if( t==0 || t==2 ) set(PLANET,(String)planetChoice.getSelectedItem());
          else remove(PLANET);
          if( t!=previousPlanet ) Aladin.info(this,RESTART);
       }

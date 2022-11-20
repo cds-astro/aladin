@@ -70,6 +70,9 @@ final public class Field {
 
    /** Utype associated with the field */
    public String utype;
+   
+   /** xtype associted with the field */
+   public String xtype;
 
    /** Number of characters, extension for VOTable compatibility */
    public String arraysize;
@@ -113,6 +116,7 @@ final public class Field {
    public int sed;  // Type de champ SED dans la liste ci-dessus
    
    public boolean flagArchive=false;   // Ce champ va servir à un bouton vers une archive (SIA, SSA...)
+   public boolean flagMoc=false;   // Ce champ va servir à un bouton vers un MOC
    
    public int alternatePrecision=-1;   // Une précision qui sera calculée à partir des valeurs 
 
@@ -150,6 +154,7 @@ final public class Field {
       if (ucd == null) ucd =(String)atts.get("ucd");
 
       utype = (String)atts.get("utype");
+      xtype = (String)atts.get("xtype");
 
       datatype = typeVOTable2Fits((String)atts.get("datatype"));
       width    =(String)atts.get("width");
@@ -171,6 +176,7 @@ final public class Field {
       unit = f.unit;
       ucd = f.ucd;
       utype = f.utype;
+      xtype = f.xtype;
       datatype = f.datatype;
       width = f.width;
       precision = f.precision;
@@ -336,6 +342,7 @@ final public class Field {
             +(unit==null?     "":" unit="+unit)
             +(ucd==null?      "":" ucd="+ucd)
             +(utype==null?    "":" utype="+utype)
+            +(xtype==null?    "":" xtype="+xtype)
             +(datatype==null? "":" datatype="+datatype)
             +(precision==null?"":" precision="+precision)
             +(type==null?     "":" type="+type)

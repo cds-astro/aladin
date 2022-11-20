@@ -139,6 +139,9 @@ final public class Fits {
       if( rgb != null ) mem += 4*rgb.length;
       return mem;
    }
+   
+   /** Retourne le nombre de pixels */
+   public long getNbPix() { return width*height; }
 
    public static String FS = System.getProperty("file.separator");
 
@@ -805,10 +808,14 @@ final public class Fits {
          bzero = DEFAULT_BZERO;
       }
 
-      try {
-         setCalib(new Calib(headerFits));
-      } catch( Exception e ) {
-         calib = null;
+      // l'extraction de la calib depuis l'entête FITS ne sera pas faite
+      // si la calib a déja été positionné (fichier hhh pré-lu)
+      if( calib==null ) {
+         try {
+            setCalib(new Calib(headerFits));
+         } catch( Exception e ) {
+            calib = null;
+         }
       }
       // if( bitpix==8 ) initPix8();
    }
@@ -881,9 +888,14 @@ final public class Fits {
 
    /**
     * Chargement de l'entete d'une image FITS depuis un fichier
+    * @param filename le nom du fichier
+    * @param checkHHH true s'il faut vérifier la présence d'un fichier hhh en cas de défaut de calibration
     * @return un code GZIP|HHH|COLOR pour savoir de quoi il s'agit
     */
    public int loadHeaderFITS(String filename) throws Exception,MyInputStreamCachedException {
+      return loadHeaderFITS(filename,false);
+   }
+   public int loadHeaderFITS(String filename, boolean checkHHH) throws Exception,MyInputStreamCachedException {
       filename = parseCell(filename); // extraction de la descrition d'une
       // cellule éventuellement en suffixe du
       // nom fichier.fits[ext:x,y-wxh]
@@ -906,7 +918,7 @@ final public class Fits {
             is.fastExploreCommentOrAvmCalib(filename);
          }
 
-         // Cas spécial d'un fichier .hhhh
+         // Cas spécial d'un simple fichier .hhhh
          if( filename.endsWith(".hhh") ) {
             byte[] buf = is.readFully();
             headerFits = new HeaderFits();
@@ -999,12 +1011,32 @@ final public class Fits {
             } catch( Exception e ) {
                bzero = DEFAULT_BZERO;
             }
+            
+            // Chargement de la calibration
+            Calib c=null;
             try {
-               setCalib(new Calib(headerFits));
-            } catch( Exception e ) {
-               calib=null;
-//               if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+               c = new Calib(headerFits);
+            } catch( Exception e ) { c=null; }
+               
+            // Peut être faut-il trouver la calibration astrométrique dans un fichier .hhh ?
+            if( c==null && checkHHH ) {
+               MyInputStream hhhStream = null;
+               String hhhFile = getHHHName(filename);
+               try {
+                  hhhStream = new MyInputStreamCached(hhhFile);
+                  byte[] buf = hhhStream.readFully();
+                  HeaderFits hf = new HeaderFits();
+                  hf.readFreeHeader(new String(buf), true, null);
+                  c = new Calib(hf);
+                  hhhStream.close();
+                  hhhStream=null;
+               } catch( Exception e ) { c=null; }
+               finally {
+                  if( hhhStream!=null ) try { hhhStream.close(); } catch( Exception e1) {}
+               }
             }
+            setCalib(c);
+            
          } catch( Exception e ) {
             if( Aladin.levelTrace >= 3 ) e.printStackTrace();
             calib = null;
@@ -1014,6 +1046,17 @@ final public class Fits {
          if( is != null ) is.close();
       }
       return code;
+   }
+   
+   /** Génération du nom du fichier hhh
+    * ex: toto.fits => toto.hhh */
+   static public String getHHHName( String filename ) { return getExtName(filename,"hhh"); }
+   
+   /** remplacement (ou ajout) d'une extension spécifique à un nom de fichier*/
+   static public String getExtName( String filename, String ext ) {
+      int pos = filename.lastIndexOf('.');
+      if( pos==-1 ) pos=filename.length();
+      return filename.substring(0,pos)+"."+ext;
    }
 
    /** Retourne la valeur BSCALE (1 si non définie) */

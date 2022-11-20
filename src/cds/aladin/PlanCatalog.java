@@ -257,7 +257,7 @@ public class PlanCatalog extends Plan {
    
    /** Retourne true si le plan peut être réinterroger sur la position courante */
    protected boolean isRedoable() {
-      if( !flagOk ) return false;
+//      if( !flagOk ) return false;
       String s =  getBookmarkCode();
       if( s!=null && s.indexOf(TAGTARGET)>0 ) return true;
       s = getAdqlQuery();
@@ -482,7 +482,8 @@ public class PlanCatalog extends Plan {
      }
      
      // Rien de visible ? on zoome sur le premier objet
-     if( v.getProj().agree(projd, v))  aladin.view.setRepere(this);
+     Projection p=v.getProj();
+     if( p!=null && p.agree(projd, v))  aladin.view.setRepere(this);
    }
    
    /** Désactive tous les filtres dédiées */

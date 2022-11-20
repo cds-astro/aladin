@@ -41,7 +41,7 @@ import cds.tools.pixtools.Util;
  *
  */
 public class BuilderTiles extends Builder {
-
+   
    private boolean isColor;
    protected int bitpix;
    protected double bzero;
@@ -374,6 +374,7 @@ public class BuilderTiles extends Builder {
             throw new Exception();
          } catch( Exception e) { e.printStackTrace(); }
       }
+      
       synchronized( memPerThread ) {
          ArrayList<Fits> m = memPerThread.get(t);
          if( m==null ) {
@@ -386,6 +387,7 @@ public class BuilderTiles extends Builder {
 
    // Suivi de mémoire d'un Thread particulier : retrait d'un Fits
    protected void rmFits(Thread t,Fits f) {
+      
       synchronized( memPerThread ) {
          ArrayList<Fits> m = memPerThread.get(t);
          if( m==null ) return;
@@ -396,6 +398,7 @@ public class BuilderTiles extends Builder {
    // Libère les bitmaps des Fits en cours de construction pour faire de la place
    protected long releaseBitmap() {
       long size=0L;
+      
       synchronized( memPerThread ) {
          for( Thread t : memPerThread.keySet() ) {
             ArrayList<Fits> m = memPerThread.get(t);
@@ -409,22 +412,9 @@ public class BuilderTiles extends Builder {
       return size;
    }
 
-   private long getUsedMem() {
-      long mem=0L;
-      try {
-         synchronized( memPerThread ) {
-            for( Thread t : memPerThread.keySet() ) {
-               ArrayList<Fits> m = memPerThread.get(t);
-               mem += getUsedMem(m);
-            }
-         }
-      } catch( Exception e ) { }
-      return mem;
-   }
-
    private String showMem() {
       try {
-         StringBuffer s = new StringBuffer();
+         StringBuilder s = new StringBuilder();
          synchronized( memPerThread ) {
             for( Thread t : memPerThread.keySet() ) {
                ArrayList<Fits> m = memPerThread.get(t);
@@ -519,27 +509,18 @@ public class BuilderTiles extends Builder {
    
    protected void build() throws Exception {
       this.ordermax = context.getOrder();
+      context.resetCounter();
       long t = System.currentTimeMillis();
 
       SMoc moc = new SMoc();
       SMoc m = context.getRegion();
       if( m==null ) m = new SMoc("0/0-11");
       moc.add( m );
-//      int minorder=0; //3;
-//      context.setMinOrder( minorder );
       int minorder = context.getMinOrder();
       
       moc.setMocOrder(minorder);
       int depth = context.getDepth();
       fifo = new LinkedList<>();
-      
-//      Iterator<Long> it = moc.pixelIterator();
-//      while( it.hasNext() ) {
-//         long npix=it.next();
-//         for( int z=0; z<depth; z++ ) {
-//            fifo.add( new Item(3, npix,z,null ) );
-//         }
-//      }
       
       for( int z=0; z<depth; z++ ) {
          Iterator<Long> it = moc.valIterator();
@@ -567,13 +548,14 @@ public class BuilderTiles extends Builder {
       long size = context.getMem();
 
       //      long maxMemPerThread = 4L * Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
-      long bufMem =  4L * Constante.ORIGCELLWIDTH * Constante.ORIGCELLWIDTH * context.getNpixOrig();
+      int npixOrig = context.getNpixOrig();
+      if( npixOrig<=0 ) npixOrig=4;
+      long bufMem =  4L * Constante.ORIGCELLWIDTH * Constante.ORIGCELLWIDTH * npixOrig;
       long oneRhomb = context.getTileSide()*context.getTileSide()*context.getNpix();
       long maxMemPerThread = 4*oneRhomb + bufMem;
       if( isColor )  maxMemPerThread += oneRhomb*(ordermax-ordermin);
       //      context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
       int nbThread = this instanceof BuilderMirror ? 16 : (int) (size / maxMemPerThread);
-
 
       int maxNbThread = context.getMaxNbThread();
       if( maxNbThread>0 && nbThread>maxNbThread ) nbThread=maxNbThread;
@@ -583,7 +565,18 @@ public class BuilderTiles extends Builder {
       Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
       context.info("Starts with "+nbThread+" thread"+(nbThread>1?"s":""));
 
-      activateCache(size,2L*size/3L);
+      // Initialisation du cache en lecture
+      long limitMem = 2*size/3L;
+      int limitFile = 5000;
+      
+      int maxFile = nbThread * Constante.MAXOVERLAY;
+      if( maxFile<300 ) maxFile=300;
+      long maxMem = (long)maxFile * Constante.ORIGCELLWIDTH * Constante.ORIGCELLWIDTH * npixOrig;
+      
+      CacheFits cache = new CacheFits(maxMem,maxFile,limitMem, limitFile);
+      context.setCache( cache );
+      context.info("Available RAM: "+cds.tools.Util.getUnitDisk(size)+" => Cache size: "+cache.getMaxFile()
+                    +" items / "+ cds.tools.Util.getUnitDisk( cache.getMaxMem()));
 
       // Lancement des threads de calcul
       launchThreadBuilderHpx(nbThread);
@@ -599,15 +592,57 @@ public class BuilderTiles extends Builder {
       
       if( !context.isTaskAborting() ) {
 
-         if( ThreadBuilderTile.statMaxOverlays>0 )
-            context.stat("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
-                  ThreadBuilderTile.statOnePass+" in one step, "+
-                  ThreadBuilderTile.statMultiPass+" in multi steps");
-         if( context.cacheFits!=null ) Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
-         Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps((System.currentTimeMillis()-t)*1000L));
+         long duree = System.currentTimeMillis()-t;
+         if( context.cacheFits!=null ) {
+            if( ThreadBuilderTile.statMaxOverlays>0 )
+               context.stat("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
+                     ThreadBuilderTile.statOnePass+" in one step, "+
+                     ThreadBuilderTile.statMultiPass+" in multi steps");
+            Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
+            infoCounter(nbThread,duree);
+            context.setCache(null);
+         }
+         Aladin.trace(3,"Hips survey build in "+cds.tools.Util.getTemps(duree*1000L));
       }
 
       if( context.cacheFits!=null ) context.cacheFits.reset();
+   }
+   
+   private String getPourcent(double x) {
+      if( x==0 ) return "";
+      int entier = (int)(x*100);
+      int dec = (int)((x*100-entier)*100.);
+      return entier+"."+(dec<10 ? "0" : "")+dec+"%";
+   }
+
+   /** Affichage des compteurs (s'ils ont été utilisés) */
+   private void infoCounter(int nbThread,long duree) {
+      long total;
+      
+      if( context.timeReadIO>0L && context.timeLeafCPU>0L ) {
+         total = context.timeReadIO+context.timeWriteIO+context.timeLeafCPU+context.timeNodeCPU;
+
+         context.stat("CPU times ("+nbThread+" thread"+(nbThread>1?"s":"")+"):"
+               + " IOread="+getPourcent((double)context.timeReadIO/total)+" ("+cds.tools.Util.getTemps(context.timeReadIO*1000L)+")"
+               + " / IOwrite="+getPourcent((double)context.timeWriteIO/total)+" ("+cds.tools.Util.getTemps(context.timeWriteIO*1000L)+")"
+               + " / CPUleaf="+getPourcent((double)context.timeLeafCPU/total)+" ("+cds.tools.Util.getTemps(context.timeLeafCPU*1000L)+")"
+               + " / CPUnode="+getPourcent((double)context.timeNodeCPU/total)+" ("+cds.tools.Util.getTemps(context.timeNodeCPU*1000L)+")"
+               );
+      }
+
+      if( context.pixelIn>0 || context.pixelOut>0 ) {
+         long d = duree/1000L;
+         context.stat("Pixel times: "+
+               (context.pixelIn==0?"":"In="+cds.tools.Util.getUnitDisk(context.pixelIn).replace("B","pix") 
+                  + " => "+cds.tools.Util.getUnitDisk(context.pixelIn/d).replace("B","pix")+"/s")
+               + (context.pixelOut==0?"":
+                 (" / Out="+cds.tools.Util.getUnitDisk(context.pixelOut).replace("B","pix") 
+               + (context.pixelIn==0?"":" (x"+cds.tools.Util.myRound((double)context.pixelOut/context.pixelIn)+")")
+               + " => "+cds.tools.Util.getUnitDisk(context.pixelOut/d).replace("B","pix")+"/s") )
+               );
+     
+      }
+      
    }
 
    private static final long MAXCHECKTIME = 3*60*1000L;   // 3mn
@@ -648,11 +683,6 @@ public class BuilderTiles extends Builder {
       CacheFits cache = context.getCache();
       if( cache!=null ) context.warning(cache.toString());
       else context.warning("No cache. FreeRAM="+cds.tools.Util.getUnitDisk(CacheFits.getFreeMem()));
-   }
-   
-   protected void activateCache(long size,long sizeCache) {
-      context.setCache(new CacheFits(sizeCache));
-      context.info("Available RAM: "+cds.tools.Util.getUnitDisk(size)+" => Cache size: "+cds.tools.Util.getUnitDisk(sizeCache));
    }
    
    /** Par défaut, il s'agit d'un simple accès à la tuile déjà calculée,
@@ -1107,6 +1137,8 @@ public class BuilderTiles extends Builder {
       } catch( Exception e ) {
       }
    }
+   
+   static protected long time() { return System.currentTimeMillis(); }
 
    /** Création d'un losange par concaténation de ses 4 fils
     * @param file Nom du fichier complet, mais sans l'extension
@@ -1116,7 +1148,8 @@ public class BuilderTiles extends Builder {
     * @param fils les 4 fils du losange
     */
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[],int z) throws Exception {
-      long t = System.currentTimeMillis();
+      long t1,t2;
+      long t = time();
       int w=context.getTileSide();
       double px[] = new double[4];
 
@@ -1130,7 +1163,9 @@ public class BuilderTiles extends Builder {
          return f;
       }
 
+      t1 = time();
       for( Fits f : fils ) if( f!=null ) f.reloadBitmap();
+      context.addTimeReadIO( time()-t1 );
 
       Fits out = new Fits(w,w,bitpix);
       if( !isColor ) {
@@ -1138,124 +1173,133 @@ public class BuilderTiles extends Builder {
          out.setBzero(bzero);
          out.setBscale(bscale);
       }
+      t1 = time();
       Fits in;
       for( int dg=0; dg<2; dg++ ) {
          for( int hb=0; hb<2; hb++ ) {
             int quad = dg<<1 | hb;
             int offX = (dg*w)>>>1;
             int offY = ((1-hb)*w)>>>1;
-      in = fils[quad];
+            in = fils[quad];
 
-      for( int y=0; y<w; y+=2 ) {
-         for( int x=0; x<w; x+=2 ) {
+            for( int y=0; y<w; y+=2 ) {
+               for( int x=0; x<w; x+=2 ) {
 
-            // Couleur
-            if( isColor ) {
+                  // Couleur
+                  if( isColor ) {
 
-               int pix=0;
-               if( in!=null ) {
-                  if( method==Context.JpegMethod.MEAN ) {
-                     int pixR=0,pixG=0,pixB=0;
-                     int nbPix=0;
-                     for( int i=0;i<4; i++ ) {
-                        int gx = i==1 || i==3 ? 1 : 0;
-                        int gy = i>1 ? 1 : 0;
-                        int p = in.getPixelRGBJPG(x+gx,y+gy);
-                        int alpha = (p>>24)&0xFF;
-                        if( alpha!=0 ) {
-                           nbPix++;
-                           pixR += (p>>16)&0xFF;
-                           pixG += (p>>8)&0xFF;
-                           pixB += p&0xFF;
+                     int pix=0;
+                     if( in!=null ) {
+                        if( method==Context.JpegMethod.MEAN ) {
+                           int pixR=0,pixG=0,pixB=0;
+                           int nbPix=0;
+                           for( int i=0;i<4; i++ ) {
+                              int gx = i==1 || i==3 ? 1 : 0;
+                              int gy = i>1 ? 1 : 0;
+                              int p = in.getPixelRGBJPG(x+gx,y+gy);
+                              int alpha = (p>>24)&0xFF;
+                              if( alpha!=0 ) {
+                                 nbPix++;
+                                 pixR += (p>>16)&0xFF;
+                                 pixG += (p>>8)&0xFF;
+                                 pixB += p&0xFF;
+                              }
+                           }
+                           if( nbPix!=0 ) pix= 0xFF000000 | ((pixR/nbPix)<<16) | ((pixG/nbPix)<<8) | (pixB/nbPix);
+
+                        } else if( method==Context.JpegMethod.MEDIAN ) {
+                           int pixR[]=new int[4], pixG[]=new int[4], pixB[]=new int[4];
+                           int nbPix=0;
+                           for( int i=0;i<4; i++ ) {
+                              int gx = i==1 || i==3 ? 1 : 0;
+                              int gy = i>1 ? 1 : 0;
+                              int p = in.getPixelRGBJPG(x+gx,y+gy);
+                              int alpha = (p>>24)&0xFF;
+                              if( alpha!=0 ) {
+                                 nbPix++;
+                                 pixR[i] = (p>>16)&0xFF;
+                                 pixG[i] = (p>>8)&0xFF;
+                                 pixB[i] = p&0xFF;
+                              }
+                           }
+                           if( nbPix!=0 ) {
+                              int pR,pB,pG;
+
+                              // Mediane en Red
+                              if( pixR[0]>pixR[1] && (pixR[0]<pixR[2] || pixR[0]<pixR[3]) || pixR[0]<pixR[1] && (pixR[0]>pixR[2] || pixR[0]>pixR[3]) ) pR=pixR[0];
+                              else if( pixR[1]>pixR[0] && (pixR[1]<pixR[2] || pixR[1]<pixR[3]) || pixR[1]<pixR[0] && (pixR[1]>pixR[2] || pixR[1]>pixR[3]) ) pR=pixR[1];
+                              else if( pixR[2]>pixR[0] && (pixR[2]<pixR[1] || pixR[2]<pixR[3]) || pixR[2]<pixR[0] && (pixR[2]>pixR[1] || pixR[2]>pixR[3]) ) pR=pixR[2];
+                              else pR=pixR[3];
+
+                              // Mediane en Green
+                              if( pixG[0]>pixG[1] && (pixG[0]<pixG[2] || pixG[0]<pixG[3]) || pixG[0]<pixG[1] && (pixG[0]>pixG[2] || pixG[0]>pixG[3]) ) pG=pixG[0];
+                              else if( pixG[1]>pixG[0] && (pixG[1]<pixG[2] || pixG[1]<pixG[3]) || pixG[1]<pixG[0] && (pixG[1]>pixG[2] || pixG[1]>pixG[3]) ) pG=pixG[1];
+                              else if( pixG[2]>pixG[0] && (pixG[2]<pixG[1] || pixG[2]<pixG[3]) || pixG[2]<pixG[0] && (pixG[2]>pixG[1] || pixG[2]>pixG[3]) ) pG=pixG[2];
+                              else pG=pixG[3];
+
+                              // Médiane en Blue
+                              if( pixB[0]>pixB[1] && (pixB[0]<pixB[2] || pixB[0]<pixB[3]) || pixB[0]<pixB[1] && (pixB[0]>pixB[2] || pixB[0]>pixB[3]) ) pB=pixB[0];
+                              else if( pixB[1]>pixB[0] && (pixB[1]<pixB[2] || pixB[1]<pixB[3]) || pixB[1]<pixB[0] && (pixB[1]>pixB[2] || pixB[1]>pixB[3]) ) pB=pixB[1];
+                              else if( pixB[2]>pixB[0] && (pixB[2]<pixB[1] || pixB[2]<pixB[3]) || pixB[2]<pixB[0] && (pixB[2]>pixB[1] || pixB[2]>pixB[3]) ) pB=pixB[2];
+                              else pB=pixB[3];
+
+                              pix = 0xFF000000 | (pR<<16) | (pG<<8) | pB;
+                           }
+
+
+                        } else {
+                           pix = in.getPixelRGBJPG(x,y);
+
                         }
                      }
-                     if( nbPix!=0 ) pix= 0xFF000000 | ((pixR/nbPix)<<16) | ((pixG/nbPix)<<8) | (pixB/nbPix);
 
-                  } else if( method==Context.JpegMethod.MEDIAN ) {
-                     int pixR[]=new int[4], pixG[]=new int[4], pixB[]=new int[4];
-                     int nbPix=0;
-                     for( int i=0;i<4; i++ ) {
-                        int gx = i==1 || i==3 ? 1 : 0;
-                        int gy = i>1 ? 1 : 0;
-                        int p = in.getPixelRGBJPG(x+gx,y+gy);
-                        int alpha = (p>>24)&0xFF;
-                        if( alpha!=0 ) {
-                           nbPix++;
-                           pixR[i] = (p>>16)&0xFF;
-                           pixG[i] = (p>>8)&0xFF;
-                           pixB[i] = p&0xFF;
-                        }
-                     }
-                     if( nbPix!=0 ) {
-                        int pR,pB,pG;
+                     out.setPixelRGBJPG(offX+(x>>>1), offY+(y>>>1), pix);
 
-                        // Mediane en Red
-                        if( pixR[0]>pixR[1] && (pixR[0]<pixR[2] || pixR[0]<pixR[3]) || pixR[0]<pixR[1] && (pixR[0]>pixR[2] || pixR[0]>pixR[3]) ) pR=pixR[0];
-                        else if( pixR[1]>pixR[0] && (pixR[1]<pixR[2] || pixR[1]<pixR[3]) || pixR[1]<pixR[0] && (pixR[1]>pixR[2] || pixR[1]>pixR[3]) ) pR=pixR[1];
-                        else if( pixR[2]>pixR[0] && (pixR[2]<pixR[1] || pixR[2]<pixR[3]) || pixR[2]<pixR[0] && (pixR[2]>pixR[1] || pixR[2]>pixR[3]) ) pR=pixR[2];
-                        else pR=pixR[3];
-
-                        // Mediane en Green
-                        if( pixG[0]>pixG[1] && (pixG[0]<pixG[2] || pixG[0]<pixG[3]) || pixG[0]<pixG[1] && (pixG[0]>pixG[2] || pixG[0]>pixG[3]) ) pG=pixG[0];
-                        else if( pixG[1]>pixG[0] && (pixG[1]<pixG[2] || pixG[1]<pixG[3]) || pixG[1]<pixG[0] && (pixG[1]>pixG[2] || pixG[1]>pixG[3]) ) pG=pixG[1];
-                        else if( pixG[2]>pixG[0] && (pixG[2]<pixG[1] || pixG[2]<pixG[3]) || pixG[2]<pixG[0] && (pixG[2]>pixG[1] || pixG[2]>pixG[3]) ) pG=pixG[2];
-                        else pG=pixG[3];
-
-                        // Médiane en Blue
-                        if( pixB[0]>pixB[1] && (pixB[0]<pixB[2] || pixB[0]<pixB[3]) || pixB[0]<pixB[1] && (pixB[0]>pixB[2] || pixB[0]>pixB[3]) ) pB=pixB[0];
-                        else if( pixB[1]>pixB[0] && (pixB[1]<pixB[2] || pixB[1]<pixB[3]) || pixB[1]<pixB[0] && (pixB[1]>pixB[2] || pixB[1]>pixB[3]) ) pB=pixB[1];
-                        else if( pixB[2]>pixB[0] && (pixB[2]<pixB[1] || pixB[2]<pixB[3]) || pixB[2]<pixB[0] && (pixB[2]>pixB[1] || pixB[2]>pixB[3]) ) pB=pixB[2];
-                        else pB=pixB[3];
-
-                        pix = 0xFF000000 | (pR<<16) | (pG<<8) | pB;
-                     }
-
-
+                     // Normal
                   } else {
-                     pix = in.getPixelRGBJPG(x,y);
 
-                  }
-               }
-
-               out.setPixelRGBJPG(offX+(x>>>1), offY+(y>>>1), pix);
-
-               // Normal
-            } else {
-
-               // On prend la moyenne des 4
-               double pix=blank;
-               int nbPix=0;
-               if( in!=null ) {
-                  for( int i=0;i<4; i++ ) {
-                     int gx = i==1 || i==3 ? 1 : 0;
-                     int gy = i>1 ? 1 : 0;
-                     px[i] = in.getPixelDouble(x+gx,y+gy);
-                     if( !in.isBlankPixel(px[i]) ) nbPix++;
-                     //                     if( !Double.isNaN(px[i]) && px[i]!=blank ) nbPix++;
-                  }
-                  if( nbPix==0 ) pix=blank;  // aucune valeur => BLANK
-                  else {
-                     pix=0;
-                     for( int i=0; i<4; i++ ) {
-                        if( !in.isBlankPixel(px[i]) ) pix += (px[i]/nbPix);
-                        //                        if( !Double.isNaN(px[i]) && px[i]!=blank ) pix+=px[i]/nbPix;
+                     // On prend la moyenne des 4
+                     double pix=blank;
+                     int nbPix=0;
+                     if( in!=null ) {
+                        for( int i=0;i<4; i++ ) {
+                           int gx = i==1 || i==3 ? 1 : 0;
+                           int gy = i>1 ? 1 : 0;
+                           px[i] = in.getPixelDouble(x+gx,y+gy);
+                           if( !in.isBlankPixel(px[i]) ) nbPix++;
+                           //                     if( !Double.isNaN(px[i]) && px[i]!=blank ) nbPix++;
+                        }
+                        if( nbPix==0 ) pix=blank;  // aucune valeur => BLANK
+                        else {
+                           pix=0;
+                           for( int i=0; i<4; i++ ) {
+                              if( !in.isBlankPixel(px[i]) ) pix += (px[i]/nbPix);
+                              //                        if( !Double.isNaN(px[i]) && px[i]!=blank ) pix+=px[i]/nbPix;
+                           }
+                        }
                      }
+                     out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
                   }
                }
-               out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
             }
          }
       }
-         }
-      }
+      context.addTimeNodeCPU( time()-t1 );
 
       if( !isColor && coaddMode!=Mode.REPLACETILE && coaddMode!=Mode.KEEPTILE ) {
+         t1 = time();
          Fits oldOut = findLeaf(file);
-         if( oldOut!=null ) out.mergeOnNaN(oldOut);
+         context.addTimeReadIO( (t2=time())-t1 );
+         if( oldOut!=null ) {
+            out.mergeOnNaN(oldOut);
+            context.addTimeNodeCPU( time()-t1 );
+        }
       }
 
       context.updateHeader(out,order,npix);
+      t1=time();
       write(file,out);
+      context.addTimeWriteIO( time()-t1 );
 
       long duree = System.currentTimeMillis() -t;
       if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createNodeHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
@@ -1281,6 +1325,7 @@ public class BuilderTiles extends Builder {
          out.addDataSum();
          out.writeFITS(filename);
       }
+      context.addPixelOut( out.getNbPix() );
    }
 
    /** Création d'un losange terminal
@@ -1292,13 +1337,16 @@ public class BuilderTiles extends Builder {
     */
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path, int order,long npix,int z) throws Exception {
       long t = System.currentTimeMillis();
+      long t0;
 
       Fits oldOut=null;
 
       boolean isInList = context.isInMoc(order,npix);
 
       if( !isInList && coaddMode!=Mode.REPLACETILE ) {
+         t0 = time();
          oldOut = findLeaf(file);
+         context.addTimeReadIO(time()-t0);
          if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) {
             addFits(Thread.currentThread(), oldOut);
             return oldOut;
@@ -1310,7 +1358,11 @@ public class BuilderTiles extends Builder {
       if( out !=null  ) {
 
          if( coaddMode!=Mode.REPLACETILE ) {
-            if( oldOut==null ) oldOut = findLeaf(file);
+            if( oldOut==null ) {
+               t0 = time();
+               oldOut = findLeaf(file);
+               context.addTimeReadIO(time()-t0);
+            }
             if( oldOut!=null && coaddMode==Mode.KEEPTILE ) {
                out=null;
                addFits(Thread.currentThread(), oldOut);
@@ -1321,6 +1373,7 @@ public class BuilderTiles extends Builder {
                // celui renseigné par l'utilisateur, et sinon celui par défaut
                if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
 
+               t0 = time();
                if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut,Fits.AVG);
                else if( coaddMode==Mode.ADD 
                      || coaddMode==Mode.SUM ) out.coadd(oldOut,Fits.ADD);
@@ -1330,6 +1383,7 @@ public class BuilderTiles extends Builder {
                   out=oldOut;
                   oldOut=null;
                }
+               context.addTimeLeafCPU(time()-t0);
             }
          }
       }
@@ -1337,7 +1391,9 @@ public class BuilderTiles extends Builder {
       long duree;
       if (out!=null) {
          context.updateHeader(out,order,npix);
+         t0 = time();
          write(file,out);
+         context.addTimeWriteIO( time()-t0);
          hpx.threadBuilder.setInfo("createLeavveHpx write done "+file+"...");
          duree = System.currentTimeMillis()-t;
          //         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");

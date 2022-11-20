@@ -21,7 +21,14 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.*;
+import static cds.aladin.Constants.CONTENTLENGTH_DISPLAY;
+import static cds.aladin.Constants.CONTENTTYPE;
+import static cds.aladin.Constants.CONTENT_TYPE_HIPS;
+import static cds.aladin.Constants.DESCRIPTION;
+import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.SEMANTICS;
+import static cds.aladin.Constants.STANDARDID;
+
 import java.util.Map;
 
 import cds.savot.model.ParamSet;
@@ -63,7 +70,7 @@ public class SimpleData {
 	}
 	
 	public void setDisplayString() {
-		StringBuffer defaultLinkLabel = new StringBuffer();
+		StringBuilder defaultLinkLabel = new StringBuilder();
 		if (this.params.get(DESCRIPTION) != null && !this.params.get(DESCRIPTION).isEmpty()) {
 			defaultLinkLabel.append(this.params.get(DESCRIPTION));
 		} else {
@@ -90,7 +97,8 @@ public class SimpleData {
 			
 		}
 		if (this.params.containsKey(CONTENTLENGTH_DISPLAY)) {
-			defaultLinkLabel.append(" (size ").append(this.params.get(CONTENTLENGTH_DISPLAY)).append(")");
+//           defaultLinkLabel.append(" (size ").append(this.params.get(CONTENTLENGTH_DISPLAY)).append(")");
+           defaultLinkLabel.append(" (").append(this.params.get(CONTENTLENGTH_DISPLAY)).append(")");
 		}
 		this.displayString = defaultLinkLabel.toString();
 	}
@@ -195,7 +203,7 @@ public class SimpleData {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		StringBuffer stringToPrint = new StringBuffer();
+		StringBuilder stringToPrint = new StringBuilder();
 		stringToPrint.append("Display string:").append(this.getDisplayString()).append(", ")
 		.append("type:").append(this.getType()).append(", ")
 		.append("Params:").append(this.params);

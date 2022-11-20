@@ -23,10 +23,8 @@ package cds.aladin;
 
 import static cds.aladin.Constants.CONTENTLENGTH;
 import static cds.aladin.Constants.CONTENTLENGTH_DISPLAY;
-import static cds.aladin.Constants.DEFAULT_CONTENTLENGTH_UNITS;
 import static cds.aladin.Constants.INPUTPARAM_NAME;
 import static cds.aladin.Constants.SERVICE_DEF;
-import static cds.aladin.Constants.SPACESTRING;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -81,7 +79,7 @@ public class DatalinkServiceUtil {
 		SavotGroup group = null;
 		if (groups!=null && groups.getItemCount()>0) {
 			for (int i = 0; i < groups.getItemCount(); i++) {
-				group = (SavotGroup) groups.getItemAt(i);
+				group = groups.getItemAt(i);
 				if (group.getName().equalsIgnoreCase(INPUTPARAM_NAME)) {
 					break;
 				}
@@ -94,7 +92,7 @@ public class DatalinkServiceUtil {
 		SavotParam param = null;
 		if (params != null && params.getItemCount() > 0) {
 			for (int i = 0; i < params.getItemCount(); i++) {
-				param = (SavotParam) params.getItemAt(i);
+				param = params.getItemAt(i);
 				if (param.getName().equalsIgnoreCase(query)) {
 					break;
 				}
@@ -130,7 +128,7 @@ public class DatalinkServiceUtil {
 						for (int j = 0; j < tableRows.getItemCount(); j++) {
 							TDSet theTDs = tableRows.getTDSet(j);
 							data = new SimpleData();
-							params = new HashMap<String,String>();
+							params = new HashMap<>();
 							String service_def = null;
 							for (int k = 0; k < theTDs.getItemCount(); k++) {
 								SavotField field = resultsResource.getFieldSet(i).getItemAt(k);
@@ -146,10 +144,26 @@ public class DatalinkServiceUtil {
 										int length = Integer.parseInt(value);
 										if (length > 0) {
 											String units = field.getUnit();
-											if (units == null || units.isEmpty()) {
-												units = DEFAULT_CONTENTLENGTH_UNITS;
+											
+											// PF NOV 2022 - POUR DONNER UNE UNITE LISIBLE SI POSSIBLE
+											if( units == null || units.isEmpty() 
+											      || units.toLowerCase().startsWith("byte") 
+											      || units.equals("B")) {
+											   String mem = Util.getUnitDisk(length);
+											   int o;
+											   for( o=mem.length()-1; o>=0 
+											         && !Character.isDigit(mem.charAt(o)); o--);
+											   if( o>0 ) {
+											      value=mem.substring(0,o+1);
+											      units=mem.substring(o+1);
+											   }
 											}
-											value = value + SPACESTRING + units;
+											
+//											if (units == null || units.isEmpty()) {
+//												units = DEFAULT_CONTENTLENGTH_UNITS;
+//											}
+//                                            value = value + SPACESTRING + units;
+                                            value = value + units;
 											params.put(CONTENTLENGTH_DISPLAY, value);
 										}
 									} catch (Exception e) {

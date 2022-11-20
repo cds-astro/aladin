@@ -212,13 +212,17 @@ final public class ThreadBuilderTile {
    Fits buildHealpix(BuilderTiles bt, String path, int order, long npix_file, int z) throws Exception {
       ArrayList<SrcFile> downFiles = null;
       Fits out=null;
+      long t0,t1;
       
       try {
          // initialisation de la liste des fichiers originaux pour ce losange
          downFiles = new ArrayList<>(Constante.MAXOVERLAY*2);
+         t0 = BuilderTiles.time();
          if( !askLocalFinder(bt,downFiles,hpxFinderPath, order, npix_file, blank)) {
             return null;
          }
+         t1 = BuilderTiles.time();
+         context.addTimeReadIO(t1-t0);
 
          Fits f;
          int n=downFiles.size();
@@ -302,7 +306,11 @@ final public class ThreadBuilderTile {
             // Sauvegarde de la tuile de poids
             if( out!=null && context.live  ) {
                String file = Util.getFilePath(path,order,npix_file,z);
+               t0 = BuilderTiles.time();
                writeWeight(file,weight,tileSide);
+               t1 = BuilderTiles.time();
+               context.addTimeWriteIO(t1-t0);
+              
             }
 
          }
@@ -402,6 +410,7 @@ final public class ThreadBuilderTile {
       double bScale = this.bScale;
       double bZero  = this.bZero;
       int tileSide = context.getTileSide();
+      long t1,t2;
 
       try {
          // cherche les numéros de pixels Healpix dans ce losange
@@ -430,7 +439,9 @@ final public class ThreadBuilderTile {
                for( int i=0; i<out.rgb.length; i++ ) out.rgb[i]=0xFF000000;
             }
          }
-
+         
+         long t0 = BuilderTiles.time();
+         
          // cherche la valeur à affecter dans chacun des pixels healpix
          int overlay = fin-deb;
 //         boolean isCAR=false;
@@ -439,30 +450,33 @@ final public class ThreadBuilderTile {
          double [] pixcoef = new double[overlay];
          if( flagColor ) { pixvalG = new double[overlay]; pixvalB = new double[overlay]; }
 
-         // METHODE REINECKE
-//         healpix.essentials.HealpixBase hpx = CDSHealpix.getHealpixBase(order+context.getTileOrder());
-         
 //         long nside = CDSHealpix.pow2( order+context.getTileOrder() );
          int orderPix = order+context.getTileOrder();
 
          boolean gal2ICRS = context.getFrame()!=Localisation.ICRS;
          
+          //  (ANCIENNE METHODE REINECKE)
+//        HealpixBase hpx = new HealpixBase( CDSHealpix.pow2(orderPix),Scheme.NESTED); 
+         
+         // Nouvelle methode FX
          final HealpixNestedFast hn = Healpix.getNestedFast(orderPix);
 //         final VerticesAndPathComputer vpc = hn.newVerticesAndPathComputer(); // For thread safety issues
 
+         
          for (int y = 0; y < out.height; y++) {
             for (int x = 0; x < out.width; x++) {
                index = min + context.xy2hpx(y * out.width + x);
                
-               // recherche les coordonnées du pixels HPX (METHODE REINECKE)
-//               healpix.essentials.Pointing pt = hpx.pix2ang(index);
-//               radec[1] = (PI2 - pt.theta)*toRad;
-//               radec[0] = pt.phi*toRad;
+               // Recherche les coordonnées du pixels HPX 
                
-               // ON TRAVAILLE DIRECTEMENT AVEC vpc POUR EVITER LES ALLOCATIONS INUTILES
-//               radec = CDSHealpix.pix2ang_nest(orderPix, index);
-//               CDSHealpix.polarToRadec( radec, radec );
-               
+               // ANCIENNE METHODE REINECKE)
+//               Pointing pt = hpx.pix2ang(index);
+//               radec[1] = (PI2 - pt.theta)*toDeg;
+//               radec[0] = pt.phi*toDeg;
+//               if( gal2ICRS ) radec = context.gal2ICRSIfRequired(radec);
+//               coo.al = radec[0]; coo.del = radec[1];
+
+               // Nouvelle methode FX
                hn.center(index,radec);
                if( gal2ICRS ) {
                   radec[0] *= toDeg;
@@ -484,16 +498,19 @@ final public class ThreadBuilderTile {
                      file = downFiles.get(i);
                      if( file.flagRemoved ) continue;
                      try {
+                        t1 = BuilderTiles.time();
                         file.open(z, flagGauss);
+                        t2 = BuilderTiles.time();
+                        context.addTimeReadIO( t2-t1);
+                        t0 += (t2-t1);
 
                      } catch( Exception e ) {
-                        System.err.println("Error on open:");
-                        /* if( context.getVerbose()>=3 ) */ e.printStackTrace();
+                        if( context.getVerbose()>=3 ) e.printStackTrace();
                         context.addFileRemoveList(file.name);
                         
                         // Cas complexe où l'image originale est un JPEG ou un PNG et que JAVA
                         // tente de l'ouvrir sur une portion uniquement. Il va en interne
-                        // l'ouvrir totalement sut le tmp du système. Si tmp est trop petit
+                        // l'ouvrir totalement sur le tmp du système. Si tmp est trop petit
                         // ça va planter et faire des petits carrés noirs sur le HiPS final,
                         // un par thread de calcul
                         String msg = e.getMessage();
@@ -510,12 +527,13 @@ final public class ThreadBuilderTile {
 
                      // Détermination du pixel dans l'image à traiter
                      try {
-//                        isCAR = file.fitsfile.calib.getProj()==Calib.CAR;
                         file.fitsfile.calib.GetXY(coo,false);
                         
                      // gasp !
                      } catch( Exception e ) {
                         System.err.println("Problem on calib: "+file.name+" => exception "+e.getMessage());
+//                        e.printStackTrace();
+//                        System.exit(1);
                         continue;
                      }
                       
@@ -641,6 +659,8 @@ final public class ThreadBuilderTile {
                if( weight!=null ) weight[y*tileSide+x]=totalCoef;
             }
          }
+         
+         context.addTimeLeafCPU( BuilderTiles.time()-t0);
 
       }
       catch( Exception e ) {
@@ -650,6 +670,7 @@ final public class ThreadBuilderTile {
       }
 
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
+      
       return (!empty) ? out : null;
    }
 
@@ -755,9 +776,6 @@ final public class ThreadBuilderTile {
       int x1 = (int)x;
       int y1 = (int)y;
 
-//      if( x-x1<0.5 ) x1--;
-//      if( y-y1<0.5 ) y1--;
-      
       int x2=x1+1;
       int y2=y1+1;
  

@@ -148,7 +148,7 @@ final public class MainPanel extends JPanel implements ActionListener {
             }
             String filename = context.getImgEtalon();
             Fits file = new Fits();
-            try { file.loadHeaderFITS(filename); }
+            try { file.loadHeaderFITS(filename,true); }
             catch (Exception e) { e.printStackTrace(); }
             bitpix = file.bitpix;
 
