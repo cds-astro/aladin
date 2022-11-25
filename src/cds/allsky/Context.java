@@ -185,10 +185,6 @@ public class Context {
    protected boolean live=false;             // true si on doit garder les tuiles de poids
    protected long bytes=0L;                 // Taille du HiPS généré en Kb
    
-   protected long timeReadIO=0L;            // Temps cumulé des lectures disques
-   protected long timeWriteIO=0L;           // Temps cumulé des écritures disques
-   protected long timeLeafCPU=0L;           // Temps cumulé des calculs pour les tuiles terminales
-   protected long timeNodeCPU=0L;           // Temps cumulé des calculs pour les tuiles hiérarchiques
    protected long pixelIn=0L;               // Nombre de pixels en entrée
    protected long pixelOut=0L;              // Nombre de pixels en sortie
 
@@ -241,15 +237,10 @@ public class Context {
    
    /** Remise à zéro des compteurs sauf le pixelIn */
    public void resetCounter() { 
-      timeReadIO=timeWriteIO=timeLeafCPU=timeNodeCPU=0L;
       pixelOut=0L;
    }
    
    // Mise à jour des compteurs
-   protected void addTimeReadIO(long t)  { timeReadIO+=t;  }
-   protected void addTimeWriteIO(long t) { timeWriteIO+=t; }
-   protected void addTimeLeafCPU(long t) { timeLeafCPU+=t; }
-   protected void addTimeNodeCPU(long t) { timeNodeCPU+=t; }
    protected void addPixelIn(long t)  { pixelIn+=t; }
    protected void addPixelOut(long t) { pixelOut+=t; }
   
@@ -340,10 +331,8 @@ public class Context {
    public int getTileSide() { return (int) CDSHealpix.pow2( getTileOrder() ); }
    public int getDepth() { return depth; }
    public boolean isCDSLint() { return cdsLint; }
-   public boolean isPartitioning() { return partitioning; }
+   public boolean isPartitioning() { return isColor() ? false : partitioning; }
    public int getPartitioning() { return Constante.ORIGCELLWIDTH; }
-
-   
    
    // Setters
    public void setMirrorCheck(boolean flag) { this.mirrorCheck = flag; }
@@ -1875,7 +1864,7 @@ public class Context {
     */
    public static void setVerbose(boolean verbose) {
       Context.verbose = verbose;
-      BuilderTiles.DEBUG=true;
+      BuilderRunner.DEBUG=true;
    }
 
    /** Verbose or not ? */

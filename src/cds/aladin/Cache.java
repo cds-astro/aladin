@@ -242,7 +242,7 @@ Aladin.trace(3,"Clear cache");
     * Remplace tous ce qui n'est ni lettre ni chiffre en code hexa
     * préfixé par _ */
    static public String codage(String s) {
-      StringBuffer r = new StringBuffer();
+      StringBuilder r = new StringBuilder();
       char a[] = s.toCharArray();
       for( int i=0; i<a.length; i++ ) {
          char c = a[i];
@@ -254,7 +254,7 @@ Aladin.trace(3,"Clear cache");
    
    /** Réciproque à la fonction codage() */
    static public String decodage(String s) {
-      StringBuffer r = new StringBuffer();
+      StringBuilder r = new StringBuilder();
       char a[] = s.toCharArray();
       for( int i=0; i<a.length; i++ ) {
          char c = a[i];

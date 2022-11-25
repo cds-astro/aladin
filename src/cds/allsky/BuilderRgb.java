@@ -37,7 +37,7 @@ import cds.fits.Fits;
 import cds.moc.SMoc;
 import cds.tools.pixtools.Util;
 
-public class BuilderRgb extends BuilderTiles {
+public class BuilderRgb extends BuilderRunner {
 
 
    private String [] inputs;         // Les paths des HiPS red, green, blue

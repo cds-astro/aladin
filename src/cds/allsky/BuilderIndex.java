@@ -123,7 +123,7 @@ public class BuilderIndex extends Builder {
          context.setProgressBar( ((ContextGui)context).mainPanel.getProgressBarIndex() );
       }
 
-      partitioning = context.partitioning;
+      partitioning = context.isPartitioning();
       if( partitioning ) context.info("Partitioning large original image files in blocks of "+Constante.ORIGCELLWIDTH+"x"+Constante.ORIGCELLWIDTH+" pixels");
 
       validateInput();

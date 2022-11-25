@@ -25,7 +25,7 @@ public enum Action {
 
    INDEX     ("Build spatial index (in HpxFinder directory) + MOC index"),
    TINDEX    ("Build time index (in TimeFinder directory) + TMOC index"),                  // PROTO
-   TILES     ("Build all true value pixel tiles (FITS) + Allsky.fits + MOC"),
+   TILES     ("Build all true value pixel tiles + Allsky + MOC"),
    JPEG      ("Build all preview tiles (JPEG) + Allsky.jpg"),
    PNG       ("Build all preview tiles (PNG) + Allsky.png"),
    MOC       ("(Re)build the MOC (MultiOrder Coverage map)"),

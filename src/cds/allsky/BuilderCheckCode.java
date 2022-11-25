@@ -139,6 +139,8 @@ public class BuilderCheckCode extends Builder {
       if( format==null ) format = context.prop.getProperty(Constante.OLD_HIPS_TILE_FORMAT);
       if( format==null ) throw new Exception("Out dir not a HiPS (or properties file missing)");
       
+      format = format.replace("jpeg","jpg");
+      
       String s = context.prop.getProperty(Constante.KEY_HIPS_CHECK_CODE);
       context.setCheckCode( s );
       

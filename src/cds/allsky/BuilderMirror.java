@@ -46,7 +46,7 @@ import cds.tools.Util;
  * @version 1.0 juin 2015 création
  * @version 1.1 février 2019 gestion du multi-partition (paramètre split=...)
  */
-public class BuilderMirror extends BuilderTiles {
+public class BuilderMirror extends BuilderRunner {
    
    static private final int TIMEOUT = 15000;    // 15 sec sans nouvelle on réinitialise la connection HTTP
    static private String USERAGENT = "Hipsgen (mirror) Aladin/"+Aladin.VERSION.substring(1);

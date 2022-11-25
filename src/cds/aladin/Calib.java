@@ -2686,11 +2686,11 @@ public final class Calib  implements Cloneable {
 
             case HPX:
                double [] unproject1 ;
-               //    	  System.out.println("HPX "+x_objr+" "+y_objr);
+               //         System.out.println("HPX "+x_objr+" "+y_objr);
                unproject1 = Healpix.UI.unproject(x_objr,y_objr) ;
                c.al = unproject1[0]*rad_to_deg ;
                c.del = unproject1[1]*rad_to_deg ;
-               //  	 System.out.println("HPX "+unproject1[0]+" "+unproject1[1]);
+               //    System.out.println("HPX "+unproject1[0]+" "+unproject1[1]);
                break ;
             default:
                break ;

@@ -62,7 +62,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       this.context = context;
       context.setMainPanel(this);
       createPanel();
-      BuilderTiles.DEBUG = (Aladin.levelTrace > 0) ? true : false;
+      BuilderRunner.DEBUG = (Aladin.levelTrace > 0) ? true : false;
    }
 
    protected JProgressBar getProgressBarTile()  { return tabBuild.buildProgressPanel.getProgressBarTile(); }

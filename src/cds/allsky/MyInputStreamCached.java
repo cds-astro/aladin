@@ -91,14 +91,14 @@ public class MyInputStreamCached extends MyInputStream {
    private String getTargetName() { return getTargetName(filename); }
    static private String getTargetName(String filename) { return Cache.codage(filename); }
    
-   // Fonction inverse
-   static private String getFilenameOrig(String nameInCache) { return Cache.decodage(nameInCache); }
-   
-   static private String getFilenameOrig(File f) throws Exception {
-      String filename = f.getCanonicalPath();
-      int i = filename.lastIndexOf(Util.FS);
-      return filename.substring(i+1);
-   }
+//   // Fonction inverse
+//   static private String getFilenameOrig(String nameInCache) { return Cache.decodage(nameInCache); }
+//   
+//   static private String getFilenameOrig(File f) throws Exception {
+//      String filename = f.getCanonicalPath();
+//      int i = filename.lastIndexOf(Util.FS);
+//      return filename.substring(i+1);
+//   }
    
    private MyInputStream convertGZorBzip2(long type) throws Exception,MyInputStreamCachedException {
       

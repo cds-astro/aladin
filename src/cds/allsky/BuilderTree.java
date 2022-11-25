@@ -27,7 +27,7 @@ import cds.fits.Fits;
  * @author Standard Anaïs Oberto [CDS] & Pierre Fernique [CDS]
  *
  */
-public class BuilderTree extends BuilderTiles {
+public class BuilderTree extends BuilderRunner {
 
    public BuilderTree(Context context) { super(context); }
 

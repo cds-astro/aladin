@@ -115,7 +115,7 @@ public class CacheFits {
       nextId = 0;
       nbClean=0;
       statNbFree = statNbOpen = statNbFind = 0;
-      map = new HashMap<>(maxFile+maxFile/100);
+      map = new HashMap<>(maxFile+maxFile/2);
    }
    
    /** Retourne la limite courante en mémoire du cache (en bytes) */
@@ -371,15 +371,16 @@ public class CacheFits {
          long m=0;
          int nb=0;
          boolean encore=true;
-         long now = System.currentTimeMillis();
+         long now = Util.getTime(0);
          long delay=5000;
+         boolean flagGC=false;
 
          int pass;
          try {
             cacheOutOfMem=true;
 
             HashMap<String,String> libere = new  HashMap<>(map.size());
-            HashMap<String,FitsFile> map1 = new  HashMap<>(map.size());
+            HashMap<String,FitsFile> map1 = new  HashMap<>(maxFile+maxFile/2);
 
             // en premier tour, on supprime les fits non utilisés
             // depuis plus de 5s, et si pas assez de mémoire, on ne regarde plus la date
@@ -413,19 +414,23 @@ public class CacheFits {
                map=map1;
             }
 
-            gc();
+            // Je fais explicitement un gc() si la taille RAM restante est plus petite que la moitié de la taille du cache
+            // sinon on laisse la JVM gérer tout seul
+            if( freeMem < mem/2 ) { gc(); flagGC=true; }
             
          } finally {
             cacheOutOfMem=false;
          }
 
-         long duree = System.currentTimeMillis() - now;
+         long duree = Util.getTime(0) - now;
          String s1 = pass>1 ? "s":"";
          long freeRam = getFreeMem();
          nbClean++;
          if( context!=null && context.getVerbose()>=3) {
-            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files released ("+Util.getUnitDisk(totMem)+") in "+pass+" step"+s1+" in "+Util.getTemps(duree*1000L)
-            +" => freeRAM="+Util.getUnitDisk(freeRam));
+            String tps = duree>1000 ? " in "+Util.getTemps(duree/1000L):""; 
+            String p = pass>1 ? " in "+pass+" steps":"";
+            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files released ("+Util.getUnitDisk(totMem)+")"+p+s1+tps
+            +(flagGC?" => freeRAM="+Util.getUnitDisk(freeRam):""));
          }
          
          // Modification de la capacité du cache
@@ -787,7 +792,7 @@ public class CacheFits {
             +" using "+Util.getUnitDisk(getMem())
             +(maxMem>0 ? "/"+Util.getUnitDisk(maxMem):"["+Util.getUnitDisk(maxMem)+"]")
             +" freeRAM="+Util.getUnitDisk(getFreeMem())
-            +" (opened="+statNbOpen+" reused="+statNbFind+" released="+statNbFree+" ["+nbClean+"x])";
+            +" (opened="+statNbOpen+" reused="+statNbFind+" released="+statNbFree+(nbClean>0?" [flush:"+nbClean+"x]":"")+")";
    }
 
    // retourne le nombre de fichier dans le cache dont le bloc mémoire pixel[]
@@ -812,6 +817,8 @@ public class CacheFits {
       long timeAccess;
 
       private int id;
+      
+      public int hashCode() { return Integer.hashCode(id); } 
 
       public FitsFile() {
          timeAccess = System.currentTimeMillis();

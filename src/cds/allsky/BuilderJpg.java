@@ -35,7 +35,7 @@ import cds.fits.Fits;
  * soit par une intervalle (cut[]).
  * @author Anaïs Oberto & Pierre Fernique
  */
-public class BuilderJpg extends BuilderTiles {
+public class BuilderJpg extends BuilderRunner {
 
    private double[] cut;
    protected byte [] tcm;

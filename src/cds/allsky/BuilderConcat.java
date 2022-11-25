@@ -37,7 +37,7 @@ import cds.tools.pixtools.Util;
 /** Fusion de 2 HiPS, puis reconstruction de l'arborescence, du allsky et du MOC
  * @author Pierre Fernique
  */
-public class BuilderConcat extends BuilderTiles {
+public class BuilderConcat extends BuilderRunner {
    //   private int statNbFile;
    //   private long statSize;
    //   private long startTime,totalTime;
