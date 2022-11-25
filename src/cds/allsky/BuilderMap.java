@@ -35,7 +35,7 @@ import cds.tools.pixtools.Util;
 
 /**
  * Création d'une Map HEALPix Fits (Map.fits) à partir des losanges individuels
- * @author Pierre Fernique [CDS]
+ * @author Pierre Fernique [CDS], Thomas Boch [CDS]
  */
 final public class BuilderMap  extends Builder {
 
@@ -59,7 +59,19 @@ final public class BuilderMap  extends Builder {
          frame = context.getFrame();
          losangeWidth = context.getTileSide();
       }
-      nside=4096;
+      // check nside value
+      int hipsOrder = Integer.parseInt( context.prop.getProperty("hips_order") );
+      int minNside = losangeWidth;
+      int maxNside = (int) (losangeWidth * Math.pow(2, hipsOrder));
+      if (nside<minNside) {
+          context.warning("nside requested value is too small, setting it to " + minNside);
+          nside = minNside;
+      }
+      if (nside>maxNside) {
+          context.warning("nside requested value is too large, setting it to " + maxNside);
+          nside = maxNside;
+      }
+
       if( bitpix>0 && (context.getBZero()!=0 || context.getBScale()!=1) ) {
          bitpix=-32;
          context.warning("Coding in real values due to BZERO/BSCALE factors");
@@ -91,7 +103,8 @@ final public class BuilderMap  extends Builder {
          int orderMap = (int)CDSHealpix.log2(nside);
          int nbits=Math.abs(bitpix)/8;
 
-         long nbPix3 = 12*8*8;// 12 x 2^3 x 2^3 // à l'ordre 3
+         int orderTile = (int)CDSHealpix.log2( nside / losangeWidth);
+         long nbHpxPix = (long) (12 * Math.pow(4, orderTile));
          boolean ring = false;
          int lenLine=1024;
 
@@ -122,11 +135,11 @@ final public class BuilderMap  extends Builder {
          
          int[] hpx2xy = cds.tools.pixtools.Util.createHpx2xy(orderLosange);
          
-         for (int i = 0 ; i < nbPix3 ; i++) {
+         for (int i = 0 ; i < nbHpxPix ; i++) {
             boolean found = true;
             double val;
-            // récupère le losange de niveau 3
-            String filename = cds.tools.pixtools.Util.getFilePath(output,3, i);
+            // récupère le losange de niveau orderTile
+            String filename = cds.tools.pixtools.Util.getFilePath(output, orderTile, i);
             Fits los = new Fits();
             try {
                los.loadFITS(filename+".fits");
@@ -139,6 +152,10 @@ final public class BuilderMap  extends Builder {
                f.write(buf,0,pos); size+=pos; pos=0;
                // on ajoute tout le losange en nan
                f.write(nan); pos=0; size+=nan.length; 
+
+               if( size>Math.pow(2, 30)) {
+                   size -= 322827*2880;
+            }
             }
             else {
                for( int ipix = 0 ; ipix < nbPix ; ipix++) {
@@ -154,15 +171,26 @@ final public class BuilderMap  extends Builder {
 
                   if( pos==lenLine ) {
                      f.write(buf); pos=0; size+=buf.length;
+                     if( size>Math.pow(2, 30)) {
+                         size -= 322827*2880;
+                     }
                   }
                }
             }
          }
-         if( pos>0 ) { f.write(buf,0,pos); size+=pos; }
+         if( pos>0 ) {
+             f.write(buf,0,pos);
+             size+=pos;
+             if( size>Math.pow(2, 30)) {
+                 size -= 322827*2880;
+             }
+         }
 
          end = Save.getEndBourrage(size);
          f.write(end);
          size += end.length;
+
+         System.out.println("Size : " + size);
 
       } finally { f.close(); }
    }

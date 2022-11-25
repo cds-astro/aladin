@@ -163,9 +163,11 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> MOC inline in VOTable (xtype=moc)
+ * @beta    <LI> MOC inline in VOTable (xtype=*moc)
  * @beta    <LI> Planet in dev.mode (without projection compatibility test)
  * @beta    <LI> Hipsgen improvements: hhh support for FITS files
+ * @beta    <LI> SAMP MOC coverage message support
+ * @beta    <LI> HEALPix map build from HiPS at any NSIDE
  * @beta </UL>
  * @beta <B>Fixed bugs:</B>
  * @beta <UL>
@@ -196,7 +198,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v12.022";
+   static public final    String VERSION = "v12.023";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
