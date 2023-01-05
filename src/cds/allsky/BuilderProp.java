@@ -39,7 +39,6 @@ public class BuilderProp extends Builder {
          context.loadMoc();
          context.moc = context.mocIndex;
       } catch( Exception e ) {
-         e.printStackTrace();
       }
       context.loadProperties();
       context.writePropertiesFile( new OutputStreamWriter( System.out ) );

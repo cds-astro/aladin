@@ -180,7 +180,7 @@ public class UtilFits {
           int nbTileInWidth = naxis1/tile1;
           if( naxis1%tile1!=0 )  nbTileInWidth++;
 
-          int pixPos=0;   // indice du pixel courant dans la matrice de pixel finale
+          int pixPos=0;   // indice du pixel courant dans la matrice finale de pixels 
           
           // Itération de traitement sur chaque tuile
           for( int numTile=0; numTile<nnaxis2; numTile++ ) {

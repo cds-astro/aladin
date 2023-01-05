@@ -164,7 +164,7 @@ public class FrameGlu extends JFrame implements KeyListener {
          if( glup[REQUIRED].length()==0 ) continue;
          if( glup[REQUIRED].charAt(0)=='*' ) l.setFont( l.getFont().deriveFont(Font.BOLD) );
          String value = glup[VALUE];
-         if( glup[FIELD].equals("Description") ) value = context.getLabel();
+         if( glup[FIELD].equals("Description") ) value = context.getTitle();
          field[i] =f= new JTextField( value );
          f.addKeyListener(this);
          f.setMinimumSize(new Dimension(300, f.getMinimumSize().height));

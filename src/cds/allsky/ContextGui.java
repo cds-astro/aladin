@@ -181,7 +181,7 @@ public class ContextGui extends Context {
             builder = new BuilderAllsky(context);
             builder.run();
 
-            String mysky = getLabel();
+            String mysky = getTitle();
             if( mysky.trim().length()==0 ) mysky="MySky";
             int npix = lastShowAllSkyNorder3>=0 ? lastShowAllSkyNorder3 : 0;
             mainPanel.planPreview = (PlanBG) mainPanel.aladin.calque.getPlan(mysky);
@@ -265,11 +265,11 @@ public class ContextGui extends Context {
 
    //   public void setRgbPlans(Object [] plans) { plansRgb=plans; }
    public void setRgbOutput(String output) { outputRGB=output; }
-   public void setHierarchyAlgo(JpegMethod method) { hierarchyAlgo=method; }
+   public void setHierarchyAlgo(ModeTree method) { hierarchyAlgo=method; }
 
    //   public Object [] getRgbPlans() { return plansRgb; }
    public String getRgbOutput() { return outputRGB; }
-   public JpegMethod getHierarchyAlgo() { return hierarchyAlgo; }
+   public ModeTree getHierarchyAlgo() { return hierarchyAlgo; }
 
    public void setRgbFormat(int format) { targetColorMode=format; }
 
@@ -338,7 +338,7 @@ public class ContextGui extends Context {
    /** Initialisation des paramètres (ne sert que pour contextGui) */
    public void initParameters() throws Exception {
       setMocArea( mainPanel.tabDesc.getMocField().trim() );
-      setMode( mainPanel.tabDesc.getCoaddModeField() );
+      setModeMerge( mainPanel.tabDesc.getCoaddModeField() );
       setSkyValName( mainPanel.tabDesc.getSkyvalField() );
       super.initParameters();
    }
@@ -348,7 +348,7 @@ public class ContextGui extends Context {
       return skyvalName;
    }
 
-   public String getLabel() {
+   public String getTitle() {
       return mainPanel.tabDesc.getLabelField();
    }
 

@@ -45,14 +45,14 @@ public class BuilderTree extends BuilderRunner {
    // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
       validateOutput();
-      if( !context.isExistingAllskyDir() ) throw new Exception("No tile found");
+      if( !context.isExistingAllskyDir() ) throw new Exception("No HiPS tile found");
       validateOrder(context.getOutputPath());
       validateTileSide(context.getOutputPath());
-
+      
       try { context.loadMoc(); }
       catch( Exception e ) {
          (new BuilderMoc(context)).run();
-         context.info("MOC rebuilt from low rhombs");
+         context.info("MOC rebuilt from HiPS tiles");
          context.loadMoc();
       }
       context.initRegion();
@@ -66,8 +66,8 @@ public class BuilderTree extends BuilderRunner {
       context.blank  = blank  = f.blank;
       context.bzero  = bzero  = f.bzero;
       context.bscale = bscale = f.bscale;
-      if( context.bitpix!=0 ) context.info("Found in first low rhomb: BITPIX="+bitpix+" BLANK="+blank+" BZERO="+bzero+" BSCALE="+bscale);
-      else context.info("Colored pixels found in first low rhomb");
+      if( context.bitpix!=0 ) context.info("Found in first tile: BITPIX="+bitpix+" BLANK="+blank+" BZERO="+bzero+" BSCALE="+bscale);
+      else context.info("Colored pixels found in first tile");
    }
    
    public Fits findLeaf(String file) throws Exception {

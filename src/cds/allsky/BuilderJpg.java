@@ -25,7 +25,7 @@ import java.awt.image.ColorModel;
 
 import cds.aladin.Aladin;
 import cds.aladin.CanvasColorMap;
-import cds.allsky.Context.JpegMethod;
+import cds.aladin.MyInputStream;
 import cds.fits.Fits;
 
 /** Construction de la hiérarchie des tuiles JPEG à partir des tuiles FITS de plus bas
@@ -42,6 +42,7 @@ public class BuilderJpg extends BuilderRunner {
    private int bitpix;
    private int width;
    private double blank,bscale,bzero;
+   protected ModeTree modeHierarchy=null;
 
    private int statNbFile;
 
@@ -73,6 +74,9 @@ public class BuilderJpg extends BuilderRunner {
       validateOrder(context.getOutputPath());
       validateDepth();
       if( !context.isColor() ) validateCut();
+      
+      modeHierarchy = context.getModeTree();
+      context.info("Hierarchy mode (tree): "+ModeTree.getExplanation(modeHierarchy));
 
       // Chargement du MOC réel à la place de celui de l'index (moins précis)
       try { context.loadMoc(); } catch( Exception e ) {
@@ -86,6 +90,7 @@ public class BuilderJpg extends BuilderRunner {
       //      context.initParameters();
    }
 
+   protected String getTileExt() { return ext; }
 
    protected int getMinCM() { return 0; }
 
@@ -99,7 +104,6 @@ public class BuilderJpg extends BuilderRunner {
       double bs = context.bscale;
       context.info("Map pixel cut ["+ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs)+"] to ["+getMinCM()+"..255] ("+context.getTransfertFct()+")");
 
-      context.info("Tile aggregation method="+context.getJpegMethod());
       build();
       if( !context.isTaskAborting() ) {
          //         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64,0);
@@ -111,7 +115,6 @@ public class BuilderJpg extends BuilderRunner {
             else ((ContextGui) context).mainPanel.planPreview.inPNG = true;
          }
       }
-
    }
 
    public boolean isAlreadyDone() {
@@ -149,8 +152,7 @@ public class BuilderJpg extends BuilderRunner {
    }
 
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
-      JpegMethod method = context.getJpegMethod();
-      Fits out = createNodeJpg(fils, method);
+      Fits out = createNodePreview(fils, modeHierarchy );
       if( out==null ) return null;
       out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
       Aladin.trace(4, "Writing " + file+ext);
@@ -171,6 +173,10 @@ public class BuilderJpg extends BuilderRunner {
    private void updateStat() {
       statNbFile++;
       totalTime = System.currentTimeMillis()-startTime;
+   }
+   
+   protected void loadLeaf(Fits out,MyInputStream is) throws Exception {
+      out.loadPreview(is, true);
    }
 
    /** Construction d'une tuile terminale. De fait, simple chargement
@@ -196,7 +202,7 @@ public class BuilderJpg extends BuilderRunner {
    }
 
    /** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
-   private Fits createNodeJpg(Fits fils[], JpegMethod method) throws Exception {
+   private Fits createNodePreview(Fits fils[], ModeTree modeTree) throws Exception {
       if( width==0 || fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null ) return null;
       Fits out = new Fits(width,width,bitpix);
       out.setBlank(blank);
@@ -204,60 +210,38 @@ public class BuilderJpg extends BuilderRunner {
       out.setBzero(bzero);
 
       Fits in;
-      double p[] = new double[4];
-      double coef[] = new double[4];
-
+      double pixd[] = new double[4];
+      
       for( int dg=0; dg<2; dg++ ) {
          for( int hb=0; hb<2; hb++ ) {
             int quad = dg<<1 | hb;
             in = fils[quad];
-            int offX = (dg*width)/2;
-            int offY = ((1-hb)*width)/2;
+            int offX = (dg*width)>>>1;
+            int offY = ((1-hb)*width)>>>1;
 
             for( int y=0; y<width; y+=2 ) {
                for( int x=0; x<width; x+=2 ) {
-
+                  
                   double pix=blank;
+                  int nbPix=0;
                   if( in!=null ) {
-
-                     // On prend la moyenne (sans prendre en compte les BLANK)
-                     if( method==Context.JpegMethod.MEAN ) {
-                        double totalCoef=0;
-                        for( int i=0; i<4; i++ ) {
-                           int dx = i==1 || i==3 ? 1 : 0;
-                           int dy = i>=2 ? 1 : 0;
-                           p[i] = in.getPixelDouble(x+dx,y+dy);
-                           if( in.isBlankPixel(p[i]) ) coef[i]=0;
-                           else coef[i]=1;
-                           totalCoef+=coef[i];
+                     for( int i=0;i<4; i++ ) {
+                        int gx = i==1 || i==3 ? 1 : 0;
+                        int gy = i>1 ? 1 : 0;
+                        pixd[nbPix] = in.getPixelDouble(x+gx,y+gy);
+                        if( !in.isBlankPixel(pixd[nbPix]) ) {
+                           nbPix++;
+                           if( modeTree==ModeTree.treeFirst ) break;
                         }
-                        if( totalCoef!=0 ) {
-                           pix=0;
-                           for( int i=0; i<4; i++ ) {
-                              if( coef[i]!=0 ) pix += p[i]*(coef[i]/totalCoef);
-                           }
-                        }
-
-                        // On garde la valeur médiane (les BLANK seront automatiquement non retenus)
-                     } else {
-
-                        double p1 = in.getPixelDouble(x,y);
-                        if( in.isBlankPixel(p1) ) p1=Double.NaN;
-                        double p2 = in.getPixelDouble(x+1,y);
-                        if( in.isBlankPixel(p2) ) p1=Double.NaN;
-                        double p3 = in.getPixelDouble(x,y+1);
-                        if( in.isBlankPixel(p3) ) p1=Double.NaN;
-                        double p4 = in.getPixelDouble(x+1,y+1);
-                        if( in.isBlankPixel(p4) ) p1=Double.NaN;
-
-                        if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
-                        else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
-                        else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
-                        else pix=p4;
+                     }
+                     if( nbPix==0 ) pix=blank;  // aucune valeur => BLANK
+                     else {
+                        if( modeTree==ModeTree.treeMean ) pix = getMean(pixd, nbPix);
+                        else if( modeTree==ModeTree.treeMedian )  pix = getMedian(pixd, nbPix);
+                        else pix = pixd[0];
                      }
                   }
-
-                  out.setPixelDouble(offX+(x/2), offY+(y/2), pix);
+                  out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
                }
             }
          }

@@ -1866,20 +1866,6 @@ public final class Util {
       File f = new File(new File(filename).getParent());
       f.mkdirs();
       if( !f.exists() ) throw new Exception("Cannot create directory for "+filename);
-
-      //	   File f;
-      //	   String FS = filename.indexOf('/')>=0 ? "/" : "\\";
-      //
-      //	   // Pour accélerer, on teste d'abord l'existence éventuelle du dernier répertoire
-      //	   int i = filename.lastIndexOf(FS);
-      //	   if( i<0 ) return;
-      //	   f = new File( filename.substring(0,i) ) ;
-      //	   if( f.exists() ) return;
-      //
-      //	   for( int pos=filename.indexOf(FS,3); pos>=0; pos=filename.indexOf(FS,pos+1)) {
-      //	      f = new File( filename.substring(0,pos) );
-      //	      if( !f.exists() ) f.mkdir();
-      //	   }
    }
 
 
@@ -2214,6 +2200,7 @@ public final class Util {
    /** retourne un temps en microsecondes sous une forme lisible 3j 5h 10mn 3s (round pour arrondir à deux unités max) */
    static public String getTemps(long micsec) { return getTemps(micsec,true);  }
    static public String getTemps(long micsec, boolean round) {
+      if( micsec==0L ) return "0ms";
       StringBuilder a = new StringBuilder();
       int n=0;
       for( int u=0; micsec>0 && u<DT.length; u++ ) {
@@ -2334,7 +2321,7 @@ public final class Util {
     * Affiche le chiffre donné avec une unité de volume disque (K M T)
     * @param val taille en octets
     * @param unit l'unité de départ (par défaut le byte)
-    * @param format le nombre de décimals après la virgule (par défaut 2)
+    * @param mirrorFormat le nombre de décimals après la virgule (par défaut 2)
     * @return le volume disque dans une unite coherente + l'unite utilisee
     */
    static final public String unites[] = {"B","KB","MB","GB","TB","PB","EB","ZB"};

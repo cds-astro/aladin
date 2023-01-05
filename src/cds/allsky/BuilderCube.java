@@ -36,9 +36,9 @@ import cds.moc.SMoc;
 import cds.tools.pixtools.Util;
 
 public class BuilderCube extends Builder {
-
+   
    private String inputPath [];
-   private Mode mode = Mode.COPY;
+   private ModeMerge mode = ModeMerge.copy;
 
    private int nbFmt=1;         // Nombre de formats de tuiles concernés
    private boolean hasFITS=false,hasPNG=false,hasJPEG=false;    // Formats déjà rencontrés
@@ -141,10 +141,10 @@ public class BuilderCube extends Builder {
       context.depth=inputPath.length;
 
       // Mode de travail (link ou copy)
-      Mode m = context.getMode();
-      if( m==Mode.getDefault() ) mode=Mode.COPY;   // Le défaut de TILES est remplacé par le défaut de CUBE
+      ModeMerge m = context.getModeMerge();
+      if( m==ModeMerge.getDefault() ) mode=ModeMerge.copy;   // Le défaut de TILES est remplacé par le défaut de CUBE
       else mode=m;
-      if( mode!=Mode.COPY && mode!=Mode.LINK ) {
+      if( mode!=ModeMerge.copy && mode!=ModeMerge.link ) {
          throw new Exception("Coadd mode ["+mode+"] not supported for CUBE action");
       }
       context.info(mode.getExplanation(mode));
@@ -213,7 +213,7 @@ public class BuilderCube extends Builder {
       (new File(output+Util.FS+subPath)).mkdirs();
       File trg = new File( output+Util.FS+subPath+Util.FS+name+suffixe+ext );
 
-      if( mode==Mode.LINK ) link(src,trg);
+      if( mode==ModeMerge.link ) link(src,trg);
       else copy(src,trg);
 
       updateStat();

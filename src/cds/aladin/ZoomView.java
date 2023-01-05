@@ -233,7 +233,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    }
    
    /** Action à opérer lorsque l'on clique sur le triangle soit des targets, soit des dates
-    * @param mode 0-target, 1-Date
+    * @param modeMerge 0-target, 1-Date
     */
    protected void targetTriangleAction(int x,int y) { targetTriangleAction(x,y,0); }
    protected void targetTriangleAction( final int x, final int y, int initIndex) {
@@ -822,7 +822,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                c = v.getCooCentre();
                if( c== null ) {
                   System.err.println("ZommView.drawHipsControl bug++ (v.getCooCenter() returns null ! => switch in SIN");
-                  proj = v.pref.projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5,v.pref);
+                  proj = v.pref.projd = new Projection("hips",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5,v.pref);
                   v.pref.projd.frame = aladin.localisation.getFrame();
                   v.projLocal = v.pref.projd.copy();
                   drawHipsControl(g, v);

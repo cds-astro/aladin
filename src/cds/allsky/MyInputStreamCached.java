@@ -41,7 +41,7 @@ import cds.tools.Util;
 public class MyInputStreamCached extends MyInputStream {
    
    // Taille max du cache disque par défaut (cf setCacheLimit() )
-   static private long DEFAULTLIMIT = 500*1024; // 500Go
+   static private long DEFAULTLIMIT = 500L*1024L; // 500Go
    
    // Nom du fichier dans le cache (clé unique)
    private String nameInCache=null;
@@ -112,7 +112,7 @@ public class MyInputStreamCached extends MyInputStream {
          
          // Ajustement éventuelle de la taille du cache en supposant que le fichier
          // décompresser prendra au mieux 3x la taille du fichier compressé
-         checkCache( (new File(filename)).length()*(2/(1024*1024.)) );
+         checkCache( ((new File(filename)).length()/1024L)/(1024./3.) );
          
          // Décompression
          InputStream in = null;
@@ -126,7 +126,7 @@ public class MyInputStreamCached extends MyInputStream {
             while( (n=in.read(buf))>=0 ) { size+=n; out.write( buf, 0 , n); }
             
             // Positionnement de la nouvelle taille du cache disque
-            cacheSize+=size/(1024*1024.);
+            cacheSize+=(size/1024L)/1024.;
             
          } finally {
             in.close();
@@ -160,7 +160,7 @@ public class MyInputStreamCached extends MyInputStream {
          
          // Ajustement éventuelle de la taille du cache en supposant que le fichier
          // décompresser prendra au mieux 3x la taille du fichier compressé
-         checkCache( (new File(filename)).length()*(3/(1024*1024.)) );
+         checkCache( ((new File(filename)).length()/1024L)/(1024./3.)  );
          
          HeaderFits header = new HeaderFits(this);
          
@@ -187,6 +187,7 @@ public class MyInputStreamCached extends MyInputStream {
                // fin de fichier, ou fin de la première HDU qui était seule demandée, ou le nombre de HDU a traité a été fait
                if( n==-1 || hdu==null || (hdu[0]!=-1 && nDone==hdu.length) ) {
 //                  System.err.println("n="+n+" hdu="+hdu);
+                  size+=n;
                   break;    
                }
                
@@ -201,12 +202,8 @@ public class MyInputStreamCached extends MyInputStream {
                size+=n;
             }
             
-//            while( (n=writeFitsCmp( out, this))!=-1 ) {
-//               size+=n;
-//            }
-            
             // Positionnement de la nouvelle taille du cache disque
-            cacheSize+=size/(1024*1024.);
+            cacheSize+=(size/1024L)/1024.;
             
          // Y a un problème, l'image en cours de construction est supprimée du cache
          } catch( Exception e ) {
@@ -378,7 +375,7 @@ public class MyInputStreamCached extends MyInputStream {
    }
    
    /** Vérification de la taille du cache disque, et nettoyage si nécessaire
-    * @param size nombre d'octets qu'il faudrait ajouter au cache
+    * @param size nombre de Mo qu'il faudrait ajouter au cache
     */
    static private void checkCache(double size) throws Exception,MyInputStreamCachedException {
       if( cacheSize+size < cacheLimit ) return;
@@ -390,19 +387,19 @@ public class MyInputStreamCached extends MyInputStream {
       int n=0;
       for( File f : files ) {
          if( stillActive(f) ) continue;
-         rmSize += f.length()/(1024*1024.);
+         rmSize += (f.length()/1024L)/1024.;
          f.delete();
          n++;
          if( cacheSize-rmSize < (cacheLimit/3)*2 ) {
             cacheSize -= rmSize;
-            if( context!=null ) context.info("Disk cache "+n+" file"+(n>1?"s":"")+"/"+Util.getUnitDisk(rmSize+"MB")
-                +" released => "+Util.getUnitDisk((long)cacheSize+"MB")+"/"+Util.getUnitDisk(cacheLimit+"MB"));
+            if( context!=null ) context.info("Disk cache flushed ("+n+" file"+(n>1?"s":"")+"/"+Util.getUnitDisk(rmSize+"MB")
+                +" released) => "+getCacheInfo());
             return;
          }
       }
       
       // Impossible de libérer assez de place - le cache est trop petit
-      if( context!=null ) context.abort("Cache disk overflow ! "+cachedir+" => "+Util.getUnitDisk((long)cacheSize+"MB")+"/"+Util.getUnitDisk(cacheLimit+"MB"));
+      if( context!=null ) context.abort("Cache disk overflow ! "+cachedir+" => "+getCacheInfo());
 
       throw new MyInputStreamCachedException();
    }
@@ -454,6 +451,20 @@ public class MyInputStreamCached extends MyInputStream {
    static private double cacheSize = 0;
    static private long cacheLimit = DEFAULTLIMIT;  
    
+   /** Retourne des informations sur le cache
+    * @param mode 0 - le répertoire du cache, ou null si aucun (qq soit le mode d'ailleurs)
+    *        mode 1 (defaut) - la taille courante du cache / la taille totale
+    *        mode 2 - le nombre de fichiers dans le cache
+    * @return
+    */
+   static public String getCacheInfo()throws Exception  { return getCacheInfo(1); }
+   static public String getCacheInfo(int mode) throws Exception {
+      if( cachedir==null ) return null;
+      if( mode==0 ) return  cachedir.getAbsolutePath();
+      if( cacheSize==0 ) return null;
+      return Util.getUnitDisk((long)cacheSize+"MB")+"/"+Util.getUnitDisk(cacheLimit+"MB");
+   }
+   
    /** Indication explicite d'un emplacement pour le cache disque, ainsi que sa taille limite (en MB) */
    static public void setCache(File dir) throws Exception { setCache(dir,DEFAULTLIMIT); }
    static public void setCache(File dir,long sizeLimit) throws Exception {
@@ -461,14 +472,14 @@ public class MyInputStreamCached extends MyInputStream {
          if( cachedir!=null ) throw new Exception("Cache dir already in use ["+cachedir.getCanonicalPath()+"]");
          cachedir=dir;
          cacheLimit = sizeLimit==-1 ? DEFAULTLIMIT : sizeLimit;
-         cacheSize=0L;
+         cacheSize=0;
          if( cachedir==null || !cachedir.exists() ) return;
          
          // Détermination de la taille initiale
          File [] files = cachedir.listFiles();
          
          if( files!=null ) {
-            for( File f : files ) { cacheSize += f.length()/(1024*1024.); }
+            for( File f : files ) { cacheSize += (f.length()/1024L)/1024.; }
             setCacheSize(cacheLimit);
          }
          
@@ -486,15 +497,15 @@ public class MyInputStreamCached extends MyInputStream {
          int n=0;
          File [] files = cachedir.listFiles();
          if( files!=null ) for( File f : files ) {
-            rmSize += f.length()/(1024*1024.);
+            rmSize += (f.length()/1024L)/1024.;
             n++;
             f.delete();
          }
          
          cachedir.delete();
          try {
-            if( context!=null ) context.info("Cache disk removed: "+cachedir.getAbsolutePath()+" ("+n+"file"+(n>1?"s":"")
-                  +"/"+Util.getUnitDisk((long)rmSize+"MB")+")!");
+            if( context!=null ) context.info("Cache disk removed: "+cachedir.getAbsolutePath()+" ("+n+" file"+(n>1?"s":"")
+                  +"="+Util.getUnitDisk((long)rmSize+"MB")+")!");
          } catch( Exception e ) {
             e.printStackTrace();
          }

@@ -21,7 +21,6 @@
 
 package cds.allsky;
 
-
 /** Permet la décompression de toutes les tuiles Fits
  * @author P. Fernique [CDS]
  * @version 1.0 - mai 2012 - création
@@ -31,12 +30,19 @@ public class BuilderGunzip extends BuilderGzip {
    public BuilderGunzip(Context context) { super(context); }
 
    public Action getAction() { return Action.GUNZIP; }
+   
+   public void buildPre() {
+      super.buildPre();
+      compress=false;
+   }
+
+
 
    /** Gunzippe toutes les tuiles FITS ainsi que le fichier Allsky.fits qui se trouve
     * dans le répertoire Allsky repéré par root
     * Attention: ne change pas pour autant les extensions des fichiers (toujours.fits)
     */
-   public void run() throws Exception {
-      gzipRec(false);
-   }
+//   public void run() throws Exception {
+//      gzipRec(false);
+//   }
 }

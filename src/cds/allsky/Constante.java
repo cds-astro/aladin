@@ -103,10 +103,9 @@ public class Constante {
    static public final String KEY_HIPS_PIXEL_BITPIX     = "hips_pixel_bitpix";
    static public final String KEY_DATA_PIXEL_BITPIX     = "data_pixel_bitpix";
    static public final String KEY_HIPS_PROCESS_SAMPLING = "hips_sampling";
-   static public final String KEY_HIPS_PROCESS_OVERLAY  = "hips_overlay";
+   static public final String KEY_HIPS_COADD            = "hips_overlay";
    static public final String KEY_HIPS_SKYVAL           = "hips_skyval_method";
    static public final String KEY_HIPS_SKYVAL_VALUE     = "hips_skyval_value";
-   static public final String KEY_HIPS_PROCESS_HIERARCHY= "hips_hierarchy";
    static public final String KEY_HIPS_ESTSIZE          = "hips_estsize";
    static public final String KEY_HIPS_NB_TILES         = "hips_nb_tiles";
    static public final String OLD_HIPS_TILE_FORMAT      = "format";
@@ -192,7 +191,7 @@ public class Constante {
    static public String SURVEY = HIPS;  // sous répertoire final contenant la hierarchie healpix
 
    static public final int ORDER           = 9;    // Taille des imagettes HEALPix
-   static public int ORIGCELLWIDTH      = 1024;    // Taille des cellules des images originales lors de la Hipselisation
+   static public int ORIGCELLWIDTH      = 4096;    // Taille des cellules des images originales lors de la Hipselisation
    static public final int GZIPMAXORDER    = 5;    // On gzippe les tiles que jusqu'au niveau 5
    static public final int MAXOVERLAY      = 10;   // Nombre max de recouvrement pris en compte
    static public final int DEFAULTMOCORDER = 7;    // MOC ORDER minimal

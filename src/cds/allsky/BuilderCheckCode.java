@@ -36,7 +36,7 @@ import cds.tools.Util;
  * @version 1.0 - Juillet 2022
  */
 public class BuilderCheckCode extends Builder {
-   private int nbFile;         // Nombre de fichiers traités
+   protected int nbFile;         // Nombre de fichiers traités
    protected String format;    // Les formats des tuiles HiPS pris en compte
    protected String hipsCheckCode;   // Check code précalculé (s'il existe dans le fichier properties)
    long hipsEstsize;            // La taille totale du HiPS (sommes de toutes les tuiles + allsky) en bytes
@@ -107,9 +107,9 @@ public class BuilderCheckCode extends Builder {
 //         context.setPropriete("#hips_size", Util.getUnitDisk(hipsEstsize));
          context.setPropriete(Constante.KEY_HIPS_ESTSIZE, (hipsEstsize/1024L)+"" );
          context.setPropriete(Constante.KEY_HIPS_NB_TILES, hipsNbTiles+"" );
-         context.writePropertiesFile(null);
+         context.writePropertiesFile();
       } else {
-         context.warning("Check codes not store. Use -f parameter to overwrite it");
+//         context.warning("Check codes not store. Use -clean option to overwrite it");
       }
    }
    
@@ -133,7 +133,7 @@ public class BuilderCheckCode extends Builder {
    public void validateContext() throws Exception {      
       validateOutput();
 
-      if( context.prop==null ) context.loadProperties();
+      context.loadProperties();
       
       format = context.prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
       if( format==null ) format = context.prop.getProperty(Constante.OLD_HIPS_TILE_FORMAT);
@@ -152,7 +152,7 @@ public class BuilderCheckCode extends Builder {
       // Peut-on recalculer les check codes ?
       if( !context.getCheckForce() ) {
          String s = context.getCheckCode();
-         if( s!=null ) context.warning("Check codes already stored ["+s+"]. Use -f to overwrite it");
+//         if( s!=null ) context.warning("Check codes already stored ["+s+"]. Use -"+ParamOption.clean+" to overwrite it");
       }
    }
    

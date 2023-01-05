@@ -21,6 +21,7 @@
 
 package cds.allsky;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -39,22 +40,54 @@ import cds.tools.pixtools.Util;
  */
 final public class BuilderMap  extends Builder {
 
+   
+   private int bitpix;
+   private double blank;
+   private String output,input,outputmap;
+   private int frame;
+   private int losangeWidth;
+   private long nside;
 
    public BuilderMap(Context context) { super(context); }
 
    public Action getAction() { return Action.MAP; }
 
    public void validateContext() throws Exception {
-      validateOutput();
+      input = context.getInputPath();
       output = context.getOutputPath();
+      File f1 = new File(output);
+      if( f1.isDirectory() ) {
+         if( context.isExistingAllskyDir(output) && !context.isExistingAllskyDir(input)) {
+            context.warning("There is no HiPS in input directory => assuming swapped in/out parameters !");
+            input=output;
+         }
+         outputmap = output+Util.FS+"Map.fits";
+         context.info("The output HEALPix map will be here => "+outputmap);
+      } else {
+         cds.tools.Util.createPath(output);
+         outputmap=output;
+      }
+      if( !context.isExistingAllskyDir(input) ) {
+         throw new Exception("There is no HiPS in input directory ["+input+"]");
+      }
+      
       nside = context.getMapNside();
       bitpix = context.getBitpix();
       blank = context.getBlank();
       if( bitpix==-1 ) {
-         context.loadProperties();
-         bitpix = Integer.parseInt( context.prop.getProperty("hips_pixel_bitpix") );
-         frame = context.prop.getProperty("hips_frame").startsWith("G") ? Localisation.GAL : Localisation.ICRS;
-         losangeWidth = Integer.parseInt( context.prop.getProperty("hips_tile_width") );
+         context.loadProperties(input);
+         try {
+            frame = context.prop.getProperty("hips_frame").startsWith("G") ? Localisation.GAL : Localisation.ICRS;
+         } catch( Exception e ) { frame = Localisation.GAL; } // Par défaut, toujours GAL pour les HiPS image
+         try {
+            bitpix = Integer.parseInt( context.prop.getProperty("hips_pixel_bitpix") );
+            losangeWidth = Integer.parseInt( context.prop.getProperty("hips_tile_width") );
+         } catch( NumberFormatException e ) {
+            Fits f = new Fits();
+            f.loadFITS( context.findOneNpixFile(input, "fits") );
+            bitpix = f.bitpix;
+            losangeWidth = f.width;
+         }
       } else {
          frame = context.getFrame();
          losangeWidth = context.getTileSide();
@@ -78,13 +111,6 @@ final public class BuilderMap  extends Builder {
       }
    }
    
-   private int bitpix;
-   private double blank;
-   private String output;
-   private int frame;
-   private int losangeWidth;
-   private long nside;
-
    public void run() throws Exception {
       exportHpx();
       String tForm = bitpix==8 ? "I" : bitpix==16 ? "I" : bitpix==32 ? "J" : bitpix==-32 ? "E" : "D";
@@ -96,7 +122,7 @@ final public class BuilderMap  extends Builder {
       
       OutputStream f = null;
       try {
-         f=new FileOutputStream( output+Util.FS+"Map.fits" );
+         f=new FileOutputStream( outputmap );
          int size=0;
 
          int orderLosange = (int)CDSHealpix.log2(losangeWidth);
@@ -139,7 +165,7 @@ final public class BuilderMap  extends Builder {
             boolean found = true;
             double val;
             // récupère le losange de niveau orderTile
-            String filename = cds.tools.pixtools.Util.getFilePath(output, orderTile, i);
+            String filename = cds.tools.pixtools.Util.getFilePath(input, orderTile, i);
             Fits los = new Fits();
             try {
                los.loadFITS(filename+".fits");
@@ -149,15 +175,13 @@ final public class BuilderMap  extends Builder {
             }
             if (!found) {
                // on finit d'écrire ce qu'il restait dans le buffer
-               f.write(buf,0,pos); size+=pos; pos=0;
+               if( pos!= 0 ) { f.write(buf,0,pos); size+=pos; pos=0; }
+               
                // on ajoute tout le losange en nan
                f.write(nan); pos=0; size+=nan.length; 
 
-               if( size>Math.pow(2, 30)) {
-                   size -= 322827*2880;
-            }
-            }
-            else {
+               if( size>Math.pow(2, 30)) size -= 322827*2880;
+            } else {
                for( int ipix = 0 ; ipix < nbPix ; ipix++) {
                   //                  int[] xy = cds.tools.pixtools.Util.hpx2XY(ipix+1,N);
                   //                  val = los.getPixelDouble(xy[0],losangeWidth-1-xy[1]);
@@ -166,14 +190,11 @@ final public class BuilderMap  extends Builder {
                   int xx = idx-yy*losangeWidth;
                   val = los.getPixelFull(xx,yy);
                   if( bitpix<0 && los.isBlankPixel(val) ) val=Double.NaN;
-//                  val = los.getPixelDouble(xx,yy);
                   PlanImage.setPixVal(buf, bitpix, pos++, val);
 
                   if( pos==lenLine ) {
                      f.write(buf); pos=0; size+=buf.length;
-                     if( size>Math.pow(2, 30)) {
-                         size -= 322827*2880;
-                     }
+                     if( size>Math.pow(2, 30)) size -= 322827*2880;
                   }
                }
             }
@@ -190,9 +211,7 @@ final public class BuilderMap  extends Builder {
          f.write(end);
          size += end.length;
 
-         System.out.println("Size : " + size);
-
-      } finally { f.close(); }
+      } finally { if( f!=null ) f.close(); }
    }
 
 

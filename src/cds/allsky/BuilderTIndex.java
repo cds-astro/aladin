@@ -273,7 +273,7 @@ final public class BuilderTIndex  extends Builder {
          context.info("Pre-existing "+Constante.FILE_METADATAXML+" file => keep it");
       } else {
          RandomAccessFile f = new RandomAccessFile(metadata ,"rw");
-         String s = METADATA.replace("YOUR_SURVEY_LABEL",context.getLabel()+" details");
+         String s = METADATA.replace("YOUR_SURVEY_LABEL",context.getTitle()+" details");
          f.write(s.getBytes());
          f.close();
          context.info("Mapping hpxFinder/"+Constante.FILE_METADATAXML+" file has been generated");

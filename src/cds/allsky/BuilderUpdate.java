@@ -22,9 +22,13 @@
 package cds.allsky;
 
 import java.io.File;
+import java.io.FileInputStream;
 
+import cds.aladin.MyInputStream;
 import cds.aladin.Tok;
+import cds.fits.Fits;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /** Permet de mettre à jour un survey préalablement généré
  * @author Pierre Fernique [CDS]
@@ -38,10 +42,9 @@ public class BuilderUpdate extends Builder {
    public Action getAction() { return Action.UPDATE; }
 
    public void run() throws Exception {
-      keepOldCopy();
       fillupContext();
       if( !context.isTaskAborting() ) builderMoc(); 
-      if( !context.isTaskAborting() ) builderGunzip();
+//      if( !context.isTaskAborting() ) builderGunzip();
       if( !context.isTaskAborting() ) builderDataSum();
       if( !context.isTaskAborting() ) builderLowOrder();
       if( !context.isTaskAborting() ) builderAllsky();
@@ -75,6 +78,11 @@ public class BuilderUpdate extends Builder {
 
       s = context.prop.getProperty(Constante.KEY_HIPS_STATUS);
       if( s!=null ) context.setStatus(s);
+      
+      int tileSideByNpixFile = context.getTileWidthByNpixFile( context.getOutputPath() );
+      context.setTileOrder( (int)CDSHealpix.log2(tileSideByNpixFile ));
+      
+
 
       context.initRegion();
    }
@@ -107,23 +115,44 @@ public class BuilderUpdate extends Builder {
    }
    
    private void builderDataSum() throws Exception {
-      context.info("Scanning and adding (or updating) DATASUM on FITS tiles...");
+      Fits f = new Fits();
+      f.loadFITS( context.findOneNpixFile( context.getOutputPath()) );
+      if( f.headerFits.hasKey("DATASUM" ) ) {
+         context.info("DATASUM seems to be already present in tiles (to update them use \"UPDATEDATASUM\" action)");
+         return;
+      }
+      context.info("Scanning and adding DATASUM on FITS tiles...");
       (b=new BuilderUpdateDataSum(context)) .run();
       context.done("Datasum done");
       b=null; 
    }
 
    private void builderCheck() throws Exception {
-      context.info("Adding/upgrading check codes...");
-      context.setCheckForce(true);
-      (b=new BuilderCheckCode(context)) .build();
+      if( context.getCheckCodeFromProp()!=null ) {
+         context.info("Checkcodes already present (to update them use \"CHECKCODE\" action)");
+         return;
+      }
+      context.info("Adding check codes...");
+//      context.setCheckForce(true);
+      Task.validator(context, Action.CHECKCODE);
+      context.writePropertiesFile();
       context.done("Check code done");
       b=null; 
    }
 
 
    private void builderGunzip() throws Exception {
-      context.info("Scanning and gunzipping required tiles (order<=5)...");
+      MyInputStream in = null;
+      boolean isGZ = false;
+      try { 
+         in = new MyInputStream( new FileInputStream( context.findOneNpixFile( context.getOutputPath())) ); 
+         isGZ = in.isGZ();
+      } finally { if( in!=null ) in.close(); }
+      if( !isGZ ) {
+         context.info("Tiles seem to be already gunzipped (use \"GUNZIP\" to be sure)");
+         return;
+      }
+      context.info("Scanning and gunzipping required tiles (order<=5) if required...");
       (b=new BuilderGunzip(context)) .run();
       if( ((BuilderGunzip)b).nbFile==0 ) context.info("Nothing gzipped");
       else context.done("Gunzip done");
@@ -138,9 +167,9 @@ public class BuilderUpdate extends Builder {
             keepOldCopy("Moc.fits");
          }
       } catch( Exception e ) {
-         context.info("Regenerating MOC from low rhombs...");
+         context.info("Regenerating MOC from max order tiles...");
          (b=new BuilderMoc(context)).run();
-         context.done("MOC regenerated from low rhombs");
+         context.done("MOC regenerated from max order tiles");
          context.loadMoc();
          b=null;
       }
@@ -148,28 +177,28 @@ public class BuilderUpdate extends Builder {
    
    private void builderAllsky() throws Exception {
       
-      // Y aurait-il des allsky manquants ? si oui, on refait tout
-      for( int z=0; z<context.depth; z++ ) {
-         String filename = BuilderAllsky.getFileName(context.getOutputPath(), 3,z);
-         
-         String s = context.prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
-         Tok tok = new Tok(s);
-         while( tok.hasMoreTokens() ) {
-            String fmt = tok.nextToken();
-            if( fmt.equals("jpeg") ) fmt="jpg";
-            
-            File f = new File(filename+"."+fmt);
-            // Manquant => on refait le tout
-            if( !f.exists() ) {
-               context.done("Regenerating Allsky file(s) from Norder3 tiles");
-               b=new BuilderAllsky(context);
-               b.run();
-               context.done("Allsky file(s) regenerated");
-               return;
-            }
-         }
-
-      }
+//      // Y aurait-il des allsky manquants ? si oui, on refait tout
+//      for( int z=0; z<context.depth; z++ ) {
+//         String filename = BuilderAllsky.getFileName(context.getOutputPath(), 3,z);
+//         
+//         String s = context.prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
+//         Tok tok = new Tok(s);
+//         while( tok.hasMoreTokens() ) {
+//            String fmt = tok.nextToken();
+//            if( fmt.equals("jpeg") ) fmt="jpg";
+//            
+//            File f = new File(filename+"."+fmt);
+//            // Manquant => on refait le tout
+//            if( !f.exists() ) {
+//               context.done("Regenerating Allsky file(s) from Norder3 tiles");
+//               b=new BuilderAllsky(context);
+//               b.run();
+//               context.done("Allsky file(s) regenerated");
+//               return;
+//            }
+//         }
+//
+//      }
       
       // Tous les allsky sont bons => Juste les actions en postJob à refaire
       b=new BuilderAllsky(context);
@@ -183,20 +212,18 @@ public class BuilderUpdate extends Builder {
       
       boolean flagFits = false;
       int bitpixOrig = context.getBitpixOrig();
-      context.setMode( Mode.KEEPTILE );
+      context.setModeMerge( ModeMerge.mergeKeepTile );
       int order=context.getOrder();
       context.setOrder(3);
       
-      validateTileSide(context.getOutputPath());
-      
-      context.info("Building Norder0,1 and 2...");
+      context.info("Building missing HiPS low orders (Norder0,1 and 2)...");
       
       String s = context.prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
       Tok tok = new Tok(s);
       while( tok.hasMoreTokens() ) {
          String fmt = tok.nextToken();
          if( fmt.equals("fits") ) { flagFits=true; continue; } 
-         context.info("Building Norder0,1 and 2 for "+fmt+" tiles...");
+         context.info("- building Norder0,1 and 2 for "+fmt+" tiles...");
          context.setColor(fmt);
          (b=new BuilderTree(context)).build();
       }
@@ -204,13 +231,12 @@ public class BuilderUpdate extends Builder {
       context.bitpixOrig = bitpixOrig;
       context.order = order;
       if( flagFits && bitpixOrig!=0 ) {
-         context.info("Building Norder0, 1 and 2 for fits tiles...");
+         context.info("- building Norder0, 1 and 2 for fits tiles...");
          (b=new BuilderTree(context)).build();
       }
       
       context.setMinOrder(0);
-      context.done("Norder0,1 and 2 built");
-
+      context.done("Norder0,1 and 2 successfully built");
    }
 
    public void validateContext() throws Exception {

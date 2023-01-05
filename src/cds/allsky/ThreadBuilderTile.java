@@ -51,13 +51,13 @@ final public class ThreadBuilderTile {
    protected BuilderRunner builderTiles;
    protected BuilderRunner.ThreadBuilder threadBuilder;   // just pour faire des remontées de debug sur setInfo(...)
    private int bitpix;
-   private Mode coaddMode;
-   private double max;
+   private ModeOverlay modeCoadd;
+   private double max,maxDemi;
    private boolean hasAlternateBlank;
    private double blankOrig;
    private double blank;
    private boolean flagColor;
-   private boolean flagGauss;
+//   private boolean flagGauss;
    private double bScale;
    private double bZero;
    private boolean fading;
@@ -67,8 +67,7 @@ final public class ThreadBuilderTile {
    private int[] borderSize;
 //   private int circle;
    private Shape globalShape;
-   private ArrayList<SrcFile> downFiles;
-   private boolean mixing;
+//   private ArrayList<SrcFile> downFiles;
    private int tileSide;
    
    static protected int nbThreadsToStop=0;
@@ -81,11 +80,11 @@ final public class ThreadBuilderTile {
       this.builderTiles=builderTiles;
 
       bitpix=context.getBitpix();
-      coaddMode=context.getMode();
+      modeCoadd=context.getModeOverlay();
       max = Fits.getMax( context.getBitpixOrig() );
+      maxDemi = max/2.;
       flagColor = context.isColor();
-      flagGauss = context.gaussFilter;
-      mixing = context.mixing;
+//      flagGauss = context.gaussFilter;
       if( !flagColor ) {
          bZero = context.getBZero();
          bScale = context.getBScale();
@@ -113,16 +112,16 @@ final public class ThreadBuilderTile {
       hpxFinderPath = context.getHpxFinderPath();
       tileSide = context.getTileSide();
 
-      downFiles = new ArrayList<>(Constante.MAXOVERLAY);
+//      downFiles = new ArrayList<>(Constante.MAXOVERLAY);
    }
 
-   public long getMem() {
-      long mem=2+5*4+4*8+2*8*4;
-      for( SrcFile f : downFiles) {
-         mem += f.fitsfile.getMem();
-      }
-      return mem;
-   }
+//   public long getMem() {
+//      long mem=2+5*4+4*8+2*8*4;
+//      for( SrcFile f : downFiles) {
+//         mem += f.fitsfile.getMem();
+//      }
+//      return mem;
+//   }
 
    private boolean needMem(long rqMem) {
       long mem =  CacheFits.getFreeMem();
@@ -224,11 +223,13 @@ final public class ThreadBuilderTile {
 
          // Pas trop de progéniteurs => on peut tout faire d'un coup
          // Pour les cubes, on va pour le moment travailler en 1 seule passe (A VOIR PAR LA SUITE S'IL FAUT AMELIORER)
-         if( !context.live && (!mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1, 1 /*nbThreads */)) ) {
+//         if( !context.live && (!mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1, 1 /*nbThreads */)) ) {
+         if( !context.live && (modeCoadd==ModeOverlay.overlayNone || n<Constante.MAXOVERLAY  
+               || !requiredMem(modeCoadd==ModeOverlay.overlayNone ? 1 : n, 1 /*nbThreads */)) ) {
 
             statOnePass++;
             long mem = getReqMem(downFiles, 0, n);
-            checkMem(mixing ? n : 1, mem, true);
+            checkMem(modeCoadd==ModeOverlay.overlayNone ? 1 : n, mem, true);
             
             threadBuilder.setInfo("createLeavveHpx onepass memOk "+order+"/"+npix_file+"...");
             out = buildHealpix1(bt,order,npix_file,z,downFiles,0,n,null);
@@ -243,8 +244,7 @@ final public class ThreadBuilderTile {
 
             // poids déjà calculés
             double [] weight = null;
-            double [] fWeight = coaddMode==Mode.ADD || coaddMode==Mode.SUM  ? null 
-                  : new double[tileSide*tileSide];
+            double [] fWeight = modeCoadd==ModeOverlay.overlayAdd  ? null : new double[tileSide*tileSide];
 
             for( int deb=0; deb<n; deb+=Constante.MAXOVERLAY ) {
                int fin = deb+Constante.MAXOVERLAY;
@@ -259,10 +259,9 @@ final public class ThreadBuilderTile {
                   if( out==null ) {
                      out=f;
                      weight=fWeight;
-                     fWeight = coaddMode==Mode.ADD || coaddMode==Mode.SUM  ? null 
-                           : new double[tileSide*tileSide];
+                     fWeight = modeCoadd==ModeOverlay.overlayAdd ? null : new double[tileSide*tileSide];
                   } else {
-                     if( coaddMode==Mode.ADD || coaddMode==Mode.SUM ) out.coadd(f,Fits.ADD);
+                     if( modeCoadd==ModeOverlay.overlayAdd ) out.coadd(f,Fits.ADD);
                      else out.coadd(f,weight,fWeight);
                   }
                }
@@ -270,11 +269,9 @@ final public class ThreadBuilderTile {
                // On libère dès à présent les fichiers Fits déjà utilisés
                // pour qu'ils puissent être supprimés du cache le cas échéant
                for( int i=deb; i<fin; i++ ) {
-//                  SrcFile f1 = downFiles.get(i);
                   SrcFile f1 = downFiles[i];
 //                  f1.fitsfile.rmUser();
                   try { if( f1!=null ) f1.release(); } catch( Exception e ) { }
-//                  downFiles.set(i,null);
                   downFiles[i]=null;
                }
             }
@@ -302,7 +299,7 @@ final public class ThreadBuilderTile {
             // Sauvegarde de la tuile de poids
             if( out!=null && context.live  ) {
                String file = Util.getFilePath(path,order,npix_file,z);
-               writeWeight(file,weight,tileSide);
+               bt.writeWeight(file,weight,tileSide,order,npix_file);
             }
 
          }
@@ -321,52 +318,52 @@ final public class ThreadBuilderTile {
       return out;
    }
    
-   /**
-    * Sauvegarde des poids des pixels d'une tuile sous la forme d'une FITS
-    * La nomenclature suit la même que pour les tuiles classiques, avec le suffixe "_w"
-    * @param file    Le nom de fichier (sans le suffixe "_w" ni l'extension ".fits)
-    * @param weight  La matrice des poids
-    * @param w       La largeur de la tuile
-    * @throws Exception
-    */
-   static public void writeWeight(String file, double [] weight, int w) throws Exception {
-      if( weight==null ) return;
-      Fits fits = new Fits(w,w,-32);
-      int i=0;
-      for( int y=0; y<fits.height; y++ ) {
-         for( int x=0; x<fits.width; x++ ) {
-            fits.setPixelDouble(x,y,weight[i++]);
-         }
-      }
-      fits.addDataSum();
-      fits.writeFITS(file+"_w.fits");
-   }
-
-   /**
-    *  Chargement des poids des pixels d'une tuile sous la forme d'une FITS
-    * La nomenclature suit la même que pour les tuiles classiques, avec le suffixe "_w"
-    * @param file    Le nom de fichier (sans le suffixe "_w" ni l'extension ".fits)
-    * @return        La matrice des poids - remplie de la valeur par défaut si le fichier n'existe pas
-    * @throws Exception
-    */
-   static public double [] loadWeight(String file,int w,double defaultWeight) throws Exception {
-      double [] weight = new double[ w *w ];
-      String filename = file+"_w.fits";
-      if( !(new File(filename)).exists() ) {
-         for( int i=0; i<weight.length; i++ ) weight[i]=defaultWeight;
-         return weight;
-      }
-      
-      Fits fits = new Fits();
-      fits.loadFITS(filename);
-      int i=0;
-      for( int y=0; y<fits.height; y++ ) {
-         for( int x=0; x<fits.width; x++ ) {
-            weight[i++] = fits.getPixelDouble(x,y);
-         }
-      }
-      return weight;
-   }
+//   /**
+//    * Sauvegarde des poids des pixels d'une tuile sous la forme d'une FITS
+//    * La nomenclature suit la même que pour les tuiles classiques, avec le suffixe "_w"
+//    * @param file    Le nom de fichier (sans le suffixe "_w" ni l'extension ".fits)
+//    * @param weight  La matrice des poids
+//    * @param w       La largeur de la tuile
+//    * @throws Exception
+//    */
+//   static public void writeWeight(String file, double [] weight, int w) throws Exception {
+//      if( weight==null ) return;
+//      Fits fits = new Fits(w,w,-32);
+//      int i=0;
+//      for( int y=0; y<fits.height; y++ ) {
+//         for( int x=0; x<fits.width; x++ ) {
+//            fits.setPixelDouble(x,y,weight[i++]);
+//         }
+//      }
+//      fits.addDataSum();
+//      fits.writeFITS(file+"_w.fits");
+//   }
+//
+//   /**
+//    *  Chargement des poids des pixels d'une tuile sous la forme d'une FITS
+//    * La nomenclature suit la même que pour les tuiles classiques, avec le suffixe "_w"
+//    * @param file    Le nom de fichier (sans le suffixe "_w" ni l'extension ".fits)
+//    * @return        La matrice des poids - remplie de la valeur par défaut si le fichier n'existe pas
+//    * @throws Exception
+//    */
+//   static public double [] loadWeight(String file,int w,double defaultWeight) throws Exception {
+//      double [] weight = new double[ w *w ];
+//      String filename = file+"_w.fits";
+//      if( !(new File(filename)).exists() ) {
+//         for( int i=0; i<weight.length; i++ ) weight[i]=defaultWeight;
+//         return weight;
+//      }
+//      
+//      Fits fits = new Fits();
+//      fits.loadFITS(filename);
+//      int i=0;
+//      for( int y=0; y<fits.height; y++ ) {
+//         for( int x=0; x<fits.width; x++ ) {
+//            weight[i++] = fits.getPixelDouble(x,y);
+//         }
+//      }
+//      return weight;
+//   }
 
    static long statOnePass=0L;
    static long statMultiPass=0L;
@@ -387,7 +384,7 @@ final public class ThreadBuilderTile {
     * @param pixels
     * @return
     */
-   Fits buildHealpix1(BuilderRunner bt, int order, long npix_file, int z,
+   Fits buildHealpix1(BuilderRunner bt, int order, long npix_file, int z1,
             SrcFile[] downFiles,int deb,int fin,double [] weight) throws Exception {
       boolean empty = true;
       long min;
@@ -401,6 +398,8 @@ final public class ThreadBuilderTile {
       double bScale = this.bScale;
       double bZero  = this.bZero;
       int tileSide = context.getTileSide();
+      
+      int depth = Builder.NEWCUBE ? context.getDepth() : 1;
 
       try {
          // cherche les numéros de pixels Healpix dans ce losange
@@ -417,7 +416,9 @@ final public class ThreadBuilderTile {
             flagModifBitpix=false;
          }
 
-         out = new Fits(tileSide, tileSide, bitpix);
+         out = new Fits(tileSide, tileSide, depth, bitpix); 
+//         out = new Fits(tileSide, tileSide, bitpix);
+         
          if( !flagColor ) {
             out.setBlank(blank);
             out.setBzero(bZero);
@@ -433,7 +434,7 @@ final public class ThreadBuilderTile {
          // cherche la valeur à affecter dans chacun des pixels healpix
          int overlay = fin-deb;
          double [] pixvalG=null,pixvalB=null;
-         double [] pixval = new double[overlay];
+         double [][] pixval = new double[overlay][depth];
          double [] pixcoef = new double[overlay];
          if( flagColor ) { pixvalG = new double[overlay]; pixvalB = new double[overlay]; }
 
@@ -487,7 +488,7 @@ final public class ThreadBuilderTile {
                      if( file.flagRemoved ) continue;
                      try {
 //                        file.open(z, flagGauss);
-                        file.open(z);
+                        file.open(z1);
                      } catch( Exception e ) {
                         if( context.getVerbose()>=3 ) e.printStackTrace();
                         context.addFileRemoveList(file.name);
@@ -529,22 +530,26 @@ final public class ThreadBuilderTile {
                      if( flagColor ) {
                         int pix = getBilinearPixelRGB(file,coo);
                         if( pix==0 ) continue;
-                        pixval[nbPix] = 0xFF & (pix>>16);
+                        pixval[nbPix][0] = 0xFF & (pix>>16);
                         pixvalG[nbPix] = 0xFF & (pix>>8);
                         pixvalB[nbPix] = 0xFF & pix;
 
                         // Cas normal
                      } else {
-                        double pix = getBilinearPixel(file,coo,z,file.blank);
-                        if( Double.isNaN(pix) ) continue;
-                        pixval[nbPix]=pix;
+                        if( Builder.NEWCUBE ) {
+                           if( !getBilinearPixel(pixval[nbPix],file,coo,file.blank) ) continue;
+                        } else {
+                           double pix = getBilinearPixel(file,coo,z1,file.blank);
+                           if( Double.isNaN(pix) ) continue;
+                           pixval[nbPix][0]=pix;
+                        }
                      }
                      // fading
-                     totalCoef+= pixcoef[nbPix] = getCoef(file.fitsfile,coo);
+                     totalCoef+= pixcoef[nbPix] = getCoef(file.fitsfile,coo, modeCoadd);
                      nbPix++;
 
                      // On a un pixel, pas besoin d'aller plus loin
-                     if( !mixing ) break;
+                     if( modeCoadd==ModeOverlay.overlayNone ) break;
                   }
                   catch( Exception e ) {
                      e.printStackTrace();
@@ -557,13 +562,13 @@ final public class ThreadBuilderTile {
                   int pixelFinal=0;
 
                   if( nbPix!=0 ) {
-                     if( totalCoef==0 )  pixelFinal = 0xFF000000 | (((int)pixval[0] & 0xFF)<<16) | (((int)pixvalG[0] & 0xFF)<<8) | ((int)pixvalB[0] & 0xFF);
+                     if( totalCoef==0 )  pixelFinal = 0xFF000000 | (((int)pixval[0][0] & 0xFF)<<16) | (((int)pixvalG[0] & 0xFF)<<8) | ((int)pixvalB[0] & 0xFF);
 
                      // Addition simple
-                     else if( coaddMode==Mode.ADD || coaddMode==Mode.SUM ) {
+                     else if( modeCoadd==ModeOverlay.overlayAdd ) {
                         double r=0,g=0,b=0;
                         for( int i=0; i<nbPix; i++ ) {
-                           r += pixval[i];
+                           r += pixval[i][0];
                            g += pixvalG[i];
                            b += pixvalB[i];
                         }
@@ -572,11 +577,11 @@ final public class ThreadBuilderTile {
                         if( b>255 ) b=255;
                         pixelFinal = 0xFF000000 | (((int)r & 0xFF)<<16) | (((int)g & 0xFF)<<8) | ((int)b & 0xFF);
 
-                        // Calcul de moyenne
+                     // Calcul de moyenne
                      } else {
                         double r=0,g=0,b=0;
                         for( int i=0; i<nbPix; i++ ) {
-                           r += (pixval[i]*pixcoef[i])/totalCoef;
+                           r += (pixval[i][0]*pixcoef[i])/totalCoef;
                            g += (pixvalG[i]*pixcoef[i])/totalCoef;
                            b += (pixvalB[i]*pixcoef[i])/totalCoef;
                         }
@@ -597,50 +602,52 @@ final public class ThreadBuilderTile {
                   // Cas normal
                }  else {
                   double pixelFinal=0;
-                  if( nbPix==0 ) {
-                     pixelFinal = Double.NaN;
+                  for( int z=0; z<depth; z++ ) {
+                     if( nbPix==0 ) {
+                        pixelFinal = blank; // Double.NaN;
 
-                  // Mode ADD simple
-                  } else if( coaddMode==Mode.SUM ) {
-                     empty=false;
-                     for( int i=0; i<nbPix; i++ ) pixelFinal += pixval[i];
-                     
-                  } else if( coaddMode==Mode.ADD ) {
-                  
-                     empty=false;
-                     for( int i=0; i<nbPix; i++ ) {
-                        if( pixelFinal/2. + pixval[i]/2 > max/2. ) { pixelFinal=max; break; }
-                        pixelFinal += pixval[i];
-                     }
-                     
-                  } else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
+                     } else {
+                        pixelFinal=0;
 
-                  // Prise en compte des coef.
-                  else {
-                     empty=false;
-                     for( int i=0; i<nbPix; i++ ) {
-                        pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
-                        //                        pixelFinal += totalCoef;
+                        if( modeCoadd==ModeOverlay.overlayAdd ) {
+                           empty=false;
+                           double a;
+                           for( int i=0; i<nbPix; i++ ) {
+                              if( pixelFinal/2. + (a=(pixval[i][z]*pixcoef[i]))/2. > maxDemi ) { pixelFinal=max; break; }
+                              pixelFinal += a;
+                           }
+
+                        } 
+                        else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0][z]; }
+
+                        // Prise en compte des coef.
+                        else {
+                           empty=false;
+                           for( int i=0; i<nbPix; i++ ) {
+                              pixelFinal += (pixval[i][z]*pixcoef[i])/totalCoef;
+                              //                        pixelFinal += totalCoef;
+                           }
+                        }
+
+                        // Changement de bitpix ?
+                        if( flagModifBitpix ) {
+                           pixelFinal = Double.isNaN(pixelFinal) ? blank
+                                 : pixelFinal<=cutOrig[2] ? cut[2]
+                                       : pixelFinal>=cutOrig[3] ? cut[3]
+                                             : (pixelFinal-cutOrig[2])*context.coef + cut[2];
+                           if( bitpix>0 && (long)pixelFinal==blank && pixelFinal!=blank ) pixelFinal+=0.5;
+                        } else if( Double.isNaN(pixelFinal) ) pixelFinal = blank;
+
                      }
+                     out.setPixelDouble(x,y,z,pixelFinal);
                   }
-
-                  // Changement de bitpix ?
-                  if( flagModifBitpix ) {
-                     pixelFinal = Double.isNaN(pixelFinal) ? blank
-                           : pixelFinal<=cutOrig[2] ? cut[2]
-                                 : pixelFinal>=cutOrig[3] ? cut[3]
-                                       : (pixelFinal-cutOrig[2])*context.coef + cut[2];
-                       if( bitpix>0 && (long)pixelFinal==blank && pixelFinal!=blank ) pixelFinal+=0.5;
-                  } else if( Double.isNaN(pixelFinal) ) pixelFinal = blank;
-
-                  out.setPixelDouble(x,y,pixelFinal);
                }
 
                // Mémorisation du poids du pixel (si nécessaire)
                if( weight!=null ) weight[y*tileSide+x]=totalCoef;
             }
          }
-         
+
       }
       catch( Exception e ) {
          e.printStackTrace();
@@ -688,7 +695,7 @@ final public class ThreadBuilderTile {
    // Même si le fading est désactivé, il faut tout de même divisé par 2 ou 4 les lignes des cellules
    // adjacentes (dû au fait que le pixel des bords de cellules auront sinon un poids
    // double voire quadruple, ce qui va se voir en cas de superpostion avec une autre image)
-   private double getCoef(Fits f,Coord coo) {
+   private double getCoef(Fits f,Coord coo,ModeOverlay mode) {
 
       int x1 = (int)coo.x;
       int y1 = (int)coo.y;
@@ -696,10 +703,10 @@ final public class ThreadBuilderTile {
       // Diviseur du coefficient sur les lignes de recouvrements des cellules
       // adjacentes (voir commentaire de la méthode)
       double div=1;
-      if( x1>0 && x1<f.width  && (coo.x<=f.xCell || coo.x>=f.xCell+f.widthCell-1) ) div*=2;
-      if( y1>0 && y1<f.height && (coo.y<=f.yCell || coo.y>=f.yCell+f.heightCell-1) ) div*=2;
+      if( x1>0 && x1<f.width-1  && (coo.x<=f.xCell || coo.x>=f.xCell+f.widthCell-1) ) div*=2;
+      if( y1>0 && y1<f.height-1 && (coo.y<=f.yCell || coo.y>=f.yCell+f.heightCell-1) ) div*=2;
 
-      if( !fading ) return 1./div;
+      if( mode!=ModeOverlay.overlayFading ) return 1./div;
 
       double c=0;
       try {
@@ -733,6 +740,59 @@ final public class ThreadBuilderTile {
    //      return (maxd - d)/maxd;
    //   }
 
+
+   private boolean getBilinearPixel(double []res, SrcFile srcFile,Coord coo,double myBlank) {
+
+      Fits f = srcFile.fitsfile;
+      if( !isIn(srcFile,coo) ) return false;
+
+      double x = coo.x;
+      double y = coo.y;
+
+      int x1 = (int)x;
+      int y1 = (int)y;
+
+      int x2=x1+1;
+      int y2=y1+1;
+ 
+      int ox1= x1;
+      int oy1= y1;
+      int ox2= x2;
+      int oy2= y2;
+
+      if( x2<f.xCell || y2<f.yCell ||
+            x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ) return false;
+
+      // Sur le bord, on dédouble le dernier pixel
+      if( ox1==f.xCell-1 ) ox1++;
+      if( oy1==f.yCell-1 ) oy1++;
+      if( ox2==f.xCell+f.widthCell ) ox2--;
+      if( oy2==f.yCell+f.heightCell ) oy2--;
+
+      for( int z=0; z<res.length; z++ ) {
+         double a0 = f.getPixelDouble(ox1,oy1,z);
+         double a1 = f.getPixelDouble(ox2,oy1,z);
+         double a2 = f.getPixelDouble(ox1,oy2,z);
+         double a3 = f.getPixelDouble(ox2,oy2,z);
+
+         boolean b0 = Double.isNaN(a0) || a0==myBlank;
+         boolean b1 = Double.isNaN(a1) || a1==myBlank;
+         boolean b2 = Double.isNaN(a2) || a2==myBlank;
+         boolean b3 = Double.isNaN(a3) || a3==myBlank;
+
+         if( b0 && b1 && b2 && b3 ) { res[z] = Double.NaN; }
+         if( b0 || b1 || b2 || b3 ) {
+            double a = !b0 ? a0 : !b1 ? a1 : !b2 ? a2 : a3;
+            if( b0 ) a0=a;
+            if( b1 ) a1=a;
+            if( b2 ) a2=a;
+            if( b3 ) a3=a;
+         }
+
+         res[z] = bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
+      }
+      return true;
+   }
 
    private double getBilinearPixel(SrcFile srcFile,Coord coo,int z,double myBlank) {
 
@@ -1107,11 +1167,11 @@ final public class ThreadBuilderTile {
                               : CacheFits.FITS;
 
             // Mode FITS couleur
-            if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(name,true,true);
+            if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(name,true,true,true);
 
             // Mode normal
             else {
-               if( context.depth>1 || frame>0 ) name = addFrameToName(name,frame);
+//               if( context.depth>1 || frame>0 ) name = addFrameToName(name,frame);  // TEST CUBE
                try {
                   fitsfile=context.cacheFits.getFits(name,mode,true,false);
                   

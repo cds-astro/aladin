@@ -40,6 +40,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Hashtable;
@@ -141,12 +143,18 @@ final public class Fits {
    }
    
    /** Retourne le nombre de pixels */
-   public long getNbPix() { return width*height; }
+   public long getNbPix() { return width*height*depth; }
 
    public static String FS = System.getProperty("file.separator");
 
    /** Création en vue d'une lecture */
    public Fits() { }
+   
+   /** Création et lecture FITS classique (le fichier sera clos à la fin de la lecture) */
+   public Fits(String filename ) throws Exception {
+      this();
+      loadFITS(filename);
+   }
    
    /** Création en vue d'une lecture avec indcation des HDU concernées par une éventuelle décompression */
    public Fits(int [] hdu) { this.hdu = hdu; } 
@@ -172,7 +180,9 @@ final public class Fits {
          rgb = new int[width * height * depth];
       } else {
          pixMode = PIX_TRUE;
-         pixels = new byte[width * height * depth * Math.abs(bitpix) / 8];
+         int size = width * height * depth;
+         size *= Math.abs(bitpix) / 8;
+         pixels = new byte[size];
          headerFits = new HeaderFits();
          headerFits.setKeyValue("SIMPLE", "T");
          headerFits.setKeyValue("BITPIX", bitpix + "");
@@ -182,8 +192,7 @@ final public class Fits {
          if( depth>1 ) headerFits.setKeyValue("NAXIS3", depth + "");
       }
    }
-
-
+   
    // public double raMin=0,raMax=0,deMin=0,deMax=0;
 
    /**
@@ -564,7 +573,7 @@ final public class Fits {
    // @return le nom de fichier sans le suffixe
    public String parseCell(String filename) throws Exception {
       ext = xCell = yCell = yCell = 0;
-      widthCell = heightCell = heightCell = -1;
+      widthCell = heightCell = depthCell = -1;
       int deb = filename.lastIndexOf('[');
       if( deb == -1 ) return filename;
       int fin = filename.indexOf(']', deb);
@@ -602,11 +611,15 @@ final public class Fits {
       loadFITS(filename + "[" + ext + ":" + x + "," + y + "," + z + "-" + w + "x" + h + "x" + d + "]");
    }
 
-   public void loadFITS(String filename) throws Exception,MyInputStreamCachedException {
-      loadFITS(filename, false, true);
+   public void loadFITS(String filename,boolean flagTrim) throws Exception,MyInputStreamCachedException {
+      loadFITS(filename, false, true,flagTrim);
    }
 
-   public void loadFITS(String filename, boolean color, boolean flagLoad)
+   public void loadFITS(String filename) throws Exception,MyInputStreamCachedException {
+      loadFITS(filename, false, true,true);
+   }
+
+   public void loadFITS(String filename, boolean color, boolean flagLoad,boolean flagTrim)
          throws Exception,MyInputStreamCachedException {
       filename = parseCell(filename); // extraction de la descrition d'une
       // cellule éventuellement en suffixe du
@@ -618,7 +631,9 @@ final public class Fits {
          if( color ) {
             if( widthCell < 0 ) throw new Exception( "Mosaic mode not supported yet for FITS color file");
             loadFITSColor(is);
-         } else loadFITS(is, ext, xCell, yCell, zCell, widthCell, heightCell, depthCell, flagLoad);
+         } else {
+            loadFITS(is, ext, xCell, yCell, zCell, widthCell, heightCell, depthCell, flagLoad,flagTrim);
+         }
       } finally {
          if( is != null ) is.close();
       }
@@ -633,7 +648,7 @@ final public class Fits {
 
    /** Chargement d'une cellule d'une image FITS */
    public void loadFITS(MyInputStream dis, int ext, int x, int y, int z, int w, int h, int d) throws Exception,MyInputStreamCachedException {
-      loadFITS(dis,ext, x, y, z, w, h, d, true);
+      loadFITS(dis,ext, x, y, z, w, h, d, true,true);
    }
 
    // Se cale sur le début de l'extension indiqué par le numéro ext
@@ -666,7 +681,8 @@ final public class Fits {
    /** Dans le cas d'un MEF, indique qu'il faut, ou ne faut pas passer la première entête si elle est vide */
    public void setSkipHDU0(boolean flag) { skipHDU0 = flag; }
 
-   public void loadFITS(MyInputStream dis, int ext, int x, int y, int z, int w, int h, int d, boolean flagLoad) throws Exception {
+   public void loadFITS(MyInputStream dis, int ext, int x, int y, int z, int w, int h, int d, 
+         boolean flagLoad,boolean flagTrim) throws Exception {
 
       dis = dis.startRead();
       // boolean flagHComp = (dis.getType() & MyInputStream.HCOMP) !=0;
@@ -781,11 +797,7 @@ final public class Fits {
                dis.skip( (long)zCell * width*height*n );
                for( int frame=0; frame<depthCell; frame++ ) {
                   dis.skip( (long)yCell * width * n);
-//                  byte[] buf = new byte[ width * n ]; // une ligne complète
                   for( int lig = 0; lig < heightCell; lig++ ) {
-//                     dis.readFully(buf);
-//                     System.arraycopy(buf, xCell * n , pixels, frame*widthCell*heightCell + lig * widthCell * n, widthCell * n);
-                 
                        dis.skip(xCell*n);
                        dis.readFully( pixels, frame*widthCell*heightCell + lig * widthCell * n, widthCell * n);
                        dis.skip( ( width-(xCell+widthCell) )*n );
@@ -807,6 +819,39 @@ final public class Fits {
       } catch( Exception e ) {
          bzero = DEFAULT_BZERO;
       }
+      
+      // Untrim ?
+      if( flagTrim && headerFits.hasKey("XOFFSET") ) {
+         if( w!=-1 ) throw new Exception("Trimed FITS cannot be opened by cells");
+         int owidth=width;
+         int oheight=height;
+         int xoffset = headerFits.getIntFromHeader("XOFFSET");
+         int yoffset = headerFits.getIntFromHeader("YOFFSET");
+         width  = widthCell = headerFits.getIntFromHeader("ZNAXIS1");
+         height = heightCell = headerFits.getIntFromHeader("ZNAXIS2");
+
+         byte [] opixels = pixels;
+         pixels = new byte[width*height*n];
+
+         headerFits.setKeyValue("NAXIS1",width+"");
+         headerFits.setKeyValue("NAXIS2",height+"");
+         headerFits.setKeyValue("XOFFSET",null);
+         headerFits.setKeyValue("YOFFSET",null);
+         headerFits.setKeyValue("ZNAXIS1",null);
+         headerFits.setKeyValue("ZNAXIS2",null);
+
+         keyAddValue("CRPIX1",-xoffset);
+         keyAddValue("CRPIX2",-yoffset);
+
+         initBlank();
+         int y1=yoffset;
+         int length = owidth * n;
+         for( y=0; y<oheight; y++, y1++ ) {
+            int srcPos = ( y*owidth ) * n;
+            int destPos= ( y1*width + xoffset ) * n;
+            System.arraycopy(opixels, srcPos, pixels, destPos, length);
+         }
+      }
 
       // l'extraction de la calib depuis l'entête FITS ne sera pas faite
       // si la calib a déja été positionné (fichier hhh pré-lu)
@@ -817,7 +862,6 @@ final public class Fits {
             calib = null;
          }
       }
-      // if( bitpix==8 ) initPix8();
    }
 
    /** Chargement d'une image FITS couleur mode ARGB */
@@ -1093,12 +1137,22 @@ final public class Fits {
       if( headerFits != null ) headerFits.setKeyValue("BZERO",
             bzero == 0 ? (String) null : bzero + "");
    }
-
+   
    /** Positionement d'une valeur BLANK. Double.NaN est supporté */
    public void setBlank(double blank) {
       this.blank = blank;
-      if( headerFits != null ) headerFits.setKeyValue(blankKey,
-            Double.isNaN(blank) ? (String) null : (bitpix>0?(int)blank:blank) + "");
+      if( headerFits != null ) {
+         String sBlank=null;
+         if( !Double.isNaN(blank) ) {
+            if( bitpix<0 ) sBlank = blank+"";
+            else {
+               // Pour eviter la notation scientifique
+               NumberFormat formatter = new DecimalFormat("#");
+               sBlank = formatter.format(blank);
+            }
+         }
+         headerFits.setKeyValue(blankKey,sBlank);
+      }
    }
    
    /** Positionnement d'un mot clé BLANK alternatif (non standard) */
@@ -1171,12 +1225,18 @@ final public class Fits {
       return v==sum32 ? 1 : 0;
    }
    
-   /** Calcul et mémorise le DATASUM et sa date en vue d'une sauvegarde dans l'entête */
-   public void addDataSum() {
+   /** Calcule et mémorise le DATASUM et sa date en vue d'une sauvegarde dans l'entête
+    * @return le DATASUM qui a été ajouté
+    */
+   public String addDataSum() {
       String dataSum = getDataSum(pixels);
       String dataSumComment = Constante.getDate();
       headerFits.addDataSum(dataSum,dataSumComment);
+      return dataSum;
    }
+   
+   /** Calcul et ajoute le DATASUM à un DATASUM précédent (permet une DATASUM HiPS global) */
+   public long computeDataSum(long dataSum) { return computeDataSum(pixels,dataSum); }
    
    static final public String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
    static final public SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
@@ -1226,7 +1286,6 @@ final public class Fits {
       
       hi = sum32 >>> 16;
       lo = sum32 & 0xFFFF;
-      hi=lo=0;
       
       for( int i=0; i<buf.length; i+=4 ) {
          hi += ( (buf[i] & 0xFF) << 8) | (buf[i+1] & 0xFF);
@@ -1406,6 +1465,27 @@ final public class Fits {
 //       pngw.end();
 //   }
 
+   /** Ecriture de l'image sous la forme PNG ou JPG avec fichier HHH */
+   public void writePng(String filename) throws Exception { writeColorHHH(filename,"jpg"); }
+   public void writeJpg(String filename) throws Exception { writeColorHHH(filename,"png"); }
+   public void writeColorHHH(String filename,String fmt) throws Exception {
+      if( bitpix!=0 || (pixMode!=PIX_RGB && pixMode!=PIX_ARGB ) ) throw new Exception("Not an RGB image");
+      createDir(filename);
+      OutputStream os = null;
+      try {
+         os = new FileOutputStream(filename);
+         writePreview(os,0,0,null,fmt);
+         os.close();
+         os = new FileOutputStream( getHHHName(filename) );
+         writeHHH( os);
+         os.close(); os=null;
+      } finally { if( os!=null ) os.close(); }
+      this.setFilename(filename);
+   }
+   public void writeHHH(OutputStream os) throws Exception  {
+      String s = headerFits.getOriginalHeaderFits();
+      os.write( s.getBytes() );
+   }
 
    public void writePreview(OutputStream os, double pixelMin,
          double pixelMax, byte[] tcm, String format) throws Exception {
@@ -1519,10 +1599,8 @@ final public class Fits {
       byte[] r = new byte[256];
       boolean transp = isTransparent(pixMode);
       int gap = transp ? 1 : 0;
-      for( int i = 1; i < r.length; i++ )
-         r[i] = (byte) (i - gap);
-      return transp ? new IndexColorModel(8, 256, r, r, r, 0)
-      : new IndexColorModel(8, 256, r, r, r);
+      for( int i = 1; i < r.length; i++ ) r[i] = (byte) (i - gap);
+      return transp ? new IndexColorModel(8, 256, r, r, r, 0) : new IndexColorModel(8, 256, r, r, r);
    }
 
    static final public boolean JPEGORDERCALIB = false; // true => Ne fait pas le
@@ -1623,15 +1701,21 @@ final public class Fits {
    public double getPixelFull(int x, int y) {
       double pix = getPixValDouble(pixels, bitpix, (y - yCell) * widthCell
             + (x - xCell));
-      if( isBlankPixel(pix) ) return pix;
+      if( isBlankPixel(pix) ) return Double.NaN;
       return bscale * pix  + bzero;
    }
 
    public double getPixelFull(int x, int y, int z) {
       double pix = getPixValDouble(pixels, bitpix, (z-zCell)*widthCell*heightCell + (y - yCell) * widthCell
             + (x - xCell));
-      if( isBlankPixel(pix) ) return pix;
+      if( isBlankPixel(pix) ) return Double.NaN;
       return bscale * pix  + bzero;
+   }
+   
+   public double getPixFull(byte[] t, int bitpix, int i) {
+      double pix = getPixValDouble(t,bitpix,i);
+      if( isBlankPixel(pix) ) return Double.NaN;
+      return (pix*bscale)+bzero;
    }
 
    /**
@@ -1669,6 +1753,12 @@ final public class Fits {
    public void setPixelRGBJPG(int x, int y, int val) {
       if( Fits.JPEGFROMTOP ) rgb[((height - y - 1) - yCell) * widthCell + (x - xCell)] = val;
       else rgb[(y - yCell) * widthCell + (x - xCell)] = val;
+   }
+   
+   public void setPixFull(byte[] t, int bitpix, int i, double val) {
+      if( isBlankPixel(val) ) val=blank;
+      else val = (val-bzero)/bscale;
+      setPixValDouble(t, bitpix, i, val);
    }
 
    /**
@@ -1807,16 +1897,16 @@ final public class Fits {
       for( int y = 0; y < heightCell; y++ ) {
          for( int x = 0; x < widthCell; x++ ) {
             double pixIn = getPixelDouble(x + xCell, y + yCell);
-            if( isBlankPixel(pixIn) ) pixOut = 0;
+            if( isBlankPixel(pixIn) ) {
+               pixOut = 0;
+            }
             else {
                int pix = ((gap + (pixIn <= min ? 0x00 : pixIn >= max ? range
                      : (int) (((pixIn - min) * r)))) & 0xff);
                pixOut = tcm == null ? (byte) pix : tcm[pix];
             }
             // setPix8(x+xCell,y+yCell,pixOut);
-            setPixValInt(pix8, 8, (height - y - 1) * widthCell + (x + xCell),
-                  pixOut);
-
+            setPixValInt(pix8, 8, (height - y - 1) * widthCell + (x + xCell), pixOut);
          }
       }
       return pix8;
@@ -2035,6 +2125,15 @@ final public class Fits {
    /** Retourne true si la valeur du pixel est blank ou NaN */
    public boolean isBlankPixel(double pix) {
       return Double.isNaN(pix) || /* !Double.isNaN(blank) && */pix == blank;
+   }
+   
+   /** Initialise tous les pixels à blank */
+   public void initBlank() throws Exception {
+      if( bitpix==0 ) throw new Exception("Fits color uncompatible");
+      if( hasCell() ) throw new Exception("Cell mode uncompatible");
+      for( int y=0;y<height; y++ ) {
+         for( int x=0; x<width; x++ ) setPixelDouble(x, y, blank);
+      }
    }
 
    //   public double[] findMinMax() {
@@ -2261,7 +2360,7 @@ final public class Fits {
       } else {
          int nblank=0; // Nombre de valeurs BLANK
          boolean first = true;
-         long nmin = 0, nmax = 0;
+//         long nmin = 0, nmax = 0;
          for( i = margeH; i < height - margeH; i++ ) {
             for( j = margeW; j < width - margeW; j++ ) {
                for( int z = margeZ; z< depth - margeZ; z++ ) {
@@ -2281,13 +2380,13 @@ final public class Fits {
 
                   if( min > c ) {
                      min = c;
-                     nmin = 1;
+//                     nmin = 1;
                   } else if( max < c ) {
                      max = c;
-                     nmax = 1;
+//                     nmax = 1;
                   } else {
-                     if( c == min ) nmin++;
-                     if( c == max ) nmax++;
+//                     if( c == min ) nmin++;
+//                     if( c == max ) nmax++;
                   }
 
                   // On mémorise les extremums et les "penultièmes" extremums
@@ -2436,7 +2535,8 @@ final public class Fits {
       int c;
       switch( bitpix ) {
          case -32:
-            setInt(t, i << 2, Float.floatToIntBits((float) val));
+            i *= 4;
+            setInt(t, i, Float.floatToIntBits((float) val));
             break;
          case 16:
             i *= 2;
@@ -2563,28 +2663,52 @@ final public class Fits {
       return bitpixOrig==8 ? 0: -getMax(bitpixOrig);
    }
    
+   /** Modification des valeurs BZERO, BSCALE et BLANK si nécessaire */
+   public void adjustParams(double bzero,double bscale, double blank) throws Exception {
+      
+      // Inutile car deja les bons parametres ?
+      if( bzero==this.bzero && bscale==this.bscale 
+            && (blank==this.blank || Double.isNaN(blank) && Double.isNaN(this.blank)) ) return;
+      
+      int taille = widthCell * heightCell * depthCell;
+      for( int i = 0; i < taille; i++ ) {
+         double v = getPixFull(pixels, bitpix, i);
+         if( isBlankPixel(v) ) v=blank;
+         else {
+            v = (v-bzero)/bscale;
+            setPixValDouble(pixels, bitpix, i, v);
+         }
+      }
+      
+      setBzero(bzero);
+      setBscale(bscale);
+      setBlank(blank);
+   }
+   
    /** Différents modes de coadd supportés */
    static public final int AVG = 0;  // Moyenne (qq soit les opérandes)
    static public final int ADD = 1;  // Addition (qq soit les opérandes)
-   static public final int MUL = 2;  // Multiplicatino (uniquement sur l'opérande 1 existe)
+   static public final int MUL = 2;  // Multiplication (uniquement sur l'opérande 1 existe)
    static public final int DIV = 3;  // Division (uniquement sur l'opérande 1 existe)
-
-
+   static public final int SUM = 4;  // Addition (uniquement sur l'opérande 1 existe)
+   static public final int SUB = 5;  // Soustraction (uniquement sur l'opérande 1 existe)
+   
    /** Coadditionne les pixels (pixels[] et rgb[], en faisant la moyenne ou par simple addition en bloquant sur la valeur max */
    public void coadd(Fits a,int mode) throws Exception {
       int taille = widthCell * heightCell * depthCell;
 
       if( a.pixels != null && pixels != null ) {
-//         double max = getMax(bitpix);
          for( int i = 0; i < taille; i++ ) {
-            double v1 = getPixValDouble(pixels, bitpix, i);
-            double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
+            double v1 = getPixFull(pixels, bitpix, i);
+            double v2 = a.getPixFull(a.pixels, a.bitpix, i);
             double v;
-                 if( mode==AVG ) v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2) / 2;
-            else if( mode==MUL ) v = isBlankPixel(v1) || isBlankPixel(v2)? v1 :  v1 * v2;
-            else if( mode==DIV ) v = isBlankPixel(v1) || isBlankPixel(v2)? v1 :  v1 / v2;
-            else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2);
-            setPixValDouble(pixels, bitpix, i, v);
+                 if( mode==AVG ) v = a.isBlankPixel(v2) ? v1 : isBlankPixel(v1) ? v2 : (v1 + v2) / 2;
+            else if( mode==MUL ) v = isBlankPixel(v1) || a.isBlankPixel(v2)? v1 :  v1 * v2;
+            else if( mode==DIV ) v = isBlankPixel(v1) || a.isBlankPixel(v2)? v1 :  v1 / v2;
+            else if( mode==SUM ) v = isBlankPixel(v1) || a.isBlankPixel(v2)? v1 : (v1 + v2);
+            else if( mode==SUB ) v = isBlankPixel(v1) || a.isBlankPixel(v2)? v1 : (v1 - v2);
+            else v = a.isBlankPixel(v2) ? v1 : isBlankPixel(v1) ? v2 : (v1 + v2);
+            setPixFull(pixels, bitpix, i, v);
          }
       }
       if( a.rgb != null && rgb != null ) {
@@ -2612,62 +2736,22 @@ final public class Fits {
       }
    }
 
-//   /** Coadditionne les pixels (pixels[] et rgb[], en faisant la moyenne ou par simple addition en bloquant sur la valeur max */
-//   public void coadd(Fits a,boolean average) throws Exception {
-//      int taille = widthCell * heightCell * depthCell;
-//
-//      if( a.pixels != null && pixels != null ) {
-////         double max = getMax(bitpix);
-//         for( int i = 0; i < taille; i++ ) {
-//            double v1 = getPixValDouble(pixels, bitpix, i);
-//            double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
-//            double v;
-//            if( average ) v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2) / 2;
-//            else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2);
-//            setPixValDouble(pixels, bitpix, i, v);
-//         }
-//      }
-//      if( a.rgb != null && rgb != null ) {
-//         for( int i = 0; i < taille; i++ ) {
-//            if( (a.rgb[i] & 0xFF000000)==0 ) continue;
-//            if( (rgb[i] & 0xFF000000)==0 ) { rgb[i]=a.rgb[i]; continue; }
-//            int r,g,b;
-//            if( average ) {
-//               r = (((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF))/2 << 16;
-//               g = (((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF))/2 << 8;
-//               b = ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF))/2;
-//            } else {
-//               r = ((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF);
-//               g = ((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF);
-//               b = ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF));
-//               if( r>255 ) r=255;
-//               if( g>255 ) g=255;
-//               if( b>255 ) b=255;
-//               r = r << 16;
-//               g = g << 8;
-//            }
-//            rgb[i] = 0xFF000000 | r | g | b;
-//         }
-//      }
-//   }
-
-
-   /** Coadditionne les pixels (pix8[], pixels[] et rgb[] */
+   /** Coadditionne les pixels (pixels[] et rgb[] */
    public void coadd(Fits a, double[] weightOut, double[] weightIn)
          throws Exception {
       int taille = widthCell * heightCell * depthCell;
 
       if( a.pixels != null && pixels != null ) {
          for( int i = 0; i < taille; i++ ) {
-            double v1 = getPixValDouble(pixels, bitpix, i);
-            double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
+            double v1 = getPixFull(pixels, bitpix, i);
+            double v2 = a.getPixFull(a.pixels, a.bitpix, i);
             double fct1 = weightOut[i] / (weightOut[i] + weightIn[i]);
             double fct2 = weightIn[i] / (weightOut[i] + weightIn[i]);
             weightOut[i] += weightIn[i];
             weightIn[i] = 0;
             double v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 :
                v1 * fct1 + v2 * fct2;
-            setPixValDouble(pixels, bitpix, i, v);
+            setPixFull(pixels, bitpix, i, v);
          }
       }
       if( a.rgb != null && rgb != null ) {
@@ -2836,7 +2920,136 @@ final public class Fits {
 //         e.printStackTrace();
 //      }
 //   }
+   
+   /*************************************** Factories pour trimer ou untrimer un FITS (suprression des bords transparents)*******************/
 
+   
+   /**
+    * Retourne un Fits trimé, ou null si pas possible
+    */
+   public Fits trimFactory() throws Exception {
+      if( hasCell() ) return null;
+      if( depth!=1 ) return null;
+      if( bitpix==0 ) return null;
+      
+      int [] b = getBorders();
+      if( b==null ) return null;
+      
+      if( b[0]==0 && b[1]==width-1
+            && b[2]==0 && b[3]==height-1 ) return null;  // aucun bord a enlever
+      
+      int nwidth  = b[1] - b[0]+1;
+      int nheight = b[3] - b[2]+1;
+      int nbytes = Math.abs(bitpix)/8;
+      
+      Fits f = new Fits(nwidth, nheight, bitpix);
+      headerFits.copyTo( f.headerFits );
+      
+      f.headerFits.setKeyValue("NAXIS1",nwidth+"");
+      f.headerFits.setKeyValue("NAXIS2",nheight+"");
+      f.headerFits.setKeyValue("XOFFSET",b[0]+"");
+      f.headerFits.setKeyValue("YOFFSET",b[2]+"");
+      f.headerFits.setKeyValue("ZNAXIS1",width+"");
+      f.headerFits.setKeyValue("ZNAXIS2",height+"");
+      
+      f.keyAddValue("CRPIX1",-b[0]);
+      f.keyAddValue("CRPIX2",-b[2]);
+      
+      int y1=0;
+      int length = nwidth * nbytes;
+      for( int y=b[2]; y<=b[3]; y++, y1++ ) {
+         int srcPos = ( y*width + b[0] ) * nbytes;
+         int destPos= ( y1*nwidth ) * nbytes;
+         System.arraycopy(pixels, srcPos, f.pixels, destPos, length);
+      }
+      return f;
+   }
+   
+   /**
+    * Retourne un Fits untrimé, ou null si pas possible
+    */
+   public Fits untrimFactory() throws Exception {
+      if( !headerFits.hasKey("XOFFSET") ) return null;
+      int xoffset = headerFits.getIntFromHeader("XOFFSET");
+      int yoffset = headerFits.getIntFromHeader("YOFFSET");
+      int nwidth  = headerFits.getIntFromHeader("ZNAXIS1");
+      int nheight = headerFits.getIntFromHeader("ZNAXIS2");
 
+      int n = Math.abs(bitpix)/8;
+      
+      Fits f = new Fits(nwidth, nheight, bitpix);
+      f.setBlank(blank);
+      headerFits.copyTo( f.headerFits );
 
+      f.headerFits.setKeyValue("NAXIS1",width+"");
+      f.headerFits.setKeyValue("NAXIS2",height+"");
+      f.headerFits.setKeyValue("XOFFSET",null);
+      f.headerFits.setKeyValue("YOFFSET",null);
+      f.headerFits.setKeyValue("ZNAXIS1",null);
+      f.headerFits.setKeyValue("ZNAXIS2",null);
+
+      f.keyAddValue("CRPIX1",-xoffset);
+      f.keyAddValue("CRPIX2",-yoffset);
+
+      f.initBlank();
+      int y1=yoffset;
+      int length = width * n;
+      for( int y=0; y<height; y++, y1++ ) {
+         int srcPos = ( y*width ) * n;
+         int destPos= ( y1*nwidth + xoffset ) * n;
+         System.arraycopy(pixels, srcPos, f.pixels, destPos, length);
+      }
+      return f;
+   }
+   
+
+   private void keyAddValue(String k, int x) {
+      try {
+         headerFits.setKeyValue(k, ""+(headerFits.getIntFromHeader(k) + x));
+      } catch( Exception e) {}
+   }
+
+   /**
+    * Determination des marges. Retourne les coordonnéees de la portion utilisée de l'image
+    * @return int [] { xleft, xright, ybottom, ytop }, null si aucun pixel utilisé dans l'image
+    */
+   public int [] getBorders() {
+      
+      // Accelerateur (facultatif)
+      if( !isBlankPixel( getPixelDouble(0,0) ) 
+            && !isBlankPixel( getPixelDouble(width-1,height-1) ) ) {
+         return new int[] { 0,width-1,0,height-1}; 
+      }
+      
+      int xleft=width, xright=-1;   // indice du premier et du dernier pixel non BLANK
+      int ybottom=height, ytop=-1;  // indice de la premiere et de la derniere ligne non BLANK
+      
+      for( int y=0; y<height; y++ ) {
+         int xfirst,xlast;
+         for( xfirst=0; xfirst<width; xfirst++) {
+            if( !isBlankPixel( getPixelDouble(xfirst, y) ) ) break;
+         }
+         
+         // Ligne vide ?
+         if( xfirst==width ) {
+            if( xleft==width ) ybottom=y+1;    // En bas ?
+            
+         // Ligne partielle ?
+         } else {
+            for( xlast=width-1; xlast>=xfirst; xlast-- ) {
+               if( !isBlankPixel( getPixelDouble(xlast, y) ) ) break;
+            }
+            if( xfirst<xleft ) xleft=xfirst;  // A gauche ?
+            if( xlast>xright ) xright=xlast;  // A droite ?
+            if( ybottom==height ) ybottom=y;  // En bas ?
+            ytop=y;                           // En haut ?
+         }
+      }
+      
+      // Tout est vide ?
+      if( ybottom==height ) return null;
+//      System.out.println("x:"+xleft+".."+xright+" y:"+ybottom+".."+ytop+" ("+width+"x"+height+")");
+      return new int [] { xleft, xright, ybottom, ytop };
+   }
+   
 }

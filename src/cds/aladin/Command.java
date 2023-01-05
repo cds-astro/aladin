@@ -43,6 +43,7 @@ import javax.swing.SwingUtilities;
 import cds.allsky.HipsGen;
 import cds.astro.Astrocoo;
 import cds.astro.Unit;
+import cds.fits.Fits;
 import cds.moc.Moc;
 import cds.moc.SMoc;
 import cds.savot.model.SavotField;
@@ -3576,6 +3577,7 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("anaglyph") ) anaglyph(param);
       else if( cmd.equalsIgnoreCase("testv12") ) testv12(param);
       else if( cmd.equalsIgnoreCase("testfading") ) testFading(param);
+      else if( cmd.equalsIgnoreCase("testhist") ) testHist(param);
       else if( cmd.equalsIgnoreCase("pf") ) pf(param);
       else if( cmd.equalsIgnoreCase("tap") ) tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") ) PlanBG.cleanCache();
@@ -5566,6 +5568,39 @@ public final class Command implements Runnable {
 //      Aladin.TESTFADING = param!=null && param.indexOf("off")>=0 ? false:true;
 //      System.out.println("Test Fading "+(Aladin.TESTFADING?"ON":"OFF"));
    }
+
+   private void testHist(String param) {
+      try {
+         if( param==null || param.length()==0 ) {
+            Plan p = a.calque.getPlanBase();
+            param = p.getUrl();
+            if( param.startsWith(("file:") )) param=param.substring(5);
+         }
+         
+         Fits f = new Fits(param);
+         System.out.println("Image: "+param+" => "+f);
+         System.out.println("...scanning...");
+         HashMap<Double, Integer> hist = new HashMap<>(65636);
+         for( int y=0; y<f.height; y++ ) {
+            for( int x=0; x<f.width; x++ ) {
+               double pix = f.getPixelDouble(x, y);
+               Integer v = hist.get(pix);
+               int v1 = v==null ? 0 : v;
+               hist.put(pix, v1+1);
+            }
+         }
+         int n=0;
+         for( int i : hist.values() ) {
+            if( i>1 ) n++;
+         }
+         System.out.println("=> Number of pixels: "+(f.width*f.height));
+         System.out.println("=> Number of distinct pixel values: "+hist.size());
+         System.out.println("=> Number of distinct pixel values used more than 1x: "+n);
+      } catch( Exception e ) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+ }
 
 
    private void pf(String param) {

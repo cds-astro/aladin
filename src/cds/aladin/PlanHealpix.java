@@ -431,7 +431,7 @@ public class PlanHealpix extends PlanBG {
          setSpecificProj(true);
       }
 
-      Projection p =  new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,
+      Projection p =  new Projection("hips",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,
             longAsc, defaultProjType,Calib.FK5,this);
 
       p.frame = getCurrentFrameDrawing();
@@ -774,9 +774,12 @@ public class PlanHealpix extends PlanBG {
     */
    private boolean needProcessing(String dir, boolean readProperties) {
 
-      // check if the Allsky file exists and has a sensible size
+//      // check if the Allsky file exists and has a sensible size
+//      File tmp = new File(getCacheDir() + Util.FS + dir
+//            + Util.FS + "Norder3" + Util.FS + "Allsky.fits");
       File tmp = new File(getCacheDir() + Util.FS + dir
-            + Util.FS + "Norder3" + Util.FS + "Allsky.fits");
+            + Util.FS + "properties");
+      
       if ( ! (tmp.exists() && tmp.length() > 0) ) {
 
          // Verif supplémentaire dans le cas d'un Healpix Partiel

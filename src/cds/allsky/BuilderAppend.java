@@ -28,6 +28,7 @@ import java.io.InputStreamReader;
 
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
+import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
 // JE N'AI PAS TERMINE - PF JUIN 2016
@@ -44,13 +45,18 @@ import cds.tools.pixtools.Util;
 public class BuilderAppend extends Builder {
    private String outputPath;
    private String inputPath;
-   private Mode mode;
+   private ModeMerge mode;
    private boolean live=false;            // true si on doit utiliser les cartes de poids
    private String addHipsPath;
    private int order;
    private String skyval;
    private String skyvalues;
-   private String bitpix;
+   private String pixelCut=null;
+   private String dataRange=null;
+   private int bitpix=-1;
+   private double bzero=0;
+   private double bscale=1;
+   private double blank=Double.NaN;
    private String addendumId;
 
    public BuilderAppend(Context context) {
@@ -67,23 +73,55 @@ public class BuilderAppend extends Builder {
    
    // Generation du HiPS additionnel
    private void createAddHips() throws Exception  {
+      
       HipsGen hi = new HipsGen();
-      String spart=" partitioning="+(context.isPartitioning()?context.getPartitioning():"false");
+      String spart=" "+Param.partitioning+"="+(context.isPartitioning()?context.getPartitioning():"false");
+      String spixelCut = pixelCut==null  ? "" : " \""+Param.pixelCut+"="+pixelCut+"\"";
+      String sdataRange= dataRange==null ? "" : " \""+Param.dataRange+"="+dataRange+"\"";
       String sbitpix = "";
-      if( bitpix!=null ) sbitpix=" hips_pixel_bitpix="+bitpix;
+      if( bitpix!=-1 ) sbitpix=" "+Param.bitpix+"="+bitpix;
+      String slive = live ? " "+Param.incremental+"=true":"";
+      
+      StringBuilder smode=new StringBuilder();
+      ModeOverlay mo = context.getModeOverlay();
+      if( !mo.equals(ModeOverlay.getDefault()) ) {
+         if( smode.length()>0 ) smode.append(',');
+         else smode.append(" "+Param.mode+"=");
+         smode.append(mo);
+      }
+      ModeMerge mm = context.getModeMerge();
+      if( !mm.equals(ModeMerge.getDefault()) ) {
+         if( smode.length()>0 ) smode.append(',');
+         else smode.append(" "+Param.mode+"=");
+         smode.append(mm);
+      }
+      ModeTree mt = context.getModeTree();
+      if( !mt.equals(ModeTree.getDefault(bitpix)) ) {
+         if( smode.length()>0 ) smode.append(',');
+         else smode.append(" "+Param.mode+"=");
+         smode.append(mt);
+      }
       
       String cmd = "in=\""+context.getInputPath()+"\" out=\""+addHipsPath
-            +"\" creator_did="+addendumId
-            +" hips_order="+order
+            +"\" "+Param.id+"="+addendumId
+            +" "+Param.order+"="+order
+            +slive
             +spart
+            +smode
             +sbitpix
-//            +" -live"
-            +(skyvalues!=null ?" \"skyvalues="+skyvalues+"\"": skyval!=null ?" skyval="+skyval:"")
+            +spixelCut
+            +sdataRange
+            +(skyvalues!=null ?" \""+Param.skyvalues+"="+skyvalues+"\""
+                  : skyval!=null ?" "+Param.skyVal+"="+skyval:"")
             +" INDEX TILES";
       Tok tok = new Tok(cmd);
       String param [] = new String[ tok.countTokens() ];
       for(int i=0; tok.hasMoreTokens(); i++ ) param[i] = tok.nextToken();
       hi.execute(param);
+      if( hi.context.isTaskAborting() ) {
+         context.taskAbort();
+         throw new Exception("Aborting");
+      }
    }
    
    // Suppression du HiPS additinnel après le merge
@@ -95,22 +133,45 @@ public class BuilderAppend extends Builder {
    // Generation du HiPS additionnel
    private void concatHips() throws Exception  {
       HipsGen hi = new HipsGen();
-      String cmd = "out=\""+context.getOutputPath()+"\" in=\""+addHipsPath+"\" CONCAT";
+      
+      StringBuilder smode=new StringBuilder();
+      ModeMerge mm = context.getModeMerge();
+      if( !mm.equals(ModeMerge.getDefault()) ) {
+         if( smode.length()>0 ) smode.append(',');
+         else smode.append(" mode=");
+         smode.append(mm);
+      }
+      ModeTree mt = context.getModeTree();
+      if( !mt.equals(ModeTree.getDefault(bitpix)) ) {
+         if( smode.length()>0 ) smode.append(',');
+         else smode.append(" mode=");
+         smode.append(mt);
+      }
+      
+      String cmd = "out=\""+context.getOutputPath()+"\" in=\""+addHipsPath+"\""
+            +smode
+            +" CONCAT";
       Tok tok = new Tok(cmd);
       String param [] = new String[ tok.countTokens() ];
       for(int i=0; tok.hasMoreTokens(); i++ ) param[i] = tok.nextToken();
       hi.execute(param);
+      if( hi.context.isTaskAborting() ) {
+         context.taskAbort();;
+         throw new Exception("Aborting");
+      }
    }
+   
   // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
       outputPath = context.getOutputPath();
       inputPath = context.getInputPath();
       addHipsPath = cds.tools.Util.concatDir( outputPath,"AddsHiPS");
-      mode = context.getMode();
+      mode = context.getModeMerge();
       
       if( inputPath==null ) throw new Exception("\"in\" parameter required !");
       File f = new File(inputPath);
-      if( f.exists() && (!f.isDirectory() || !f.canRead() )) throw new Exception("\"inputPath\" directory not available ["+inputPath+"]");
+      if( !f.exists() ||  !f.canRead() ) throw new Exception("Input directory or image not available ["+inputPath+"]");
+//      if( f.exists() && (!f.isDirectory() || !f.canRead() )) throw new Exception("Input directory or image not available ["+inputPath+"]");
 
       skyval=getSkyVal(outputPath);
       if( skyval!=null && skyval.toLowerCase().equals("auto") ) {
@@ -119,8 +180,13 @@ public class BuilderAppend extends Builder {
          } catch( Exception e) {}
       }
       
-      bitpix=getBitpix(outputPath);
-
+      try {
+         pixelCut = loadProperty(outputPath,Constante.KEY_HIPS_PIXEL_CUT);
+      } catch( Exception e) {}
+      try {
+         dataRange = loadProperty(outputPath,Constante.KEY_HIPS_DATA_RANGE);
+      } catch( Exception e) {}
+      
       order=-1;
       try { 
          order = Util.getMaxOrderByPath( outputPath );
@@ -132,17 +198,26 @@ public class BuilderAppend extends Builder {
       if( inputOrder!=-1 )  throw new Exception("The input directory must contains original images/cubes. Use CONCAT if you want to merge two HiPS");
       context.info("Order retrieved from ["+outputPath+"] => "+order);
       
+      // Recuperation des parametres du HiPS target pour generer le Hips a ajouter
+      // avec les memes parametres
+      try {
+         double v[] = getBitpixBzeroBscaleBlank(outputPath);
+         bitpix=(int)v[0];
+         bzero=v[1];
+         bscale=v[2];
+         blank=v[3];
+      } catch( Exception e1 ) { }
       
       // Info sur la méthode
-      if( mode==Mode.MUL || mode==Mode.DIV || mode==Mode.COPY || mode==Mode.LINK ) {
+      if( mode==ModeMerge.copy || mode==ModeMerge.link ) {
          throw new Exception("Coadd mode ["+mode+"] not supported for APPEND action");
       }
-      context.info("Coadd mode: "+Mode.getExplanation(mode));
+      context.info("Coadd mode: "+ModeMerge.getExplanation(mode));
 
       
       // Il faut voir si on peut utiliser les tuiles de poids
       live = checkLiveByProperties(context.getOutputPath());
-      if( mode==Mode.AVERAGE ) {
+      if( mode==ModeMerge.mergeMean ) {
          if( !live ) context.warning("Target HiPS does not provide weight tiles => assuming weigth 1 for each output pixel");
       }
       
@@ -168,14 +243,14 @@ public class BuilderAppend extends Builder {
       return null;
    }
 
-   /** Récupère la variable du skyval */
-   protected String getBitpix(String path) {
-      try {
-         String s = loadProperty(path,Constante.KEY_HIPS_PIXEL_BITPIX);
-         return s;
-      } catch( Exception e ) {}
-      return null;
+   /** Récupère les variables pour faire le même traitement BITPIX, BZERO,BSCALE,BLANK */
+   protected double [] getBitpixBzeroBscaleBlank(String path) throws Exception {
+      String filename = context.findOneNpixFile(path);
+      Fits f = new Fits();
+      f.loadFITS(filename);
+      return new double[] { f.bitpix, f.bzero, f.bscale, f.blank };
    }
+
 
    /** Charge une valeur d'un mot clé d'un fichier de properties pour un répertoire particulier, null sinon */
    protected String loadProperty(String path,String key) throws Exception {

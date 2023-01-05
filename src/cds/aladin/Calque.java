@@ -1588,7 +1588,7 @@ public class Calque extends JPanel implements Runnable {
     * Retourne l'index du premier plan dont le label correspond
     * au masque passe en parametre
     * @param mask le pattern de recherche avec jokers à la msdos
-    * @param mode 0-avec jokers, 1-simple égalité stricte des chaines
+    * @param modeMerge 0-avec jokers, 1-simple égalité stricte des chaines
     * @return le numero du plan correspondant, -1 si aucun
     */
    protected int getIndexPlan(String mask) { return getIndexPlan(mask,0); }
@@ -1611,7 +1611,7 @@ public class Calque extends JPanel implements Runnable {
     * Retourne le premier plan dont le label correspond
     * au masque passe en parametre
     * @param mask le pattern de recherche avec jokers à la msdos
-    * @param mode 0-avec jokers, 1-simple égalité stricte des chaines
+    * @param modeMerge 0-avec jokers, 1-simple égalité stricte des chaines
     * @return le plan correspondant, null si aucun
     */
    public Plan getPlan(String mask) { return getPlan(mask,0); }

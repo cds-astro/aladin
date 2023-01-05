@@ -44,7 +44,7 @@ public class BuilderUpdateDataSum extends BuilderCheckCode {
    public void run() throws Exception {
       context.loadProperties();
       scanDir(new File( context.getOutputPath() ),"fits");
-      context.writePropertiesFile(null);
+      context.writePropertiesFile();
       context.info("All DATASUM generated/updated");
    }
    

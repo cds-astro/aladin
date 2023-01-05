@@ -611,7 +611,7 @@ public class Save extends JFrame implements ActionListener {
 
    /** Backup ou Save view
     * @param mode 0-backup, 1-view, 2-allview
-    * @param format BMP, JPEG, PNG, EPS, PNG|LK (ignoré si mode=0)
+    * @param mirrorFormat BMP, JPEG, PNG, EPS, PNG|LK (ignoré si mode=0)
     */
    protected void saveFile(int mode) { saveFile(mode,BMP,-1); }
    protected void saveFile(int mode,int format,float qual) {

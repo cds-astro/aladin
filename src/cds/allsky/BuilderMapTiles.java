@@ -42,25 +42,15 @@ import cds.tools.pixtools.CDSHealpix;
 public class BuilderMapTiles extends Builder {
 
    private HeaderFits headerFits;
-
    private CacheFitsWriter cache; // Cache en écriture des tuiels
-
    protected int bitpixOrig = -1;
-
    protected int maxOrder = -1;
-
    private long nside = -1; // NSIDE de la map
-
    private String ordering = null; // ORDERING de la map
-
    private long initialOffsetHpx; // Position dans la map des DATA
-
    private long startTime = 0;
-
    private long nbRecord = -1, cRecord = -1;
-
    private String info = "";
-
    private Builder b = null;
 
    public BuilderMapTiles(Context context) {

@@ -60,8 +60,9 @@ public class BuilderMirror extends BuilderRunner {
    private String dateRelease="";       // Date of last release date of the local copy
    private boolean isLocal=false;       // true s'il s'agit d'une copie locale
    private long timeIP;
-   private boolean check=false;         // true si on redémarre une session => pas de test de taille sur les tuiles déjà arrivées
+   private boolean fastCheck=false;         // true si on redémarre une session => pas de test de taille sur les tuiles déjà arrivées
    boolean flagCat=false;               // true s'il s'agit d'un HiPS catalogue
+   private String checkCode=null;       // Le checkcode du HiPS distant, ou null si inconnue
 
    public BuilderMirror(Context context) {
       super(context);
@@ -74,10 +75,10 @@ public class BuilderMirror extends BuilderRunner {
       
       // Détermination d'une éventuelle copie locale
       String dir = context.getInputPath();
-      check = context.getMirrorCheck();
+      fastCheck = context.getFastCheck();
       isLocal = !dir.startsWith("http://") && !dir.startsWith("https://") && !dir.startsWith("ftp://");
       if( isLocal ) context.info("Local mirror copy");
-      if( !isLocal && check ) context.info("Will check all date and size for already loaded tiles");
+      if( !isLocal && fastCheck ) context.info("Will check all date and size for already loaded tiles");
 
       // Chargement des propriétés distantes
       prop = new MyProperties();
@@ -91,6 +92,9 @@ public class BuilderMirror extends BuilderRunner {
       
       // On valide le répertoire de destination
       validateOutput();
+      
+      // Mémorisation des checkcodes afin de pouvoir les comparer à la fin de la copie
+      checkCode = prop.getProperty("hips_check_code");
       
       // Détermination du statut
       String s = prop.getProperty(Constante.KEY_HIPS_STATUS);
@@ -121,6 +125,7 @@ public class BuilderMirror extends BuilderRunner {
          if( o==-1 ) throw new Exception("Order unknown !");
          context.setOrder(o);
       } else {
+         if( paramO>=0 && paramO<=2 ) throw new Exception("Target HiPS order must be greater or equal to 3");
          if( o!=-1 ) {
             if( paramO>o ) throw new Exception("Order greater than the original");
             else if( o!=paramO ) isPartial=true;
@@ -245,7 +250,7 @@ public class BuilderMirror extends BuilderRunner {
       // Le Mode n'est pas paramètrable par l'utilisateur
       // KEEPTILE Obligatoire pour pouvoir tester les branches plus courtes dans le cas d'un catalogue
       // => cf findLeaf(...)
-      context.setMode( flagCat ? Mode.KEEPTILE : Mode.REPLACETILE );
+      context.setModeMerge( flagCat ? ModeMerge.mergeKeepTile : ModeMerge.mergeOverwriteTile );
    }
    
    // Récupération des paramètres pour effectuer un split multi-partitions
@@ -370,8 +375,37 @@ public class BuilderMirror extends BuilderRunner {
          } finally {  if( out!=null ) out.close(); }
       }
       
+      // Validation des checkcodes
+      if( !context.isTaskAborting() ) validateCheckCode();
+   }
+   
+   public void validateCheckCode() {
+      try {
+         context.setCheckForce(false);
+         Builder b=Task.validator(context,Action.CHECKCODE);
+         if( context.isTaskAborting() ) throw new Exception("Aborting");
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
       
-
+      if( checkCode!=null ) {
+         if( isSmaller ) {
+            context.info("Partial mirror => checkcode not verified");
+         } else {
+            String localCheckCode = context.getCheckCode();
+            for( String fmt : context.getCheckCodeFmt(localCheckCode) ) {
+               String remoteKey = Context.getCheckCode(fmt, checkCode);
+               String localKey = Context.getCheckCode(fmt, context.hipsCheckCode);
+               if( remoteKey!=null ) {
+                  if( !remoteKey.equals(localKey)) {
+                     context.error("Checkcode not matching for ["+fmt+"] tiles => non-compliant copy");
+                  } else {
+                     context.info("Checkcode for ["+fmt+"] tiles OK => compliant copy");
+                  }
+               }
+            }
+         }
+      }
    }
 
    private int statNbFile=0;
@@ -447,14 +481,15 @@ public class BuilderMirror extends BuilderRunner {
       }
       
       context.showMirrorStat(statNbFile, statCumul, lastCumulPerSec, totalTime, nbThreads,statNbThreadRunning, lastTimeIP);
+  
    }
-
+   
    public void build() throws Exception {
       bidon = new Fits();
       initStat();
       super.build();
    }
-
+   
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
     return createLeaveHpx(hpx,file,path,order,npix,z,true);
  }
@@ -706,7 +741,7 @@ public class BuilderMirror extends BuilderRunner {
                // reprise => pas de vérif date&size des tuiles déjà arrivées
                // On garde un vieux doute sur les fichiers vraiments petits
                // ON POURRAIT VERIFIER QUE LE FICHIER N'EST PAS TRONQUE EN CHARGEANT LA TUILE SANS ERREUR MAIS CA VA PRENDRE DES PLOMBES...
-               if( !check ) {
+               if( !fastCheck ) {
                   
                   // Des heuristiques simples pour ne pas recopier des tuiles
                   // visiblement déjà copiées et bonnes.
@@ -814,6 +849,7 @@ public class BuilderMirror extends BuilderRunner {
       int n;
 
       fIn = new File(fileIn);
+      if( !fIn.exists() ) return 0; // Fichier inexistant
       lastModified = fIn.lastModified();
       fOut = new File(fileOut);
 

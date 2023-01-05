@@ -82,7 +82,7 @@ public class Context {
    
    private static boolean verbose=false;
    protected String hipsId=null;             // Identificateur du HiPS (publisher_did, sinon publisher_id/obs_id sans le préfixe ivo://)
-   protected String label;                   // Nom du survey
+   protected String title;                   // Nom du survey
 
    protected String inputPath;               // Répertoire des images origales ou path de l'image originale (unique)
    protected String outputPath;              // Répertoire de la boule HEALPix à générer
@@ -115,12 +115,9 @@ public class Context {
 //   protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    public int dataArea = Constante.SHAPE_UNKNOWN; // Type d'observable (totalité, en ellipse ou en rectangle)
    public double maxRatio = Constante.PIXELMAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
-   protected boolean fading=false;           // Activation du fading entre les images originales
-   protected boolean mixing=true;            // Activation du mélange des pixels des images originales
    protected boolean fake=false;             // Activation du mode "just-print norun"
    protected boolean cdsLint=false;          // Activation du mode "cds" pour LINT (plus de vérif)
-   protected boolean flagRecomputePartitioning=true; // true si hipsgen doit déterminer automatiquement la taille du partitionnement
-   protected boolean partitioning=true;      // Activation de la lecture par blocs des fimages originales
+   protected boolean partitioning=true;     // Activation de la lecture par blocs des fimages originales
    public String skyvalName;                 // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    public double pourcentMin=-1;             // Pourcentage de l'info à garder en début d'histog. si autocut (ex: 0.003), -1 = défaut
    public double pourcentMax=-1;             // Pourcentage de l'info à garder en fin d'histog. si autocut (ex: 0.9995), -1 = défaut
@@ -131,18 +128,18 @@ public class Context {
    protected int typicalImgWidth=-1;         // Taille typique d'une image d'origine
    protected int mirrorDelay=0;              // délais entre deux récupérartion de fichier lors d'un MIRROR (0 = sans délai)
    protected boolean notouch=false;          // true si on ne doit pas modifier la date du hips_release_date
-   protected boolean mirrorCheck=true;      // true si on relance un hipsgen MIRROR => pas de vérif sur les tuiles déjà là
+   protected boolean fastCheck=true;      // true si on relance un hipsgen MIRROR => vérif rapide sur les tuiles déjà là
    protected boolean hipslintTileTest=true;  // true pour faire un hipslint test sur des tuiles au hasard
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
    protected double bzero=0;                 // Valeur BZERO de la boule Healpix à générer
    protected double bscale=1;                // Valeur BSCALE de la boule HEALPix à générer
-   //   protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
-   private JpegMethod jpegMethod = JpegMethod.MEDIAN;
-   protected Mode mode=Mode.getDefault();   // Methode de traitement par défaut
+   private ModeTree modeTree = null;
+   protected ModeOverlay modeOverlay=ModeOverlay.getDefault();   // Methode de traitement par défaut des images 
+   protected ModeMerge modeMerge=ModeMerge.getDefault();   // Methode de traitement par défaut des tuiles Hips
    protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
    protected String creator=null;          // Le nom de la personne qui a fait le HiPS
    protected String status=null;             // status du HiPs (private|public clonable|unclonable|clonableOnce)
@@ -151,7 +148,7 @@ public class Context {
    protected String redInfo;                 // Information de colormap lors de la génération d'un HIPS RGB (composante red)
    protected String greenInfo;               // Information de colormap lors de la génération d'un HIPS RGB (composante green)
    protected String blueInfo;                // Information de colormap lors de la génération d'un HIPS RGB (composante blue)
-   protected boolean gaussFilter=false;      // Filtrage gaussien lors de la génération d'un HiPS RGB (pour améliorer le rendu du fond)
+//   protected boolean gaussFilter=false;      // Filtrage gaussien lors de la génération d'un HiPS RGB (pour améliorer le rendu du fond)
    protected int nbPilot=-1;                 // Indique le nombre d'images à prendre en compte (pour faire un test pilot)
 
    protected boolean flagLupton = false;         // Méthode Lupton ?
@@ -175,22 +172,27 @@ public class Context {
    protected Vector<String> keyAddProp=null; // Clés des propriétés additionnelles à mémoriser dans le fichier properties
    protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
    protected String target=null;             // ra,de en deg du "centre" du HiPS s'il est indiqué
-   protected String targetRadius=null;       // radius en deg de la taille du premier champ HiPS à afficher
    protected String resolution=null;         // resolution en arcsec du pixel des images originales
    protected String scriptCommand;           // Mémorisation de la commande  script
    protected int targetColorMode = Constante.TILE_PNG;       // Mode de compression des tuiles couleurs
 
-   protected ArrayList<String> tileFormat=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
+   protected ArrayList<String> tileFormat=null;          // Liste des formats de tuiles à copier (mirror)
    protected boolean testClonable=true;
    protected boolean live=false;             // true si on doit garder les tuiles de poids
    protected long bytes=0L;                 // Taille du HiPS généré en Kb
+   protected boolean flagGlobalDataSum=false; // true si on veut calculer un DATASUM global (cf Action CHECKDATASUM)
    
    protected long pixelIn=0L;               // Nombre de pixels en entrée
    protected long pixelOut=0L;              // Nombre de pixels en sortie
+   protected long trimMem=0L;               // Volume memoire sauve par la methode TRIM
+   
+   protected boolean trim=false;            // true s'il faut l'appliquer
+   protected boolean gzip=false;            // true s'il faut l'appliquer
+
 
    public Context() { 
       
-      // CE NE FONCTIONNE PAS BIEN, NOTAMMENT SOUS CYGWIN
+      // CA NE FONCTIONNE PAS BIEN, NOTAMMENT SOUS CYGWIN
       if( !(this instanceof ContextGui ) ) {
 //         System.out.println("getenv().get(\"TERM\") => "+ System.getenv().get("TERM")+" System.console()="+System.console());
          if( /* System.console()!=null && */ System.getenv().get("TERM") != null) {
@@ -202,8 +204,11 @@ public class Context {
    }
 
    public void reset() {
+      bitpix=-1;
       mocArea=mocIndex=moc=null;
-      mode=Mode.getDefault();
+      modeMerge=ModeMerge.getDefault();
+      modeOverlay=ModeOverlay.getDefault();
+      modeTree=ModeTree.getDefault(bitpix);
       hasAlternateBlank=false;
       blankOrig = Double.NaN;
       bscaleBzeroOrigSet=false;
@@ -221,7 +226,8 @@ public class Context {
       tileFormat = null;
       outputRGB = null;
       redInfo=blueInfo=greenInfo=null;
-      gaussFilter = false;
+      live=false;
+//      gaussFilter = false;
       plansRGB = new String [3];
       cmsRGB = new String [3];
       flagNoInitEtalon=false;
@@ -238,6 +244,7 @@ public class Context {
    /** Remise à zéro des compteurs sauf le pixelIn */
    public void resetCounter() { 
       pixelOut=0L;
+      trimMem=0L;
    }
    
    // Mise à jour des compteurs
@@ -269,13 +276,13 @@ public class Context {
 
    
    // Getters
-   public String getLabel() {
-      if( label==null ) return getLabelFromHipsId();
-      return label;
+   public String getTitle() {
+      if( title==null ) return getLabelFromHipsId();
+      return title;
 
    }
    public String getHipsId() { return hipsId; }
-   public boolean getFading() { return fading; }
+   public boolean getFading() { return getModeOverlay().equals(ModeOverlay.overlayFading); }
    public int[] getBorderSize() { return dataArea==Constante.SHAPE_UNKNOWN ?  borderSize : new int[]{0,0,0,0}; }
    public double getMaxRatio() { return maxRatio; }
    public int getOrder() { return order; }
@@ -285,7 +292,7 @@ public class Context {
    public String getFrameCode() { return getFrameCode( getFrame() ); }
    public CacheFits getCache() { return cacheFits; }
    public String getInputPath() { return inputPath; }
-   public boolean getMirrorCheck() { return mirrorCheck; }
+   public boolean getFastCheck() { return fastCheck; }
    public String getOutputPath() { return outputPath; }
    public String getSplit() { return split; }
    public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.FILE_HPXFINDER); }
@@ -307,7 +314,9 @@ public class Context {
       if( mocArea!=null ) mocArea.setSys( getFrameCode() );  // On s'assure qu'on exprime bien le MOC dans le bon frame
       return mocArea; 
    }
-   public Mode getMode() { return mode; }
+   public ModeMerge getModeMerge() { return modeMerge; }
+   public ModeOverlay getModeOverlay() { return modeOverlay; }
+   
    public double[] getCut() throws Exception { return cut; }
    public double[] getCutOrig() throws Exception { return cutOrig; }
    public String getSkyval() { return skyvalName; }
@@ -335,24 +344,27 @@ public class Context {
    public int getPartitioning() { return Constante.ORIGCELLWIDTH; }
    
    // Setters
-   public void setMirrorCheck(boolean flag) { this.mirrorCheck = flag; }
+   public void setfastCheck(boolean flag) { this.fastCheck = flag; }
    public void setLive(boolean flag) { live=flag; }
    public void setFlagInputFile(boolean flag) { isInputFile=flag; }
    public void setHeader(HeaderFits h) { header=h; }
    public void setCreator(String s) { creator=s; }
    public void setStatus(String s ) { status=s; }
    public void setHipsId(String s) { hipsId= canonHipsId(s); }
-   public void setLabel(String s)     { label=s; }
+   public void setTitle(String s)     { title=s; }
    public void setMaxNbThread(int max) { maxNbThread = max; }
-   public void setFading(boolean fading) { this.fading = fading; }
-   public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
-   public void setMixing(String s) { mixing = s.equalsIgnoreCase("false") ? false : true; }
+   public void setFading(boolean fading) { 
+      try { setMode(!fading?"overlay_mean":"overlay_fading");
+      } catch( Exception e ) { } 
+   }
+   public void setFading(String s) { setFading( s.equalsIgnoreCase("false") ? false : true ); }
+   public void setMixing(String s) { 
+      setModeOverlay( s.equalsIgnoreCase("false")? ModeOverlay.overlayNone : ModeOverlay.getDefault()); }
    public void setPartitioning(String s) {
       try {
          int val = Integer.parseInt(s);
          Constante.ORIGCELLWIDTH = val;
          partitioning = true;
-         flagRecomputePartitioning = false;
       } catch( Exception e ) {
          partitioning = s.equalsIgnoreCase("false") ? false : true;
       }
@@ -421,10 +433,10 @@ public class Context {
    public void setTileOrder(int tileOrder) { this.tileOrder = tileOrder; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) { this.frame=getFrameVal(frame); }
-   public void setFilter(String s) throws Exception {
-      if( s.equalsIgnoreCase("gauss") )  gaussFilter=true;
-      else throw new Exception("Unknown filter ["+s+"] (=> only \"gauss\" are presently supported)");
-   }
+//   public void setFilter(String s) throws Exception {
+//      if( s.equalsIgnoreCase("gauss") )  gaussFilter=true;
+//      else throw new Exception("Unknown filter ["+s+"] (=> only \"gauss\" are presently supported)");
+//   }
    public void setSkyValName(String s ) {
       skyvalName=s;
       if( s==null ) return;
@@ -440,15 +452,16 @@ public class Context {
    public void setShape(String s) throws Exception {
       if( Util.indexOfIgnoreCase(s,"circle")>=0      || Util.indexOfIgnoreCase(s,"ellipse")>=0 ) {
          dataArea=Constante.SHAPE_ELLIPSE;
-         info("Ellipse shape data area autodetection");
+         info("Shape fov autodetection => ellipse");
       }
-      else if( Util.indexOfIgnoreCase(s,"square")>=0 || Util.indexOfIgnoreCase(s,"rectangular")>=0 ) {
+      else if( Util.indexOfIgnoreCase(s,"square")>=0 
+            || Util.indexOfIgnoreCase(s,"rectangle")>=0 || Util.indexOfIgnoreCase(s,"rectangular")>=0 ) {
          dataArea=Constante.SHAPE_RECTANGULAR;
-         info("Rectangular shape data area autodetection");
+         info("Shape fov autodetection => rectangular");
       }
       else {
          dataArea=Constante.SHAPE_UNKNOWN;
-         throw new Exception("Unknown observation shape ["+s+"] (=> circle, ellipse, square, rectangular)");
+         throw new Exception("Unknown observation shape ["+s+"] (=> ellipse|rectangle)");
       }
    }
    
@@ -466,7 +479,7 @@ public class Context {
    }
 
    public String getRgbOutput() { return getOutputPath(); }
-   public JpegMethod getHierarchyAlgo() { return getJpegMethod(); }
+   public ModeTree getHierarchyAlgo() { return getModeTree(); }
    public int getRgbFormat() { return targetColorMode; }
 
    public void setFov(String r) throws Exception {
@@ -502,7 +515,7 @@ public class Context {
       return s;
    }
    public String checkHipsId(String s ) throws Exception { return checkHipsId(s,true); }
-   private String checkHipsId(String s,boolean withException) throws Exception {
+   public String checkHipsId(String s,boolean withException) throws Exception {
 
       String auth,id;
       boolean flagQuestion=false;  // true si l'identificateur utilise un ? après l'authority ID, et non un /
@@ -511,8 +524,8 @@ public class Context {
       
       if( s==null || s.trim().length()==0 ) {
          verbose=false;
-         s=getLabel()!=null?getLabel():"";
-         if( withException ) throw new Exception("Missing ID (ex: creator_did=CDS/P/DSS2/color)");
+         s=getTitle()!=null?getTitle():"";
+         if( withException ) throw new Exception("Missing HiPS id (ex: "+Param.id+"=CDS/P/DSS2/color)");
       }
 
       if( s.startsWith("ivo://")) s=s.substring(6);
@@ -530,7 +543,7 @@ public class Context {
       if( offset==-1) {
          auth="UNK.AUTH";
 //         if( verbose ) warning("Id error => missing authority => assuming "+auth);
-         if( withException ) throw new Exception("ID error => missing authority (ex: creator_did=CDS/P/DSS2/color)");
+         if( withException ) throw new Exception("ID error => missing authority (ex: "+Param.id+"=CDS/P/DSS2/color)");
 
       } else {
          auth = s.substring(0,offset);
@@ -538,7 +551,7 @@ public class Context {
          if( auth.length()<3) {
             while( auth.length()<3) auth=auth+"_";
 //            if( verbose ) warning("Creator ID error => at least 3 characters are required => assuming "+auth);
-            if( withException ) throw new Exception("ID error => at least 3 authority characters are required (ex: creator_did=CDS/P/DSS2/color)");
+            if( withException ) throw new Exception("ID error => at least 3 authority characters are required (ex: "+Param.id+"=CDS/P/DSS2/color)");
          }
          StringBuilder a = new StringBuilder();
          boolean bug=false;
@@ -549,7 +562,7 @@ public class Context {
          if( bug ) {
             auth=a.toString();
 //            if( verbose ) warning("Creator ID error => some characters are not allowed => assuming "+auth);
-            if( withException ) throw new Exception("ID error => some characters are not allowed (ex: creator_did=CDS/P/DSS2/color)");
+            if( withException ) throw new Exception("ID error => some characters are not allowed (ex: "+Param.id+"=CDS/P/DSS2/color)");
          }
       }
 
@@ -560,7 +573,7 @@ public class Context {
       if( id.length()==0) {
          id="ID"+(System.currentTimeMillis()/1000);
 //         if( verbose ) warning("Id error => missing ID => assuming "+id);
-         if( withException ) throw new Exception("ID error: suffix Id missing (ex: creator_did=CDS/P/DSS2/color)");
+         if( withException ) throw new Exception("ID error: suffix Id missing (ex: "+Param.id+"=CDS/P/DSS2/color)");
       } else {
          StringBuilder a = new StringBuilder();
          boolean bug=false;
@@ -571,7 +584,7 @@ public class Context {
          if( bug ) {
             id=a.toString();
 //            if( verbose ) warning("Id identifier error => some characters are not allowed => assuming "+id);
-            if( withException ) throw new Exception("ID suffix error: some characters are not allowed (ex: creator_did=CDS/P/DSS2/color)");
+            if( withException ) throw new Exception("ID suffix error: some characters are not allowed (ex: "+Param.id+"==CDS/P/DSS2/color)");
          }
       }
 
@@ -623,7 +636,7 @@ public class Context {
 
    /** Indication des types de tuiles à copier lors d'une action MIRROR */
    protected void setTileFormat(String s) {
-      Tok tok = new Tok(s);
+      Tok tok = new Tok(s,", ;");
       while( tok.hasMoreTokens() ) addTileFormat(tok.nextToken());
    }
 
@@ -680,17 +693,44 @@ public class Context {
    public void setSplit(String split) { this.split = split; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
    public void setIndexFitskey(String list) {
-      StringTokenizer st = new StringTokenizer(list);
+      Tok st = new Tok(list," ,;");
       fitsKeys = new ArrayList<>(st.countTokens());
       while( st.hasMoreTokens() ) fitsKeys.add(st.nextToken());
    }
-   public void setMode(Mode coAdd) { this.mode = coAdd;  }
+   /** Positionnement des modes de traitement du coadd des progeniteurs,du merge des tuiles HiPS
+    * et de la construction de l'arbre HiPS
+    * Teste uniquement la fin du mode1, et si ça matche, l'affecte. Permet de faire plusieurs
+    * affectation d'un coup (ex: setMode("ADD");
+    * Effectue cela pour les trois catégories ModeMerge, ModeTree et ModeOverlay
+    */
+   public void setMode(String mode1) throws Exception {
+      boolean setModeOverlay=false,setModeMerge=false, setModeTree=false;
+      Tok tok = new Tok(mode1," ,;");
+      while( tok.hasMoreTokens() ) {
+         String mode=tok.nextToken();
+         String m1 = ModeOverlay.contains(mode);
+         if( m1!=null ) {
+            setModeOverlay(ModeOverlay.valueOf(m1));
+            setModeOverlay=true;
+         } 
+         m1=ModeMerge.contains(mode);
+         if( m1!=null ) {
+            setModeMerge(ModeMerge.valueOf(m1));
+            setModeMerge=true;
+         } 
+         m1=ModeTree.contains(mode);
+         if( m1!=null )  {
+            setModeTree(ModeTree.valueOf(m1));
+            setModeTree=true;
+         } 
+         if( !setModeOverlay && !setModeMerge && !setModeTree ) throw new Exception("Unmatching mode ["+mode1+"]");
+      }
+   }
+   public void setModeMerge(ModeMerge modeMerge) { this.modeMerge=modeMerge;  }
+   public void setModeOverlay(ModeOverlay modeOverlay) { this.modeOverlay = modeOverlay;  }
    public void setTarget(String target) { this.target = target; }
-   public void setTargetRadius(String targetRadius) { this.targetRadius = targetRadius; }
    public void setBScaleOrig(double x) { bScaleOrig = x; bscaleBzeroOrigSet=true; }
    public void setBZeroOrig(double x) { bZeroOrig = x; bscaleBzeroOrigSet=true; }
-   //   public void setBScale(double x) { bscale = x; bscaleBzeroSet=true; }
-   //   public void setBZero(double x) { bzero = x; bscaleBzeroSet=true; }
    public void setBitpixOrig(int bitpixO) {
       this.bitpixOrig = bitpixO;
       if (this.bitpix==-1) this.bitpix = bitpixO;
@@ -732,6 +772,14 @@ public class Context {
    /** retourne la chaine des check codes (ex: "png:452738951 fit:184622110")
     * ou null si non connue */ 
    public String getCheckCode() { return hipsCheckCode; }
+   
+   /** Retourne la clé numérique checkcode à partir des propriétés */
+   public String getCheckCodeFromProp() {
+      try { if( prop==null ) loadProperties(); } catch( Exception e ) { }
+      if( prop==null ) return null;
+      String s = prop.getProperty(Constante.KEY_HIPS_CHECK_CODE);
+      return s;
+   }
    
    /// true si on peut modifier les Check codes
    public void setCheckForce(boolean flag) { hipsCheckForce=flag; }
@@ -791,22 +839,19 @@ public class Context {
       return isColor() ? Constante.TILE_EXTENSION[ targetColorMode ] : ".fits";
    }
 
-   protected enum JpegMethod { MEDIAN, MEAN, FIRST; }
-
    /**
-    * @param jpegMethod the method to set
-    * @see Context#MEDIAN
-    * @see Context#MEAN
+    * @param mode the method to set
+    * @see Context#treeMedian
+    * @see Context#overlayMean
     */
-   public void setJpegMethod(JpegMethod jpegMethod) {
-      this.jpegMethod = jpegMethod;
+   public void setModeTree() { setModeTree((ModeTree)null); }
+   public void setModeTree(ModeTree mode) { this.modeTree = mode; }
+   public ModeTree getModeTree() { 
+      if( modeTree==null ) return ModeTree.getDefault(bitpix);
+      return modeTree;
    }
-   public void setMethod(String jpegMethod) {
-      this.jpegMethod = JpegMethod.valueOf(jpegMethod.toUpperCase());
-   }
-   public JpegMethod getJpegMethod() { return jpegMethod; }
 
-   public void setDataCut(String scut) throws Exception {
+   public void setDataRange(String scut) throws Exception {
       StringTokenizer st = new StringTokenizer(scut," ");
       int i=2;
       //      if( cut==null ) cut = new double[4];
@@ -886,19 +931,15 @@ public class Context {
       // Positionnement initiale du HiPS par défaut
       if( target==null ) {
          Coord c = fitsfile.calib.getImgCenter();
-         String s = Util.round(c.al,5)+" "+(c.del>=0?"+":"")+Util.round(c.del,5);
+         double r = Math.max( fitsfile.calib.getImgHeight(),fitsfile.calib.getImgWidth());
+         String s = Util.round(c.al,5)+" "+(c.del>=0?"+":"")+Util.round(c.del,5) +" "+Util.round(r,5);
          setTarget(s);
          info("Set default target => "+s);
-         if( targetRadius==null ) {
-            double r = Math.max( fitsfile.calib.getImgHeight(),fitsfile.calib.getImgWidth());
-            setTargetRadius(Util.round(r,5)+"");
-         }
       }
 
       // Mémorisation de la résolution initiale
       double [] res = fitsfile.calib.GetResol();
       resolution = Util.myRound(Math.min(res[0],res[1]));
-      
       
       lastImgEtalon = imgEtalon;
    }
@@ -993,7 +1034,9 @@ public class Context {
          MyInputStream in = null;
          try {
             in = (new MyInputStream( new FileInputStream(path))).startRead();
+            
             if( (in.getType()&MyInputStream.FITS) != MyInputStream.FITS && !in.hasCommentCalib() ) continue;
+            if( (in.getType()&(MyInputStream.SMOC|MyInputStream.TMOC|MyInputStream.STMOC))!=0) continue;
             Aladin.trace(4, "Context.findImgEtalon: "+path+"...");
             setImgEtalon(path);
             return true;
@@ -1053,6 +1096,7 @@ public class Context {
             
             long type = in.getType();
             if( (type&MyInputStream.FITS) != MyInputStream.FITS && !in.hasCommentCalib() ) continue;
+            if( (in.getType()&(MyInputStream.SMOC|MyInputStream.TMOC|MyInputStream.STMOC))!=0) continue;
             return path + (hdu==null || hdu.length>0 && hdu[0]==-1 ? "":"["+hdu[0]+"]");
 
          }  
@@ -1073,7 +1117,7 @@ public class Context {
    }
 
    protected String outputRGB;
-   protected JpegMethod hierarchyAlgo;
+   protected ModeTree hierarchyAlgo;
    protected String [] plansRGB = new String [3];
    protected String [] cmsRGB = new String [3];
 
@@ -1246,7 +1290,6 @@ public class Context {
             bzero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
             bscale = bScaleOrig/coef;
 
-
             info("Change BITPIX from "+bitpixOrig+" to "+bitpix);
             info("Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
                   "to ["+cut[2]+" .. "+cut[3]+"]");
@@ -1270,7 +1313,7 @@ public class Context {
          }
 
       }
-
+      
       // Détermination de la zone du ciel à calculer
       initRegion();
    }
@@ -1410,11 +1453,16 @@ public class Context {
       if( !verifFrame() ) return false;
       if( !verifTileOrder() ) return false;
 
-      if( mode==Mode.REPLACETILE ) return true;
+      if( modeMerge==ModeMerge.mergeOverwriteTile ) return true;
 
       if( !isColor() ) {
-         String fileName=getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
-         if( !(new File(fileName)).exists() ) return true;
+         
+// On va desormais eviter d'utiliser le Allsky qui peut ne pas avoir ete cree - PF dec 2022
+//         String fileName=getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
+//         if( !(new File(fileName)).exists() ) return true;
+         String fileName = findOneNpixFile( getOutputPath() );
+         if( fileName==null ) return true;
+         
          Fits fits = new Fits();
          try { fits.loadHeaderFITS(fileName); }
          catch( Exception e ) { return true; }
@@ -1478,13 +1526,13 @@ public class Context {
       return  (new File(path)).isDirectory();
    }
    
+   /** Retourne true si le repertoire cible contient deja un HiPS
+    * Se base sur l'existence d'au moins un repertoire NorderNN */
    protected boolean isExistingAllskyDir() { return isExistingAllskyDir( getOutputPath() ); }
    protected boolean isExistingAllskyDir(String path) {
       if( path==null ) return false;
       File f = new File(path);
-      if( !f.exists() ) {
-         return false;
-      }
+      if( !f.exists() ) return false;
       int order = cds.tools.pixtools.Util.getMaxOrderByPath(path);
       return order!=-1;
    }
@@ -1512,8 +1560,13 @@ public class Context {
       return npixFile!=null && (new File(npixFile)).exists();
    }
    
-   /** Retourne une tuile HiPS */
-   protected String findOneNpixFile(String path) {
+   /** Retourne une tuile HiPS
+    * @param path Le repertoire du HiPS
+    * @param ext l'extension de la tuile (fits,png,jpg...), null si indifferent
+    * @return le path de la premiere tuile trouvee, null si aucune
+    */
+   static public String findOneNpixFile(String path) { return findOneNpixFile(path,null); }
+   static public String findOneNpixFile(String path, String ext) {
          File root = new File(path);
          
          // Recherche du premier NorderXX trouvé où XX est un nombre
@@ -1544,13 +1597,15 @@ public class Context {
             if( s.startsWith("Npix") ) {
                int j = s.lastIndexOf('.');
                if( j<0 ) continue;
+               if( ext!=null ) {
+                  String x = s.substring(j+1);
+                  if( !ext.equals(x) ) continue;
+               }
                try { Integer.parseInt( s.substring(4,j)); } catch( Exception e) { continue; }
                npix = dir.getAbsolutePath()+"/"+s;
                break;
             } 
          }
-         if( npix==null ) return null;
-         
          return npix;
    }
    
@@ -1646,6 +1701,13 @@ public class Context {
 
       stat(s);
       if( cacheFits!=null && cacheFits.getStatNbOpen()>0 ) stat(cacheFits+"");
+      
+      try {
+         String cacheDisk = MyInputStreamCached.getCacheInfo(1);
+         if( cacheDisk!=null ) stat("Disk cache: "+cacheDisk);
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
 
       setProgress(statNbTile+statNbEmptyTile, nbCells);
    }
@@ -1918,15 +1980,17 @@ public class Context {
    private String cyan()  { return TERM ? "\033[37m" : ""; }
    private String end()   { return TERM ? "\033[0m"  : ""; }
 
-   public void running(String s)  { nl(); System.out.println(blue()  +"RUN   : "+getTitle(s,'=')+end()); }
-   public void done(String r)     { nl(); System.out.println(blue()  +"DONE  : "+r+end()); }
-   public void abort(String r)    { nl(); System.out.println(rouge() +"ABORT : "+r+end()); }
-   public void info(String s)     { nl(); System.out.println(         "INFO  : "+s); }
-   public void run(String s)      { nl(); System.out.println(blue()  +"RUN   : "+s+end()); }
-   public void warning(String s)  { nl(); System.out.println(violet()+"*WARN*: "+s+end()); }
-   public void error(String s)    { nl(); System.out.println(rouge() +"*ERROR: "+s+end()); }
-   public void action(String s)   { nl(); System.out.println(blue()  +"ACTION: "+s+end()); }
-   public void stat(String s)     { nl(); System.out.println(bluec() +"STAT  : "+s+end()); }
+   public void valid(String s)     { nl(); System.out.println("\n"+rouge() +"VALID : "+getTitle(s,'=')+end()); }
+   public void running(String s )  { nl(); System.out.println(blue()  +"RUN   : "+getTitle(s,'=')+end()); }
+   public void done(String r)      { nl(); System.out.println(blue()  +"DONE  : "+r+end()); }
+   public void abort(String r)     { nl(); System.out.println(rouge() +"ABORT : "+r+end()); }
+   public void info(String s)      { nl(); System.out.println(         "INFO  : "+s); }
+   public void run(String s)       { nl(); System.out.println(blue()  +"RUN   : "+s+end()); }
+   public void warning(String s)   { nl(); System.out.println(violet()+"*WARN*: "+s+end()); }
+   public void error(String s)     { nl(); System.out.println(rouge() +"*ERROR: "+s+end()); }
+   public void action(String s)    { nl(); System.out.println(blue()  +"ACTION: "+s+end()); }
+   public void stat(String s)      { nl(); System.out.println(bluec() +"STAT  : "+s+end()); }
+   public void param(String s)     { nl(); System.out.println(cyan()  +"PARAM : "+s+end()); }
    
    
    static private final int MAXREMOVEDFILE=100;
@@ -2076,8 +2140,8 @@ public class Context {
     * directement dans son navigateur le répertoire de base du HiPS généré
     */
    protected void writeIndexHtml() throws Exception {
-      String label = getLabel();
-      if( label==null || label.length()==0 ) label= "XXX_"+(System.currentTimeMillis()/1000);
+      String title = getTitle();
+      if( title==null || title.length()==0 ) title= "XXX_"+(System.currentTimeMillis()/1000);
 
       int order = getOrder();
       if( order==-1 ) order = cds.tools.pixtools.Util.getMaxOrderByPath( getOutputPath() );
@@ -2095,9 +2159,9 @@ public class Context {
       String tiles = getAvailableTileFormats();
       String fmt = tiles.indexOf("png")>=0 ? "png" : "jpg";
 
-      String res = INDEX.replace("$LABEL",label);
+      String res = INDEX.replace("$LABEL",title);
       StringBuilder info = new StringBuilder();
-      info.append("   <LI> <B>Label:</B> "+label+"\n");
+      info.append("   <LI> <B>Title:</B> "+title+"\n");
       info.append("   <LI> <B>Type:</B> "+(depth>1?"HiPS cube ("+depth+" frames)" : isColor() ? "colored HiPS image" : "HiPS image")+"\n");
       info.append("   <LI> <B>Best pixel angular resolution:</B> "+Coord.getUnit( resol )+"\n");
       info.append("   <LI> <B>Max tile order:</B> "+order+" (NSIDE="+nside+")\n");
@@ -2165,11 +2229,23 @@ public class Context {
       } finally {  if( out!=null ) out.close(); }
 
    }
+   
+   /** Creation du fichier properties s'il n'existe pas encore, notamment
+    * en début de processus de génération des tuiles, afin qu'Aladin puisse
+    * déjà reconnaître que ces un HiPS, même s'il n'est pas encore terminé.
+    */
+   protected void createPropForVisu() {
+      try {
+         File f = new File( outputPath+Util.FS+Constante.FILE_PROPERTIES );
+         if( !f.exists() ) writePropertiesFile();
+      } catch( Exception e ) {}
+   }
 
    /** Création, ou mise à jour des fichiers meta associées au survey
     */
    protected void writeMetaFile() throws Exception {
-      writePropertiesFile(null);
+      info("properties & index.html files created or updated");
+      writePropertiesFile();
       
       // On en profite pour écrire le fichier index.html
       writeIndexHtml();
@@ -2182,6 +2258,7 @@ public class Context {
    /** Création, ou mise à jour du fichier des Properties associées au survey
     * @param stream null pour l'écrire à l'emplacement prévu par défaut
     */
+   protected void writePropertiesFile() throws Exception { writePropertiesFile(null); }
    protected void writePropertiesFile(OutputStreamWriter stream) throws Exception {
 
 
@@ -2218,9 +2295,11 @@ public class Context {
       
       if( addendum_id!=null ) setPropriete(Constante.KEY_ADDENDUM_ID,addendum_id);
       
-      String title = prop!=null ? prop.get( Constante.KEY_OBS_TITLE) : null;
-      if( title==null ) title=getLabel();
-      setPropriete(Constante.KEY_OBS_TITLE,title);
+      String titre= title;
+      if( titre==null && prop!=null ) titre = prop.get( Constante.KEY_OBS_TITLE);
+      if( titre==null ) titre =getTitle();
+      
+      setPropriete(Constante.KEY_OBS_TITLE,titre);
       setPropriete("#"+Constante.KEY_OBS_COLLECTION,"Dataset collection name");
       setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"Dataset text description");
       setPropriete("#"+Constante.KEY_OBS_ACK,"Acknowledgement mention");
@@ -2248,7 +2327,7 @@ public class Context {
       setPropriete(Constante.KEY_HIPS_TILE_WIDTH,nSide+"");
 
       // L'url
-      setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
+      setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+getLabelFromHipsId()+"");
       
       // le status du HiPS : par defaut "public master clonableOnce"
 //      setPropriete(Constante.KEY_HIPS_STATUS,"public master clonableOnce");
@@ -2269,7 +2348,7 @@ public class Context {
       String fmt = getAvailableTileFormats();
       if( fmt.length()>0 ) setPropriete(Constante.KEY_HIPS_TILE_FORMAT,fmt);
 
-      if( fmt.indexOf("fits")>=0) {
+      if( fmt.indexOf("fits")>=0 || isMap()) {
          if( bitpix!=-1 ) setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,bitpix+"");
       }
       //      setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
@@ -2287,11 +2366,20 @@ public class Context {
 
       // Ajout du target et du radius par défaut
       if( target!=null ) {
-         int offset = target.indexOf(' ');
-         setPropriete(Constante.KEY_HIPS_INITIAL_RA,  target.substring(0,offset));
-         setPropriete(Constante.KEY_HIPS_INITIAL_DEC, target.substring(offset+1));
+         try {
+            Tok tok = new Tok(target," ;,");
+            double ra = Double.parseDouble(tok.nextToken());
+            double de = Double.parseDouble(tok.nextToken());
+            setPropriete(Constante.KEY_HIPS_INITIAL_RA,  ra+"");
+            setPropriete(Constante.KEY_HIPS_INITIAL_DEC, de+"");
+            if( tok.hasMoreTokens() ) {
+               double rad = Double.parseDouble(tok.nextToken());
+               setPropriete(Constante.KEY_HIPS_INITIAL_FOV, rad+"");
+            }
+         } catch( Exception e ) {
+            warning("HiPS initial target syntaxe error ["+target+"] => ignored");
+         }
       }
-      if( targetRadius!=null ) setPropriete(Constante.KEY_HIPS_INITIAL_FOV, targetRadius);
 
       // Resolution du hiPS
       double res = CDSHealpix.pixRes( order + getTileOrder() );
@@ -2331,34 +2419,6 @@ public class Context {
       // Check Code ?
       if( hipsCheckCode!=null ) setPropriete(Constante.KEY_HIPS_CHECK_CODE,hipsCheckCode);
 
-// DESORMAIS MAJ PAR L'ACTION CRC - PF 19 JUILLET 2022
-//      SMoc m = moc!=null ? moc : mocIndex;
-//      double skyFraction = m==null ? 0 : m.getCoverage();
-//      if( skyFraction>0 ) {
-//
-//         setPropriete(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( skyFraction ) );
-//
-//         long nbpix = CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder());
-//         long tileSizeFits = Math.abs(bitpix/8) * nbpix + 2048L;
-//         long tileSizeJpeg = nbpix/15;
-//         long tileSizePng = (long)(tileSizeJpeg*1.5);
-//         double coverage = m.getCoverage();
-//         long numberOfTiles =  CDSHealpix.pow2(order) *  CDSHealpix.pow2(order) * 12L;
-//         
-////         System.out.println("nbpix="+nbpix+" TileSizeFits="+Util.getUnitDisk(tileSizeFits)+ " tileSizeJpeg="+Util.getUnitDisk(tileSizeJpeg)+" tileSizePng="+Util.getUnitDisk(tileSizePng)
-////         +" nbTiles="+numberOfTiles+" depth="+depth);
-//         long fitsSize = (long)( ( tileSizeFits*numberOfTiles * 1.4 * coverage) )/1024L;
-//         long jpegSize = (long)( ( tileSizeJpeg*numberOfTiles * 1.4 * coverage) )/1024L;
-//         long pngSize = (long)( ( tileSizePng*numberOfTiles * 1.4 * coverage) )/1024L;
-//         long size = (fmt.indexOf("fits")>=0 ? fitsSize : 0)
-//               + (fmt.indexOf("jpeg")>=0 ? jpegSize : 0)
-//               + (fmt.indexOf("png")>=0 ? pngSize : 0)
-//               + 8;
-//         size *= depth;
-////         System.out.println("fmt="+fmt+" => full size="+Util.getUnitDisk(size*1024L)+" => estsize="+size);
-//         setPropriete(Constante.KEY_HIPS_ESTSIZE, size+"" );
-//      }
-
       // Mise en place effective des proprétés
       String k[] = new String[ keyAddProp==null ? 0 : keyAddProp.size() ];
       String v[] = new String[ k.length ];
@@ -2377,7 +2437,7 @@ public class Context {
       if( hipsId==null ) setHipsId(null);
 
       MyProperties prop = new MyProperties();
-      String label = getLabel()+"-meta";
+      String titre = getTitle()+"-meta";
       String finderHipxId = getHipsId()+"/meta";
 
 //      int offset = finderHipxId.indexOf('/');
@@ -2393,7 +2453,7 @@ public class Context {
 //            publisher_id         = ivo://ivo:
 //            obs_collection       = toto-meta
 
-      prop.setProperty(Constante.KEY_OBS_TITLE, label);
+      prop.setProperty(Constante.KEY_OBS_TITLE, titre);
       prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
       prop.setProperty(Constante.KEY_HIPS_FRAME, getFrameName());
       prop.setProperty(Constante.KEY_HIPS_ORDER, getOrder()+"");
@@ -2797,38 +2857,41 @@ public class Context {
          replaceKeys(prop);
          
          // S'il n'y a pas d'indication hips_initial... on les indique manu-militari
-         String ra  = prop.get( Constante.KEY_HIPS_INITIAL_RA );
-         String dec = prop.get( Constante.KEY_HIPS_INITIAL_DEC );
-         String fov = prop.get( Constante.KEY_HIPS_INITIAL_FOV );
-         if( ra==null || dec==null || fov==null ) {
-            if( fov==null ) {
+         // ni d'indication de target
+         if( target==null ) {
+            String ra  = prop.get( Constante.KEY_HIPS_INITIAL_RA );
+            String dec = prop.get( Constante.KEY_HIPS_INITIAL_DEC );
+            String fov = prop.get( Constante.KEY_HIPS_INITIAL_FOV );
+            if( ra==null || dec==null || fov==null ) {
+               if( fov==null ) {
 
-               // On va préférer prendre le moc_order indiqué dans les properties
-               // pour éviter de récupérer le bug sur le MocOrder
-               try {
-                  int n = Integer.parseInt( prop.get("moc_order"));
-                  SMoc mm = new SMoc();
-                  mm.setMocOrder(n);
-                  fov =  mm.getAngularRes()+"";
-               } catch( Exception e) {
-                  fov = moc.getAngularRes()+"";
-               }
-               prop.replaceValue( Constante.KEY_HIPS_INITIAL_FOV,fov);
-            }
-            if( ra==null || dec==null ) {
-               Healpix hpx = new Healpix();
-               if( moc.isFull() ) { ra="0"; dec="+0"; }
-               else {
+                  // On va préférer prendre le moc_order indiqué dans les properties
+                  // pour éviter de récupérer le bug sur le MocOrder
                   try {
-                     int o = moc.getMocOrder();
-                     long pix = moc.valIterator().next();
-                     double coo[] = hpx.pix2ang(o,pix);
-                     ra = coo[0]+"";
-                     dec = coo[1]+"";
-                  } catch( Exception e ) { }
+                     int n = Integer.parseInt( prop.get("moc_order"));
+                     SMoc mm = new SMoc();
+                     mm.setMocOrder(n);
+                     fov =  mm.getAngularRes()+"";
+                  } catch( Exception e) {
+                     fov = moc.getAngularRes()+"";
+                  }
+                  prop.replaceValue( Constante.KEY_HIPS_INITIAL_FOV,fov);
                }
-               prop.replaceValue( Constante.KEY_HIPS_INITIAL_RA,ra);
-               prop.replaceValue( Constante.KEY_HIPS_INITIAL_DEC,dec);
+               if( ra==null || dec==null ) {
+                  Healpix hpx = new Healpix();
+                  if( moc.isFull() ) { ra="0"; dec="+0"; }
+                  else {
+                     try {
+                        int o = moc.getMocOrder();
+                        long pix = moc.valIterator().next();
+                        double coo[] = hpx.pix2ang(o,pix);
+                        ra = coo[0]+"";
+                        dec = coo[1]+"";
+                     } catch( Exception e ) { }
+                  }
+                  prop.replaceValue( Constante.KEY_HIPS_INITIAL_RA,ra);
+                  prop.replaceValue( Constante.KEY_HIPS_INITIAL_DEC,dec);
+               }
             }
          }
 
@@ -2921,10 +2984,11 @@ public class Context {
    }
    
    /** Lecture des propriétés */
-   protected void loadProperties() throws Exception {
+   protected void loadProperties() throws Exception { loadProperties(getOutputPath()); }
+   protected void loadProperties(String path) throws Exception {
       waitingPropertieFile();
       try {
-         String propFile = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES;
+         String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
          prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
@@ -3050,6 +3114,7 @@ public class Context {
             
             // Je vire les commentaires qui foutent le bouzin
             String key = e.getKey().trim();
+            if( key.equals("NAXIS") ) continue;  // PREVENIR FX QUE POUR UN CUBE CA NE MARCHERA PAS
             String val=e.getValue();
             int i=val.indexOf('/');
             if( i>0 ) val = val.substring(0, i).trim();
@@ -3059,7 +3124,6 @@ public class Context {
       } catch( Exception e ) {
          e.printStackTrace();
       }
-
    }
    
    /** Supprime toutes les métriques (en cas de modif/update d'un HiPS */
@@ -3108,6 +3172,21 @@ public class Context {
          if( s.startsWith(fmt+":") ) return s.substring(fmt.length()+1);
       }
       return null;
+   }
+   
+   /** Retourne la liste des formats concernés par la chaine hipsCheckCode
+    * ex: "png:46574930 fits:2847219305" => png,fits
+    */
+   static public ArrayList<String> getCheckCodeFmt(String hipsCheckCode) {
+      ArrayList<String> res = new ArrayList<>(10);
+      if( hipsCheckCode==null ) return res;
+      Tok tok = new Tok(hipsCheckCode," ,");
+      while( tok.hasMoreTokens() ) {
+         String s = tok.nextToken();
+         int o = s.indexOf(':');
+         if( o!=-1 ) res.add(s.substring(0,o));
+      }
+      return res;
    }
    
    /** Supprime le Check code concernant un format spécifique d'une chaine hhipsCheckCode

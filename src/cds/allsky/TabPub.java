@@ -307,16 +307,16 @@ public class TabPub extends JPanel implements ActionListener {
 	    }
 
 	    public synchronized void start(){
-	        (new Thread(this)).start();
+	       (new Thread(this)).start();
 	    }
-	    
+
 	    public void run() {
 	       running=true;
-	        File f = new File(outfile);
-	        f.delete();
-	        allsky.export(outfile);
-	        running=false;
+	       File f = new File(outfile);
+	       f.delete();
+	       allsky.export(outfile);
+	       running=false;
 	    }
-	}
+    }
 
 }

@@ -271,7 +271,7 @@ public class PlanBG extends PlanImage {
       if( label!=null && label.trim().length()>0 ) setLabel(label);
       setSpecificParams(to);
       //      if( copyrightUrl==null ) copyrightUrl=url;
-      aladin.trace(3,"AllSky creation: "+to.toString1()+(c!=null ? " around "+c:""));
+      aladin.trace(3,"HiPS creation: "+to.toString1()+(c!=null ? " around "+c:""));
       suite();
    }
 
@@ -659,7 +659,7 @@ public class PlanBG extends PlanImage {
       paramByTreeNode(gsky, c, radius);
       scanProperties();
       scanMetadata();
-      aladin.trace(3,"AllSky local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
+      aladin.trace(3,"HiPS local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
       suite();
    }
 
@@ -1002,7 +1002,7 @@ public class PlanBG extends PlanImage {
       int projection = isPanorama ? Calib.MER : isAPlanet ? Calib.SIN : defaultProjType ;
       specificProj = isAPlanet;
       
-      Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
+      Projection p = new Projection("hips",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
             projection,Calib.FK5,this);
       p.frame = getCurrentFrameDrawing();
 //      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
@@ -2067,6 +2067,10 @@ public class PlanBG extends PlanImage {
     *             HealpixKey.ONLYIFDISKAVAIL - les données seront chargées immédiatement si elles sont présentes sur le disque locale, sinon asynchrone
     */
    protected double getHealpixPixel(int orderFile,long npixFile,double theta, double phi,int z,int mode) {
+      if( isOutMoc(orderFile, npixFile) ) {
+//         System.out.println("Inutile c'est en dehors du MOC");
+         return Double.NaN;
+      }
       HealpixKey h = mode==HealpixKey.PIX8 ? pixList.get( key(orderFile,npixFile,z) ) :
          getHealpixLowLevel(orderFile,npixFile,z,mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
       //      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,z,mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
@@ -2376,7 +2380,7 @@ public class PlanBG extends PlanImage {
    @Override
    protected boolean isSync() {
       if( error!=null ) {
-         aladin.trace(6,"PlanBG.isSync()=true:"+label+" => in error (error!=null)");
+         aladin.trace(6,"PlanBG.isSync()=true:"+label+" => in error (error="+error+")");
          return true;
       }
       if( !flagOk ) {
@@ -4526,7 +4530,7 @@ public class PlanBG extends PlanImage {
          if( status==HealpixKey.READY ) nbReady++;
          else if( status==HealpixKey.ERROR ) nbError++;
       }
-
+      
       return nbReady==0 && nbError>5;
    }
 
@@ -4675,9 +4679,9 @@ public class PlanBG extends PlanImage {
     * Gère le chargement des losanges de manière asynchrone
     */
    class HealpixLoader implements Runnable {
-      static final int POOLSIZE = 1; //8;
+      static final int POOLSIZE = 1; //3;
       boolean POOLTEST = true;   // EN COURS DE DEVELOPPEMENT POUR METTRE NE PLACE UN POOL DE THREADS DE CHARGEMENT DE TUILES
-      static final int DELAI =500;   // delai en ms entre deux demandes de chargement des losanges
+      static final int DELAI =10000;   // delai en ms avant la mort des Loaders
 
       private boolean loading;      // false s'il n'y a plus de losange en cours de chargement
       private boolean purging;      // false s'il n'y a plus aucun losange à purger
@@ -4719,8 +4723,7 @@ public class PlanBG extends PlanImage {
          }
          else {
             thread = new Thread(this,"HealpixLoader");
-            Util.decreasePriority(Thread.currentThread(), thread);
-            //            thread.setPriority(Thread.currentThread().getPriority()-1);
+//            Util.decreasePriority(Thread.currentThread(), thread);
             thread.start();
          }
       }

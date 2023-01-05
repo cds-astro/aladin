@@ -62,7 +62,7 @@ public class PlanBGStatic extends PlanBG {
 //      int defaultProjType = Projection.getProjType(sProj);
       int defaultProjType = Calib.AIT;
       
-      projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false, defaultProjType,Calib.FK5,this);
+      projd = new Projection("hips",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false, defaultProjType,Calib.FK5,this);
       projd.frame = getCurrentFrameDrawing();
       
       typeCM = aladin.configuration.getCMMap();

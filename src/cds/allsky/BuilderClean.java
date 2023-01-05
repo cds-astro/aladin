@@ -40,7 +40,7 @@ public class BuilderClean extends Builder {
 
    public void run() throws Exception {
       resetCheckCode();
-      context.writePropertiesFile(null);
+      context.writePropertiesFile();
 
       deleteDir(new File(context.getOutputPath()));
    }

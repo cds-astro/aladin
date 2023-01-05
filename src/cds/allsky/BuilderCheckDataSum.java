@@ -29,22 +29,37 @@ import cds.fits.Fits;
  * @author Pierre Fernique [CDS]
  * @version 1.0 - Juillet 2022
  */
-public class BuilderCheckFits extends BuilderCheckCode {
+public class BuilderCheckDataSum extends BuilderCheckCode {
    static final int MAXCORRUPT = 99;  // Nombre MAX de fichiers corrompus avant d'arrêter
    static final int MAXMISSING = 10;  // Nombre MAX de fichiers tolérés sans DATASUM
    
    int missingDataSum=0;              // Nombre de fichiers sans DATASUM
    int corruptDataSum=0;              // Nombre de fichiers corrompus
+   boolean flagGlobalDataSum=false;   // true si on doit calculer le DATASUM global
+   long globalDataSum=0L;             // DATASUM global sur toutes les tuiles Fits
 
-   public BuilderCheckFits(Context context) {
+   public BuilderCheckDataSum(Context context) {
       super(context);
    }
-
+   
    public Action getAction() { return Action.CHECKDATASUM; }
    
    protected void validateContextMore() throws Exception {
       if( format.indexOf("fits")<0 ) throw new Exception("No Fits tiles for this HiPS!");
+      activateGlobalDataSum( context.flagGlobalDataSum );
    }
+   
+   /** Retourne le Global DATASUM qui a été calculé */
+   public long getDataGlobalDataSum() throws Exception { 
+      if( !flagGlobalDataSum ) throw new Exception("Global DATASUM not computed (use activateGlobalDataSum(true) before)");
+      return globalDataSum; 
+   }
+   
+   /** True si on veut calculer puis recuperer le DATASUM global
+    * => cf. getGlobalDataSum() 
+    * @param flag
+    */
+   private void activateGlobalDataSum(boolean flag ) {flagGlobalDataSum=flag; }
    
    public void run() throws Exception {
 
@@ -66,6 +81,8 @@ public class BuilderCheckFits extends BuilderCheckCode {
          throw new Exception("HiPS is corrupted");
       }
       
+      if( flagGlobalDataSum ) context.info("Global DATASUM: "+globalDataSum);
+      
       // Vérification du Check code Fits
       String v = Context.getCheckCode("fits", context.getCheckCode());
       if( v==null ) {
@@ -74,7 +91,6 @@ public class BuilderCheckFits extends BuilderCheckCode {
          if( !info.getCode().equals(v) ) throw new Exception("HiPS is not compliant to Fits check code");
          else context.info("HiPS compliant with Fits check code!");
       }
-
    }
    
    // Affichage des fichiers corrompus
@@ -90,10 +106,13 @@ public class BuilderCheckFits extends BuilderCheckCode {
       if( missingDataSum>MAXMISSING && corruptDataSum==0 ) return;
 
       Fits fits = new Fits();
-      fits.loadFITS( f.getAbsolutePath() );
+      fits.loadFITS( f.getAbsolutePath(),false );
       int check = fits.checkDataSum();
       if( check==0 ) { corruptDataSum++; info.addCorruptedFile(f); }
       else if( check==-1 ) missingDataSum++;
+      
+      // On va calculer un DATASUM global
+      if( flagGlobalDataSum ) globalDataSum = fits.computeDataSum(globalDataSum);
       
       if( corruptDataSum>MAXCORRUPT ) {
          context.error("A lot of HiPS Fits tile(s) corrupted (DATASUM not compliant)!");

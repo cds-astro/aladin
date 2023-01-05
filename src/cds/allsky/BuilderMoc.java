@@ -114,7 +114,7 @@ public class BuilderMoc extends Builder {
       
       // Quel type de tuile utiliser ?
       ext = getDefaultExt(path);
-      if( ext!=null ) context.info("MOC generation based on "+ext+" tiles");
+      String sinfo = ext==null ? "": " based on "+ext+" tiles";
       
       // S'agit-il d'un gros cube => oui, alors on ne fait le MOC que sur la tranche du milieu
       // sinon c'est bien trop long
@@ -128,7 +128,7 @@ public class BuilderMoc extends Builder {
       String outputFile = path + FS + Constante.FILE_MOC;
       
       long t = System.currentTimeMillis();
-      context.info("MOC generation ("+(isMocHight?"deep resolution":"regular resolution")+" mocOrder="+moc.getMocOrder()
+      context.info("MOC generation"+sinfo+" ("+(isMocHight?"deep resolution":"regular resolution")+" mocOrder="+moc.getMocOrder()
             +(maxSize!=-1?" <"+cds.tools.Util.getUnitDisk(maxSize):"")
             +")...");
       
@@ -153,9 +153,13 @@ public class BuilderMoc extends Builder {
    }
    
    private String getDefaultExt(String path) {
-      if( (new File(path+FS+"Norder3"+FS+"Allsky.fits")).exists() ) return "fits";
-      if( (new File(path+FS+"Norder3"+FS+"Allsky.jpg")).exists() ) return "jpg";
-      if( (new File(path+FS+"Norder3"+FS+"Allsky.png")).exists() ) return "png";
+//      if( (new File(path+FS+"Norder3"+FS+"Allsky.fits")).exists() ) return "fits";
+//      if( (new File(path+FS+"Norder3"+FS+"Allsky.jpg")).exists() ) return "jpg";
+//      if( (new File(path+FS+"Norder3"+FS+"Allsky.png")).exists() ) return "png";
+      
+      for( String ext : new String[]{"fits","jpg","png"} ) {
+         if( context.findOneNpixFile(path,ext)!=null ) return ext;
+      }
       return null;
    }
    

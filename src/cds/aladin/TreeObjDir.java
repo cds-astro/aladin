@@ -686,24 +686,24 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    private boolean getIsColorByPath(String path,boolean local) {
-      String ext = inPNG ? ".png" : ".jpg";
+      String ext = inPNG ? "png" : "jpg";
       MyInputStream in = null;
       try {
-         if( local ) return Util.isJPEGColored(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext);
-         in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky"+ext) );
+         if( local ) return Util.isJPEGColored( Context.findOneNpixFile(path,ext) );
+         in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky."+ext) );
          byte [] buf = in.readFully();
          return Util.isColoredImage(buf);
       } catch( Exception e) {
-         aladin.trace(3,"Allsky"+ext+" not found => assume B&W survey");
+         aladin.trace(3,"Allsky."+ext+" not found => assume B&W survey");
          return false;
       }
       finally { try { if( in!=null ) in.close(); } catch( Exception e1 ) {} }
    }
 
    private boolean getFormatByPath(String path,boolean local,int fmt) {
-      String ext = fmt==0 ? ".fits" : fmt==1 ? ".jpg" : fmt==3 ? ".png" : ".xml";
-      return local && (new File(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext)).exists() ||
-            !local && Util.isUrlResponding(path+"/Norder3/Allsky"+ext);
+      String ext = fmt==0 ? "fits" : fmt==1 ? "jpg" : fmt==3 ? "png" : "xml";
+      return local && Context.findOneNpixFile(path,ext)!=null ||
+            !local && Util.isUrlResponding(path+"/Norder3/Allsky."+ext);
    }
 
    private int getMaxOrderByPath(String urlOrPath,boolean local) {
@@ -712,14 +712,6 @@ public class TreeObjDir extends TreeObj implements Propable {
                || !local && Util.isUrlResponding(urlOrPath+"/Norder"+n)) return n;
       }
       return -1;
-
-      //      int maxOrder=-1;
-      //      for( int n=3; n<100; n++ ) {
-      //         if( local && !(new File(urlOrPath+Util.FS+"Norder"+n).isDirectory()) ||
-      //            !local && !Util.isUrlResponding(urlOrPath+"/Norder"+n)) break;
-      //         maxOrder=n;
-      //      }
-      //      return maxOrder;
    }
    
    protected JPanel createPanel() {

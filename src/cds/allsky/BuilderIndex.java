@@ -167,11 +167,11 @@ public class BuilderIndex extends Builder {
          context.warning("The provided order ["+order+"] is less than the optimal order ["+context.getOrder()+"] => OVER-sample will be applied");
       } else if( order>context.getOrder() ) {
          context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
-      } else context.info("Order="+context.getOrder()+" => PixelAngularRes="
+      } else context.info("Max Order="+context.getOrder()+" => Pixel angular resolution="
             +Coord.getUnit( CDSHealpix.pixRes( context.getOrder()+context.getTileOrder())/3600. ) );
 
       int w = context.getTileSide();
-      context.info("TileOrder="+context.getTileOrder()+" => tileSize="+w+"x"+w+" pixels");
+      context.info("Tile Order="+context.getTileOrder()+" => tile size: "+w+"x"+w+" pixels");
 
       // Récupération de la liste des HDU
       hdu = context.getHDU();
@@ -252,7 +252,7 @@ public class BuilderIndex extends Builder {
       statBlocFile += deltaBlocFile;
       if( (code & Fits.GZIP) !=0 ) statNbZipFile++;
       long size = f.length();
-      statPixSize += width*height*depth;
+      statPixSize += (long)width*height*depth;
       statMemFile += size;
       if( statMaxSize<size ) {
          statMaxSize=size;
@@ -400,7 +400,7 @@ public class BuilderIndex extends Builder {
               nbFiles++;
 
                if( firstDepth==0 ) firstDepth=fitsfile.depth;
-               else if( fitsfile.depth!=firstDepth ) continue;
+               else if( fitsfile.depth!=firstDepth ) continue;          // Les cubes qui n'ont pas le meme nombre de plans que le 1er cube sont ignores
 
                Aladin.trace(4,"HiPS indexing "+currentfile+ (ext==0?"":"["+ext+"]..."));
 
@@ -429,13 +429,15 @@ public class BuilderIndex extends Builder {
 //                           if( fitsfile.widthCell!=cellSize || fitsfile.heightCell!=cellSize ) {
 //                              System.out.println(currentfile +" "+x+","+y+" "+fitsfile.widthCell+"x"+fitsfile.heightCell);
 //                           }
-                           fitsfile.depthCell = fitsfile.depth = 1;
+                           int depth = fitsfile.depth;
+                           fitsfile.depthCell = fitsfile.depth = 1;   // On considère qu'une seule tranche marchera pour toute
                            fitsfile.xCell=x;
                            fitsfile.yCell=y;
                            fitsfile.zCell=0;
                            fitsfile.ext = ext;
                            String currentCell = fitsfile.getCellSuffix();
                            testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
+                           fitsfile.depthCell = fitsfile.depth = depth;   // Pour mettre à jour les stats correctement
                         }
                      }
 

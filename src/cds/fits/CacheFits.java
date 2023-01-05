@@ -269,7 +269,7 @@ public class CacheFits {
          f.fits.loadPreview(fileName,true, (mode&HHH)==0, format);
       }
       else {
-         f.fits.loadFITS(fileName, false, flagLoad);
+         f.fits.loadFITS(fileName, false, flagLoad,true);
          if( context!=null ) {
             flagChangeOrig = f.fits.bzero!=context.bZeroOrig || f.fits.bscale!=context.bScaleOrig;
             if( flagChangeOrig && firstChangeOrig ) {
@@ -787,7 +787,7 @@ public class CacheFits {
       //      int nbReleased = getNbReleased();
       int n = map.size();
       String s = n>1 ? "s":"";
-      return "Cache: "+n+" item"+s+"/"+maxFile
+      return "RAM cache: "+n+" item"+s+"/"+maxFile
             //      +(nbReleased>0 ? "("+nbReleased+" released)" : "")
             +" using "+Util.getUnitDisk(getMem())
             +(maxMem>0 ? "/"+Util.getUnitDisk(maxMem):"["+Util.getUnitDisk(maxMem)+"]")

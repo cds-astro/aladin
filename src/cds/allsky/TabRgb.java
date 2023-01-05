@@ -70,7 +70,6 @@ import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanBGRgb;
 import cds.aladin.prop.PropPanel;
-import cds.allsky.Context.JpegMethod;
 import cds.tools.Util;
 
 public class TabRgb extends JPanel implements ActionListener {
@@ -325,15 +324,15 @@ public class TabRgb extends JPanel implements ActionListener {
             getString("METHODJPGH"),
             p1,g,c, GridBagConstraints.EAST);
 
-      p1 = new JPanel();
-      gauss=b1 = new JCheckBox(getString("FILTERGAUSS")+" ");  p1.add(b1); 
-      b1.addActionListener( new ActionListener() {
-         public void actionPerformed(ActionEvent e) { updatePreview(); }
-      });
-      b1.setSelected(true);
-      PropPanel.addCouple(f, p,getString("FILTERRGB"), 
-            getString("FILTERRGBH"),
-            p1,g,c, GridBagConstraints.EAST);
+//      p1 = new JPanel();
+//      gauss=b1 = new JCheckBox(getString("FILTERGAUSS")+" ");  p1.add(b1); 
+//      b1.addActionListener( new ActionListener() {
+//         public void actionPerformed(ActionEvent e) { updatePreview(); }
+//      });
+//      b1.setSelected(true);
+//      PropPanel.addCouple(f, p,getString("FILTERRGB"), 
+//            getString("FILTERRGBH"),
+//            p1,g,c, GridBagConstraints.EAST);
 
       bg = new ButtonGroup();
       p1 = new JPanel();
@@ -508,7 +507,7 @@ public class TabRgb extends JPanel implements ActionListener {
 
    
    /** Retourne true si le filtre de réduction de bruit (gauss) est activé */
-   public boolean getGauss() { return gauss.isSelected(); }
+//   public boolean getGauss() { return gauss.isSelected(); }
 
    /** Retourne les 3 plans sélectionnés */
    public PlanBG [] getSelectedPlans() {
@@ -519,9 +518,9 @@ public class TabRgb extends JPanel implements ActionListener {
    public int getRGBMethod() { return classic.isSelected() ? 0 : 1; }
    
    /** Retourne la méthode qu'il faudra utiliser pour construire les JPG couleur */
-   public JpegMethod getHierarchyAlgo() {
-      if( radioMediane.isSelected() ) return Context.JpegMethod.MEDIAN;
-      return Context.JpegMethod.MEAN;
+   public ModeTree getModeTree() {
+      if( radioMediane.isSelected() ) return ModeTree.treeMedian;
+      return ModeTree.treeMean;
    }
 
    /** Retourne le format de codage pour les tuiles couleurs (JPEG ou PNG) */
@@ -692,7 +691,7 @@ public class TabRgb extends JPanel implements ActionListener {
          cmd.append( " in"+RGB[c]+"=\""+p.getUrl()+"\"");
       }
       cmd.append( getFormat()==Constante.TILE_PNG ? " color=png" :" color=jpg");
-      if( getGauss() ) cmd.append(" filter=gauss");
+//      if( getGauss() ) cmd.append(" filter=gauss");
       
       boolean flagLupton = getRGBMethod()==1;
       if( flagLupton ) {
@@ -788,9 +787,9 @@ public class TabRgb extends JPanel implements ActionListener {
 
          // Les paramètres généraux
          context.setRgbOutput(outputField.getText());
-         context.setHierarchyAlgo(getHierarchyAlgo());
+         context.setHierarchyAlgo(getModeTree());
          context.setRgbFormat(getFormat());
-         if( getGauss() ) context.setFilter("gauss");
+//         if( getGauss() ) context.setFilter("gauss");
 
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
          context.setProgressBar(progressBar);

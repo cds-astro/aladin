@@ -83,6 +83,7 @@ public final class Coord {
 //   }
    
    public Coord(String sexa) throws Exception {
+      sexa=sexa.replace(',',' ');    // Si jamais on a une virgule qui sépare ra et dec
       coo.set(sexa);
       al  = coo.getLon();
       del = coo.getLat();

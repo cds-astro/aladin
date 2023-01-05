@@ -333,7 +333,7 @@ public class BuilderDetails extends Builder {
          context.info("Pre-existing "+Constante.FILE_METADATAXML+" file => keep it");
       } else {
          RandomAccessFile f = new RandomAccessFile(metadata ,"rw");
-         String s = METADATA1.replace("YOUR_SURVEY_LABEL",context.getLabel()+" details");
+         String s = METADATA1.replace("YOUR_SURVEY_LABEL",context.getTitle()+" details");
          f.write(s.getBytes());
          f.write( getAdditionalMetaFileFields().getBytes() );
          f.write(METADATA2.getBytes());

@@ -119,7 +119,7 @@ final public class BuilderAllsky  extends Builder {
             if( !findParam ) { bzero=in.getBzero(); bscale=in.getBscale(); blank=in.getBlank(); findParam=true; }
             if( out==null ) {
                if( in.width!=0 && in.width<outLosangeWidth ) {
-                  context.info("createAllsky: reducing width=>"+in.width+" ...");
+//                  context.info("createAllsky: reducing width=>"+in.width+" ...");
                   createAllSky(path,order,in.width,z);
                   return;
                }
@@ -160,11 +160,22 @@ final public class BuilderAllsky  extends Builder {
       out.setBzero(bzero);
       out.setBscale(bscale);
 
-
       // Ecriture du FITS (true bits)
       String filename = getFileName(path, order,z);
+      
+      if( context.trim ) {
+         long mem = out.getMem();
+         Fits nout = out.trimFactory();
+         if( nout!=null ) {
+            out.setReleasable(false);
+            out=nout;
+            long mem1 = out.getMem();
+            context.trimMem+=(mem-mem1)/1024L;
+         }
+      }
+
       out.addDataSum();
-      out.writeFITS(filename+".fits");
+      out.writeFITS(filename+".fits",context.gzip);
 
       // Dans le cas d'un cube, il est possible que le Allsky.fits n'ait pas été créé (vide),
       // on va alors dupliquer le premier Allsky_nnn.fits en Allsky.fits pour s'en sortir
@@ -172,7 +183,7 @@ final public class BuilderAllsky  extends Builder {
          String f = getFileName(path,order,0);
          if( !(new File(f+".fits")).isFile() ) {
             out.addDataSum();
-            out.writeFITS(f+".fits");
+            out.writeFITS(f+".fits",context.gzip);
          }
       }
 

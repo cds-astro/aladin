@@ -42,15 +42,19 @@ public class Task extends Thread {
 	private Context context;
 	private Vector<Action> actions;
 	private Builder builder=null;   // Builder en cours d'exécution
+	private boolean flagValidator=false;
+	
+	
+	public Task() { flagValidator=true; }
 	
 	/** Lancement d'une tâche unique
 	 * @param context
 	 * @param action
-	 * @param now  true pour une exécution asynchrone, false pour un thread indépendant
+	 * @param now  true pour une exécution synchrone, false pour un thread indépendant
 	 */
     public Task(Context context,Action action,boolean now) throws Exception {
        this.context=context;
-       actions = new Vector<Action>();
+       actions = new Vector<>();
        actions.add(action);
        
        perform(now);
@@ -68,6 +72,15 @@ public class Task extends Thread {
        perform(now);
     }
     
+    static public Builder validator(Context context, Action action) throws Exception {
+       Task task = new Task();
+       task.context=context;
+       task.actions = new Vector<>();
+       task.actions.add(action);
+       task.run();
+       return task.builder;
+    }
+    
     // Exécution des tâches
     private void perform(boolean now) throws Exception {
        if( context.isTaskRunning() ) throw new Exception("There is already a running task ("+context.getAction()+")");
@@ -79,17 +92,16 @@ public class Task extends Thread {
     
     public void run() {
        ThreadProgressBar progressBar=null;
-       
+
        progressBar = new ThreadProgressBar(context);
        progressBar.start();
-       
 
        
 //       System.out.println("Check actions:");
 //       for( Action a : actions ) { System.out.println(" ==> "+a); }
 
        try { 
-          context.setTaskRunning(true);
+          if( !flagValidator ) context.setTaskRunning(true);
           for( Action a : actions ) {
              if( context.isTaskAborting() ) break;
              context.running(a+"");

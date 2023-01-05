@@ -68,7 +68,7 @@ public class BuilderRgb extends BuilderRunner {
    
    private int statNbFile;
 
-   private Mode coaddMode=Mode.REPLACETILE;
+   private ModeMerge coaddMode=ModeMerge.mergeOverwriteTile;
    private int format;
 
    public BuilderRgb(Context context) {
@@ -81,7 +81,10 @@ public class BuilderRgb extends BuilderRunner {
       Fits.setToolKit();
       build();
       context.resetCheckCode();
-      context.setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, context.getJpegMethod().toString().toLowerCase());
+      context.setPropriete(Constante.KEY_HIPS_COADD, 
+               context.getModeOverlay().toString()+" "+
+               context.getModeMerge().toString()+" "+
+               context.getModeTree().toString() );
 
       if( !context.isTaskAborting() ) (new BuilderMoc(context)).createMoc(output);
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.done("ALLSKY file done"); }
@@ -151,10 +154,10 @@ public class BuilderRgb extends BuilderRunner {
       String path = context.getRgbOutput();
       
       format= context.getRgbFormat();
-      coaddMode = context.getMode();
-      if( coaddMode!=Mode.KEEPTILE && coaddMode!=Mode.REPLACETILE ) {
+      coaddMode = context.getModeMerge();
+      if( coaddMode!=ModeMerge.mergeKeepTile && coaddMode!=ModeMerge.mergeOverwriteTile ) {
          if( context instanceof ContextGui ) {
-            context.setMode(Mode.REPLACETILE);
+            context.setModeMerge(ModeMerge.mergeOverwriteTile);
          } else throw new Exception("Only KEEPTILE and REPLACETILE modes are supported for RGB HiPS generation");
 
       }
@@ -275,9 +278,9 @@ public class BuilderRgb extends BuilderRunner {
       // détermination de la zone à calculer
       if( context.mocArea!=null ) context.moc = context.moc.intersection( context.mocArea );
       
-      // Faut-il un filtre gaussien
-      if( context.gaussFilter ) context.info("Gauss filter activated...");
-      flagGauss = context.gaussFilter;
+//      // Faut-il un filtre gaussien
+//      if( context.gaussFilter ) context.info("Gauss filter activated...");
+//      flagGauss = context.gaussFilter;
 
       context.writeMetaFile();
    }
@@ -440,9 +443,12 @@ public class BuilderRgb extends BuilderRunner {
       // récupération du bzero et bscale
       double bzero=0,bscale=1;
       Fits f = new Fits();
-      String name = inputs[c]+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
-      File file = new File( name );
-      if( !file.canRead() ) throw new Exception("Cannot determine BZERO and BSCALE for component "+c+" => missing Allsky.fits");
+      
+//      String name = inputs[c]+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
+//      if( !file.canRead() ) throw new Exception("Cannot determine BZERO and BSCALE for component "+c+" => missing Allsky.fits");
+      String name = context.findOneNpixFile(inputs[c],"fits");
+      if( name==null ) throw new Exception("Cannot determine BZERO and BSCALE for component "+c+" => no fits tile");
+
       f.loadHeaderFITS( name );
       try { bzero = f.headerFits.getDoubleFromHeader("BZERO"); } catch( Exception e ) { }
       try { bscale = f.headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { }

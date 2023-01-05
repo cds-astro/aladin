@@ -46,7 +46,7 @@ public class BuilderConcat extends BuilderRunner {
    private String inputPath;
    private String outputPathIndex;
    private String inputPathIndex;
-   private Mode mode;
+   private ModeMerge mode;
    private boolean doHpxFinder;
    private int tileMode;
    private int tileSide;
@@ -66,44 +66,46 @@ public class BuilderConcat extends BuilderRunner {
 
       // Regeneration de l'arborescence pour la zone concernée
       (new BuilderTree(context)).run();
-      context.info("tree updated");
+      context.info("Hips tree updated");
 
       boolean inJpg=false,inPng=false;
 
       if( !context.isColor() ) {
          // Regeneration des tuiles jpeg et de l'arborescence pour la zone concernée si nécessaire
-         inJpg = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.jpg")).exists();
+//         inJpg = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.jpg")).exists();
+         inJpg = context.findOneNpixFile(context.getOutputPath(),"jpg")!=null;
          if( inJpg ) { (new BuilderJpg(context)).run(); context.info("JPEG tiles updated"); }
 
          // Regeneration des tuiles png et de l'arborescence pour la zone concernée si nécessaire
-         inPng = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.png")).exists();
+//         inPng = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.png")).exists();
+         inPng = context.findOneNpixFile(context.getOutputPath(),"png")!=null;
          if( inPng ) {
             context.info("Updating PNG tiles...");
-            context.setMode(Mode.REPLACETILE);
+            context.setModeMerge(ModeMerge.mergeOverwriteTile);
             (new BuilderPng(context)).run(); 
          }
       }
 
-      // Dans le cas d'un traitement algorythmique, les mises à jour des métadonnées
-      // sont spécifiques (voir ci-dessous)
-      boolean coaddOp = mode==Mode.SUM || mode==mode.DIV || mode==Mode.MUL;
-      
-      // Mise à jour ou generation du MOC final
       String outputPath = context.getOutputPath();
-      outputMoc = new SMoc();
-      File f = coaddOp ? null :new File(outputPath+Util.FS+Constante.FILE_MOC);
-      if( f.exists() ) {
-         outputMoc.read( f.getCanonicalPath() );
-         outputMoc = outputMoc.union(inputMoc);
-         outputMoc.write( context.getOutputPath()+Util.FS+Constante.FILE_MOC);
-         context.info("MOC updated");
-      } else {
-         (new BuilderMoc(context)).run();
-         context.info("MOC done");
-      }
+      
+      // Dans le cas d'un traitement algorythmique, on ne fait pas de mise à jour
+      // ni du MOC ni du HpxFinder
+      if( mode!=ModeMerge.mergeMul && mode!=ModeMerge.mergeDiv && mode!=ModeMerge.mergeSub) {
+         
+         // Mise à jour ou generation du MOC final
+         outputMoc = new SMoc();
+         File f = new File(outputPath+Util.FS+Constante.FILE_MOC);
+         if( f.exists() ) {
+            outputMoc.read( f.getCanonicalPath() );
+            outputMoc = outputMoc.union(inputMoc);
+            outputMoc.write( context.getOutputPath()+Util.FS+Constante.FILE_MOC);
+            context.info("MOC updated");
+         } else {
+            (new BuilderMoc(context)).run();
+            context.info("MOC done");
+         }
 
-      // Post traitement sur le HpxFinder si nécessaire
-      if( !coaddOp ) {
+         // Post traitement sur le HpxFinder si nécessaire
          if( !doHpxFinder ) {
             f = new File(outputPathIndex);
             if( f.isDirectory() ) {
@@ -133,7 +135,7 @@ public class BuilderConcat extends BuilderRunner {
       inputPath = context.getInputPath();
       outputPathIndex = cds.tools.Util.concatDir( outputPath,Constante.FILE_HPXFINDER);
       inputPathIndex = cds.tools.Util.concatDir( inputPath,Constante.FILE_HPXFINDER);
-      mode = context.getMode();
+      mode = context.getModeMerge();
       tileMode=Constante.TILE_FITS;
       tileSide=context.getTileSide();
 
@@ -200,21 +202,22 @@ public class BuilderConcat extends BuilderRunner {
       
       // faudra-t-il traiter les index
       doHpxFinder = (new File(inputPathIndex)).isDirectory() && (new File(outputPathIndex)).isDirectory();
-      if( mode==Mode.DIV || mode==Mode.MUL || mode==Mode.SUM ) {
+      if( mode==ModeMerge.mergeMul || mode==ModeMerge.mergeDiv || mode==ModeMerge.mergeSub) {
          doHpxFinder=false;
          if( liveIn ) context.warning("Source HiPS does provide weight tiles => ignored");
       }
-      if( doHpxFinder ) context.info("HpxFinder will be also concatenated (mode="+mode+")");
+      if( doHpxFinder ) context.info("HpxFinder will be also concatenated");
 
-
-      
-      if( mode==Mode.AVERAGE ) {
+      if( mode==ModeMerge.mergeMean ) {
          if( !live ) context.warning("Both HiPS to merge do not provide weight tiles => assuming basic average");
          else if( !liveOut ) context.warning("Target HiPS do not provide weight tiles => assuming weigth 1 for each output pixel");
          else if( !liveIn ) context.warning("Source HiPS do not provide weight tiles => assuming weigth 1 for each input pixel");
       }
       
-      context.info("Coadd mode: "+Mode.getExplanation(mode));
+      // Info sur la méthode
+      context.info("Merge mode (tiles): "+ModeMerge.getExplanation(context.getModeMerge()));
+      context.info("Hierarchy mode (tree): "+ModeTree.getExplanation(context.getModeTree()));
+      
       
    }
    
@@ -315,6 +318,7 @@ public class BuilderConcat extends BuilderRunner {
    public void validateParams(String allskyFile) throws Exception {
       Fits f = new Fits();
       f.loadHeaderFITS(allskyFile);
+//      boolean flagOp = Mode.isOperation( context.getMode());
 
       int bitpix = f.headerFits.getIntFromHeader("BITPIX");
       if( bitpix!=context.bitpix ) throw new Exception("Uncompatible HiPS => input.BITPIX="+bitpix+" output.BITPIX="+context.bitpix);
@@ -323,19 +327,23 @@ public class BuilderConcat extends BuilderRunner {
       try {
          bscale = f.headerFits.getDoubleFromHeader("BSCALE");
       } catch( Exception e ) { }
-      if( bscale!=context.bscale ) context.warning("BSCALE modification => ignored (input.BSCALE="+bscale+" output.BSCALE="+context.bscale+")");
-
       double bzero=0;
       try {
          bzero = f.headerFits.getDoubleFromHeader("BZERO");
       } catch( Exception e ) { }
-      if( bzero!=context.bzero ) context.warning("BZERO modification =>ignored (input.BZERO="+bzero+" output.BZERO="+context.bzero+")");
-
       double blank=Double.NaN;
-      try {
+      if( bscale!=context.bscale || bzero!=context.bzero ) {
+         /* if( flagOp ) throw new Exception("Uncompatible BSCALE/BZERO => input:"+bscale+"/"+bzero+" output:"+context.bscale+"/"+context.bzero);
+         else */ context.info("BSCALE/BZERO modification => assuming input:"+bscale+"/"+bzero+" output:"+context.bscale+"/"+context.bzero);
+      }
+      try
+      {
          blank = f.headerFits.getDoubleFromHeader("BLANK");
       } catch( Exception e ) { }
-      if( !Double.isNaN(blank) && blank!=context.blank ) context.warning("BLANK modification => ignored (input.BLANK="+blank+" output.BLANK="+context.blank+")");
+      if( !Double.isNaN(blank) && blank!=context.blank ) {
+         /* if( flagOp ) throw new Exception("Uncompatible BLANK => input:"+blank+" output:"+context.blank);
+         else */ context.info("BLANK modification => assuming input:"+blank+" output:"+context.blank);
+      }
    }
 
 
@@ -356,74 +364,84 @@ public class BuilderConcat extends BuilderRunner {
       
       // traitement de la tuile
       String outFile = Util.getFilePath(outputPath,order,npix,z);
-      if( mode!=Mode.REPLACETILE ) {
+      if( mode!=ModeMerge.mergeOverwriteTile ) {
          out = loadTile(outFile);
-         if( out!=null && live ) weightOut  = ThreadBuilderTile.loadWeight(outFile,tileSide,1);
+         if( out!=null && live ) weightOut  = loadWeight(outFile,tileSide,1);
       }
-      if( live ) weightIn = ThreadBuilderTile.loadWeight(inputFile,tileSide,1);
+      if( live ) weightIn = loadWeight(inputFile,tileSide,1);
       
       switch(mode) {
-         case REPLACETILE:
+         case mergeOverwriteTile:
+            input.adjustParams(bzero, bscale, blank);
             out=input;
             weightOut=weightIn;
             break;
-         case KEEPTILE :
+         case mergeKeepTile :
             if( out==null ) {
+               input.adjustParams(bzero, bscale, blank);
                out=input;
                weightOut=weightIn;
             }
             break;
-         case AVERAGE:
+         case mergeMean:
             if( out!=null ) {
+               input.adjustParams(bzero, bscale, blank);
                if( !live ) input.coadd(out,Fits.AVG);
-               else input.coadd(out, weightIn, weightOut);
-            }
+               else {
+                  input.coadd(out, weightIn, weightOut);
+               }
+            } 
+            input.adjustParams(bzero, bscale, blank);
             out=input;
             weightOut=weightIn;
             break;
-         case DIV:
-            if( out!=null ) out.coadd(input,Fits.DIV);
-            break;
-         case MUL:
-            if( out!=null ) out.coadd(input,Fits.MUL);
-            break;
-         case SUM:
-            if( out!=null ) out.coadd(input,Fits.ADD);
-            break;
-         case ADD:
+         case mergeAdd:
             if( out!=null ) {
-               input.coadd(out,Fits.ADD);
-               if( live ) for( int i=0; i<weightOut.length; i++ ) weightIn[i] += weightOut[i];
+               out.coadd(input,Fits.ADD);
+               if( live ) for( int i=0; i<weightOut.length; i++ ) weightOut[i] += weightIn[i];
+            } else {
+               input.adjustParams(bzero, bscale, blank);
+               out=input; 
+               weightOut=weightIn;
             }
-            out=input;
-            weightOut=weightIn;
             break;
-         case OVERWRITE:
+         case mergeKeep:
             if( out!=null ) {
                if( !live ) out.mergeOnNaN(input);
                else out.mergeOnNaN(input,weightOut, weightIn);
             }  else {
+               input.adjustParams(bzero, bscale, blank);
                out=input;
                weightOut=weightIn;
             }
             break;
-         case KEEP:
+         case mergeOverwrite:
             if( out!=null ) {
+               input.adjustParams(bzero, bscale, blank);
                if( !live ) input.mergeOnNaN(out);
-               else out.mergeOnNaN(out,weightIn, weightOut);
-            }
+               else input.mergeOnNaN(out,weightIn, weightOut);
+            } 
+            input.adjustParams(bzero, bscale, blank);
             out=input;
             weightOut=weightIn;
             break;
+         case mergeSub:
+            if( out!=null ) out.coadd(input,Fits.SUB);
+            break;
+         case mergeMul:
+            if( out!=null ) out.coadd(input,Fits.MUL);
+            break;
+         case mergeDiv:
+            if( out!=null ) out.coadd(input,Fits.DIV);
+            break;
          default:
             throw new Exception("Coadd mode ["+mode+"] not supported for CONCAT action");
-
       }
 
-      if( out==null ) throw new Exception("Y a un blème ! out==null");
-      
-      write(outFile,out);
-      if( liveOut ) ThreadBuilderTile.writeWeight(outFile,weightOut,tileSide);
+      if( out!=null ) {
+         write(outFile,out);
+         if( liveOut ) writeWeight(outFile,weightOut,tileSide,order,npix);
+      }
 
       if( context.isTaskAborting() )  throw new Exception("Task abort !");
 
@@ -435,16 +453,16 @@ public class BuilderConcat extends BuilderRunner {
          HealpixProgen outIndex = loadIndex(outIndexFile);
 
          switch(mode) {
-            case REPLACETILE:
+            case mergeOverwriteTile:
                outIndex=inputIndex;
                break;
-            case KEEPTILE :
+            case mergeKeepTile :
                if( outIndex==null ) outIndex=inputIndex;
                break;
-            case ADD:
-            case AVERAGE:
-            case OVERWRITE:
-            case KEEP:
+            case mergeAdd:
+            case mergeMean:
+            case mergeOverwrite:
+            case mergeKeep:
                if( outIndex!=null ) inputIndex.merge(outIndex);
                outIndex=inputIndex;
                break;

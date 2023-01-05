@@ -43,6 +43,12 @@ import cds.tools.pixtools.Util;
  *
  */
 public abstract class Builder {
+   
+   static public final boolean GAUSS = false;
+   static final boolean NEWCUBE = false;
+//   static final boolean TRIMBORDER = false;
+   static final boolean TESTALLSKY = true;
+//   static final boolean GZIPBYDEFAULT = false;
 
    protected Builder b=null;                 // Subtilité pour faire afficher des statistiques
 
@@ -76,10 +82,13 @@ public abstract class Builder {
          case CHECKCODE: return new BuilderCheckCode(context);
          case UPDATEDATASUM: return new BuilderUpdateDataSum(context);
          case CHECK:     return new BuilderCheck(context);
-         case CHECKDATASUM: return new BuilderCheckFits(context);
+         case CHECKDATASUM: return new BuilderCheckDataSum(context);
+         case CHECKFAST: return new BuilderCheckFast(context);
          case LINT:      return new BuilderLint(context);
-//         case GZIP:      return new BuilderGzip(context);
+         case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);
+         case TRIM:      return new BuilderTrim(context);
+         case UNTRIM:    return new BuilderUntrim(context);
          case RGB:       return new BuilderRgb(context);
          case TREE:      return new BuilderTree(context);
          case CONCAT:    return new BuilderConcat(context);
@@ -93,6 +102,7 @@ public abstract class Builder {
          case SMOC:      return new BuilderSMoc(context);
          case TMOC:      return new BuilderTMoc(context);
          case STMOC:     return new BuilderSTMoc(context);
+         case VALIDATOR: return new BuilderValidator(context);
 //         case ZIP:       return new BuilderZip(context);
          default: break;
       }
@@ -123,6 +133,10 @@ public abstract class Builder {
       context.warning("Action "+getAction()+" not run due to the -n option");
       return true;
    }
+   
+   /** Retourne le temps d'execution (ms) si connue, -1 sinon */
+   protected long execTime=-1L;
+   public long getExecTime() { return execTime; }
 
    // Quelques validateurs génériques utilisés par les différents Builders.
 
@@ -208,7 +222,8 @@ public abstract class Builder {
 
       File f = new File(output);
       if( f.exists() && (!f.isDirectory()  || !f.canRead())) throw new Exception("Ouput directory not available ["+output+"]");
-      context.info("the output directory is "+output);
+      
+      context.info("Output directory: "+output);
       
       
       context.setValidateOutput(true);
@@ -303,7 +318,8 @@ public abstract class Builder {
       double [] pixelRangeCut = context.getPixelRangeCut();
       if( (missingCut  || missingRange ) && pixelRangeCut!=null || missingGood ) {
          try {
-            setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+//            setBzeroBscaleFromPreviousAllsky( context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits" );
+            setBzeroBscaleFromPreviousAllsky( context.findOneNpixFile(context.getOutputPath(), "fits"));
          } catch( Exception e ) {
 
             String img = context.getImgEtalon();
@@ -394,7 +410,8 @@ public abstract class Builder {
 
             // Il me faut alors BZERO  et BSCALE
             try {
-               setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+//               setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+               setBzeroBscaleFromPreviousAllsky( context.findOneNpixFile(context.getOutputPath(), "fits") );
                if( cut==null ) cut = new double[5];
                for( int i=0; i<4; i++ ) {
                   if( Double.isNaN(pixelRangeCut[i]) ) continue;
@@ -406,18 +423,18 @@ public abstract class Builder {
       } catch( Exception e ) {}
    }
 
-
    protected void validateBitpix() {
       if( context.bitpix!=-1 ) return;
       try {
-         setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+//         setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+         setBzeroBscaleFromPreviousAllsky( context.findOneNpixFile(context.getOutputPath(), "fits") );
       } catch( Exception e ) { }
    }
 
    protected void validateLabel() {
-      if( context.label!=null ) return;
+      if( context.title!=null ) return;
       String label = getALabel(context.getOutputPath(),context.getInputPath());
-      if( label!=null && label.length()>0 ) context.label=label;
+      if( label!=null && label.length()>0 ) context.title=label;
    }
 
    protected String getALabel(String outputPath,String inputPath) {
@@ -433,15 +450,9 @@ public abstract class Builder {
             prop.load(in);
             in.close();
             
-            String s =  MultiMoc.getID(prop);
-            s=context.getLabelFromHipsId(s);
-            if( s==null ) {
-               s = prop.getProperty(Constante.KEY_OBS_TITLE);
-            }
-//            String s = prop.getProperty(Constante.KEY_OBS_COLLECTION);
-            if( s==null ) {
-               s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
-            }
+            String s=prop.getProperty(Constante.KEY_OBS_TITLE);
+            if( s==null ) s=prop.getProperty(Constante.OLD_OBS_COLLECTION);
+            if( s==null ) s=context.getLabelFromHipsId( MultiMoc.getID(prop) );
             if( s!=null && s.length()>0 ) label=s;
          }
       } catch( Exception e ) { }
@@ -487,10 +498,10 @@ public abstract class Builder {
    /**
     * Initialisation des paramètres FITS à partir d'un Allsky.fits précédent
     */
-   protected void setFitsParamFromPreviousAllsky(String allskyFile) throws Exception {
+   protected void setFitsParamFromPreviousAllsky(String aFitsTile) throws Exception {
       Fits f = new Fits();
 
-      f.loadFITS(allskyFile);
+      f.loadFITS(aFitsTile);
       double [] cut = f.findAutocutRange(0,0,true);
 
       context.setBitpix(f.bitpix);
@@ -510,9 +521,9 @@ public abstract class Builder {
 
    }
 
-   protected void setBzeroBscaleFromPreviousAllsky(String allskyFile) throws Exception {
+   protected void setBzeroBscaleFromPreviousAllsky(String aFitsTile) throws Exception {
       Fits f = new Fits();
-      f.loadHeaderFITS(allskyFile);
+      f.loadHeaderFITS(aFitsTile);
       try {
          double bzero = f.headerFits.getDoubleFromHeader("BZERO");
          context.bzero=bzero;
@@ -531,6 +542,15 @@ public abstract class Builder {
 
       }
    }
+   
+   protected void setTileWidthFromPreviousAllsky(String aFitsTile) throws Exception {
+      Fits f = new Fits();
+      f.loadHeaderFITS(aFitsTile);
+      try {
+         int tileWidth = f.headerFits.getIntFromHeader("NAXIS1");
+         context.setTileOrder( (int)CDSHealpix.log2(tileWidth));
+      } catch( Exception e ) { }
+   }     
    
    
    // Gestion des paramètres pour le stockage dans une partition alternative
@@ -599,7 +619,7 @@ public abstract class Builder {
          return;   // tout tient dans la première partition
       }
       for( int n=0; tok.hasMoreTokens(); n++ ) {
-         if( n==MAXPART ) throw new Exception("Too many slitting partitions");
+         if( n==MAXPART ) throw new Exception("Too many splitting partitions");
          part[n] = new Part();
          String s1 = tok.nextToken();
          int i = s1.lastIndexOf(' ');
@@ -671,5 +691,53 @@ public abstract class Builder {
    }
    
 
-   
+   /**
+    * Sauvegarde des poids des pixels d'une tuile sous la forme d'une FITS
+    * La nomenclature suit la même que pour les tuiles classiques, avec le suffixe "_w"
+    * @param file    Le nom de fichier (sans le suffixe "_w" ni l'extension ".fits)
+    * @param weight  La matrice des poids
+    * @param w       La largeur de la tuile
+    * @throws Exception
+    */
+   public void writeWeight(String file, double [] weight, int w,int order,long npix) throws Exception {
+      if( weight==null ) return;
+      Fits fits = new Fits(w,w,-32);
+      context.updateHeader(fits,order,npix);
+      int i=0;
+      for( int y=0; y<fits.height; y++ ) {
+         for( int x=0; x<fits.width; x++ ) {
+            fits.setPixelDouble(x,y,weight[i++]);
+         }
+      }
+      fits.addDataSum();
+      fits.writeFITS(file+"_w.fits");
+   }
+
+   /**
+    *  Chargement des poids des pixels d'une tuile sous la forme d'une FITS
+    * La nomenclature suit la même que pour les tuiles classiques, avec le suffixe "_w"
+    * @param file    Le nom de fichier (sans le suffixe "_w" ni l'extension ".fits)
+    * @return        La matrice des poids - remplie de la valeur par défaut si le fichier n'existe pas
+    * @throws Exception
+    */
+   public double [] loadWeight(String file,int w,double defaultWeight) throws Exception {
+      double [] weight = new double[ w *w ];
+      String filename = file+"_w.fits";
+      if( !(new File(filename)).exists() ) {
+         for( int i=0; i<weight.length; i++ ) weight[i]=defaultWeight;
+         return weight;
+      }
+      
+      Fits fits = new Fits();
+      fits.loadFITS(filename);
+      int i=0;
+      for( int y=0; y<fits.height; y++ ) {
+         for( int x=0; x<fits.width; x++ ) {
+            weight[i++] = fits.getPixelDouble(x,y);
+         }
+      }
+      return weight;
+   }
+
+
 }

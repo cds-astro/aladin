@@ -97,7 +97,8 @@ public class HealpixKeyRgb extends HealpixKey {
       TabRgb t = ((PlanBGRgb)planBG).tabRgb;
       int mode = t.getRGBMethod();
       int format = t.getFormat();
-      boolean flagGauss = t.getGauss() && order==planBG.maxOrder;
+//      boolean flagGauss = t.getGauss() && order==planBG.maxOrder;
+      boolean flagGauss = false;
 
       try {
          for( int c=0; c<3; c++ ) {

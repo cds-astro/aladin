@@ -51,7 +51,6 @@ import cds.aladin.Aladin;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
 import cds.aladin.prop.PropPanel;
-import cds.allsky.Context.JpegMethod;
 import cds.tools.Util;
 
 public class TabJpg extends JPanel implements ActionListener {
@@ -292,7 +291,7 @@ public class TabJpg extends JPanel implements ActionListener {
             }
          }
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         context.setJpegMethod(getMethod());
+         context.setModeTree(getModeTree());
          context.setProgressBar(progressJpg);
          Action action = getTileFormat()==Constante.TILE_PNG ? Action.PNG : Action.JPEG;
          context.setValidateCut(false);
@@ -375,10 +374,10 @@ public class TabJpg extends JPanel implements ActionListener {
       return ((PlanImage) mainPanel.aladin.calque.getPlanBase() ).getCM();
    }
    
-   /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
-   public JpegMethod getMethod() {
-      if( radioMediane.isSelected() ) return Context.JpegMethod.MEDIAN;
-      return Context.JpegMethod.MEAN;
+   /** Retourne le mode de calcul d'une pixel père à partir de ses 4 pixels fils */
+   public ModeTree getModeTree() {
+      if( radioMediane.isSelected() ) return ModeTree.treeMedian;
+      return ModeTree.treeMean;
    }
    
    /**   retourne le format pour les tuiles compressées (JPEG ou PNG) */
