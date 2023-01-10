@@ -635,7 +635,7 @@ public class Calque extends JPanel implements Runnable {
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].type==Plan.ALLSKYIMG && plan[i].flagOk
-               && (Aladin.PROTO || ((PlanBG)plan[i]).isLocalAllSky() )
+               && (Aladin.BETA || ((PlanBG)plan[i]).isLocalAllSky() )
                && ((PlanBG)plan[i]).canbeTruePixels()) n++;
       }
       return n;

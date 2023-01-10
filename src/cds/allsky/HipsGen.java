@@ -67,6 +67,7 @@ public class HipsGen {
     private boolean flagCrc=false;
     private boolean flagAbort=false,flagPause=false,flagResume=false;
     private boolean flagValidator=false;
+    private boolean flagHtml = false;
     public Context context;
     
     private boolean flagHHHcar=false;
@@ -477,7 +478,7 @@ public class HipsGen {
         boolean first=true;
 
         if (length == 0) {
-            usage(launcher,false);
+            usage(launcher);
             return;
         }
 
@@ -513,17 +514,19 @@ public class HipsGen {
             // Juste pour pouvoir appeler directement par le main() de cette classe
             // et non celle d'Aladin
             else if( arg.equalsIgnoreCase("-skygen") || arg.equalsIgnoreCase("-hipsgen")) continue;
+            
+            else if( ParamOption.html.equals(arg) ) { flagHtml=true; continue; }
 
             // Manuel
             else if( ParamOption.man.equals(arg) ) {
                if( i<args.length-1 ) help(launcher,args[i+1]);
-               else usage(launcher,true);
+               else usage(launcher,FULL|(flagHtml?HTML:0));
                return;
             }
             // Help
             else if( ParamOption.h.equals(arg) ) {
                if( i<args.length-1 ) help(launcher,args[i+1]);
-               else usage(launcher,false);
+               else usage(launcher,(flagHtml?HTML:0));
                return;
             }
 
@@ -868,32 +871,48 @@ public class HipsGen {
         public void run() { execute(args); }
     }
 
+    public static final int FULL = 1;
+    public static final int HTML = 2;
+
     // Aladin.jar -hipsgen
-    private static void usage(String launcher,boolean full) {
+    private static void usage(String launcher) { usage(launcher,0); }
+    private static void usage(String launcher,int mode) {
+       
+       boolean flagHtml = (mode&HTML)!=0;
+       
+       if( flagHtml ) System.out.println("<HTML><H1>Hipsgen manual reference"
+          + "<BR><FONT SIZE=-1>related to Hipsgen/Aladin "+Aladin.VERSION+"</FONT></H1>\n<PRE>\n");
        System.out.println("Usage: java -jar "+launcher+" in=dir [otherParams ...ACTIONs...]");
        System.out.println("       java -jar "+launcher+" -param=configfile [...ACTIONs...]\n");
        System.out.println("       java -jar "+launcher+" -h");
        System.out.println("       java -jar "+launcher+" -man [param|ACTION]\n");
        System.out.println("HiPS generator from a set of source images. Provides additional\n"
              + "HiPS manipulation utilities (duplication, concatenation, checking, etc).");
-       System.out.println("The parameters are provided in the configfile, or directly on the command line\n");
+       System.out.println("The parameters are provided in the configfile, or directly on the command line.");
+       System.out.println("Default actions: "+Action.defaultList()+"\n");
        System.out.println("Available options:");
        System.out.println( ParamOption.help());
-       System.out.println("Ex: java -jar "+launcher+" in=/MyImg    => Do all the job." +
-             "\n    java -jar "+launcher+" in=/MyImg "+Param.bitpix+"=16 "+Param.pixelCut+"\"-1 100 log\"" +
-             "\n           The FITS tiles will be coded in short integers, the preview tiles" +
-             "\n           will map the physical values [-1..100] with a log function contrast in [0..255]." +
-             "\n    java -jar "+launcher+" in=HiPS1 out=HiPS2 CONCAT => Concatenate HiPS1 to HiPS2"
+       System.out.println("Ex: java -jar "+launcher+" in=/MyImg "+Param.id+"=AUT/P/myhips    => Do all the job" +
+             "\n    java -jar "+launcher+" in=/MyImg "+Param.id+"=AUT/P/myhips INDEX TILES" +
+             "\n           => Generate the spatial index and the FITS tiles only" +
+             "\n    java -jar "+launcher+" in=HiPS1 out=HiPS2 CONCAT    => Concatenate HiPS1 to HiPS2" +
+             "\n    java -jar "+launcher+" in=http://remote/hips MIRROR => copy the remote HiPS locally"
              //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
              );
 
        System.out.println("\n(c) Université de Strasbourg/CNRS 2018-2023 - "+launcher+" based on Aladin "+Aladin.VERSION+" from CDS\n");
-
-       System.out.println("Available actions (by default: \""+Action.defaultList()+"\"):");
-       System.out.println( Action.help(launcher,full));
-       System.out.println("Available parameters:");
-       System.out.println( Param.help(launcher,full));
-
+       if( flagHtml ) {
+          System.out.println("</PRE>\n<BR><BR<BR><H2>Available actions</H2>");
+          System.out.println( Action.help(launcher,mode));
+          System.out.println("<BR><BR<BR><H2>Available parameters</H2>");
+          System.out.println( Param.help(launcher,mode));
+          System.out.println("</HTML>\n");
+       } else {
+          System.out.println("Available actions:");
+          System.out.println( Action.help(launcher,mode));
+          System.out.println("Available parameters:");
+          System.out.println( Param.help(launcher,mode));
+       }
     }
 
     private void help(String launcher,String opt) {
@@ -901,12 +920,12 @@ public class HipsGen {
        if( opt==null ) return;
        try {
           Param p = Param.get(opt);
-          System.out.println( p.fullHelp(launcher));
+          System.out.println( p.fullHelp(launcher,0));
           return;
        } catch( Exception e) {}
        try {
           Action p = Action.get(opt);
-          System.out.println( p.fullHelp(launcher));
+          System.out.println( p.fullHelp(launcher,0));
           return;
        } catch( Exception e) {}
     }

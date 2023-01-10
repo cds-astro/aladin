@@ -111,7 +111,7 @@ public class BuilderDetails extends Builder {
       String img = context.getImgEtalon();
       if( img==null && context.getInputPath()!=null) {
          img = context.justFindImgEtalon( context.getInputPath() );
-         if( img!=null ) context.info("Use this reference image => "+img);
+         if( img!=null ) context.info("Reference image => "+img);
       }
       if( img!=null ) {
          try { context.setImgEtalon(img); }

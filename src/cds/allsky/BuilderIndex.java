@@ -99,11 +99,12 @@ public class BuilderIndex extends Builder {
 
       if( statNbFile==0 ) throw new Exception("No available image found ! => Aborted");
       
-      long val = partitioning ? Constante.ORIGCELLWIDTH * Constante.ORIGCELLWIDTH : statMaxWidth*statMaxHeight;
+      int bloc = context.getPartitioning();
+      long val = partitioning ? Math.min(bloc,statMaxWidth) * Math.min(bloc,statMaxHeight) : statMaxWidth*statMaxHeight;
       val *= statMaxNbyte;
       val *= maxOverlays;
       context.info("Max original image overlay estimation"
-         +(partitioning?" ("+Constante.ORIGCELLWIDTH+"x"+Constante.ORIGCELLWIDTH+" pixel blocks from original images)":"")
+//         +(partitioning?" ("+bloc+"x"+bloc+" pixel blocks from original images)":"")
          +": "+maxOverlays+" => may required "+cds.tools.Util.getUnitDisk(val)+" per thread");
    }
 
@@ -124,7 +125,10 @@ public class BuilderIndex extends Builder {
       }
 
       partitioning = context.isPartitioning();
-      if( partitioning ) context.info("Partitioning large original image files in blocks of "+Constante.ORIGCELLWIDTH+"x"+Constante.ORIGCELLWIDTH+" pixels");
+      if( partitioning ) {
+         int bloc = context.getPartitioning();
+         context.info("Partitioning large original image files in blocks of "+bloc+"x"+bloc+" pixels");
+      }
 
       validateInput();
       validateOutput();
@@ -136,11 +140,12 @@ public class BuilderIndex extends Builder {
       
       // Tests order
       int order = context.getOrder();
+      double originalPixelRes=-1;
       if( order==-1 || context.getFitsKeys()==null ) {
          String img = context.getImgEtalon();
          if( img==null ) {
             img = context.justFindImgEtalon( context.getInputPath() );
-            if( img!=null ) context.info("Use this reference image => "+img);
+            if( img!=null ) context.info("Reference image => "+img);
          }
          if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
          try {
@@ -150,9 +155,10 @@ public class BuilderIndex extends Builder {
 
             // Recherche des fitsKey à garder par défaut
             context.defaultFitsKey = context.scanDefaultFitsKey( file.headerFits );
-
+            
+            originalPixelRes = file.getCalib().GetResol()[0];
             if( order==-1 ) {
-               long nside = calculateNSide(file.getCalib().GetResol()[0] * 3600.);
+               long nside = calculateNSide(originalPixelRes * 3600.);
                order = (Util.order((int) nside) - context.getTileOrder() );
                if( order<3 ) order=3;
             }
@@ -167,11 +173,17 @@ public class BuilderIndex extends Builder {
          context.warning("The provided order ["+order+"] is less than the optimal order ["+context.getOrder()+"] => OVER-sample will be applied");
       } else if( order>context.getOrder() ) {
          context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
-      } else context.info("Max Order="+context.getOrder()+" => Pixel angular resolution="
-            +Coord.getUnit( CDSHealpix.pixRes( context.getOrder()+context.getTileOrder())/3600. ) );
+      } else {
+         double hipsPixelRes = CDSHealpix.pixRes( context.getOrder()+context.getTileOrder())/3600. ;
+         context.info("HiPS order "+context.getOrder()+" (pixel ang.res"
+            +(originalPixelRes!=-1?" orig:"+Coord.getUnit( originalPixelRes ):"")
+            +" hips:"+Coord.getUnit(hipsPixelRes )
+            +(originalPixelRes!=-1?" x"+cds.tools.Util.round(hipsPixelRes/originalPixelRes,2):"")
+            +")");
+      }
 
       int w = context.getTileSide();
-      context.info("Tile Order="+context.getTileOrder()+" => tile size: "+w+"x"+w+" pixels");
+      context.info("Tile order "+context.getTileOrder()+" => tile size: "+w+"x"+w+" pixels");
 
       // Récupération de la liste des HDU
       hdu = context.getHDU();
@@ -236,6 +248,7 @@ public class BuilderIndex extends Builder {
       create(input, pathDest, order);
       
       context.addPixelIn(statPixSize);
+      context.addMaxImgSize(statMaxWidth, statMaxHeight, statMaxDepth, statMaxNbyte);
    }
 
    // Initialisation des statistiques
@@ -378,7 +391,7 @@ public class BuilderIndex extends Builder {
          Fits fitsfile = new Fits();
          boolean flagDefaultHDU = hdu==null;
          boolean flagAllHDU = hdu!=null && hdu.length>0 && hdu[0]==-1;
-         int cellSize = Constante.ORIGCELLWIDTH;
+         int cellSize = context.getPartitioning();
          int firstDepth=0;
          
          // Multi Extension ou non ?

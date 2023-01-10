@@ -22,6 +22,7 @@
 package cds.aladin;
 
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.util.Hashtable;
 
 import cds.allsky.TabRgb;
@@ -46,7 +47,7 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class PlanBGRgb extends PlanBG {
 
-   public PlanBG red,green,blue;  // Les trois plans HiPS originaux
+   public PlanBG red,green,blue;  // Les troisplans HiPS originaux
    protected TabRgb tabRgb;       // La référence au formulaire de contrôle
 
    protected PlanBGRgb(Aladin aladin, TabRgb tabRgb, String label, PlanBG red, PlanBG green, PlanBG blue,Coord co, double radius) {
@@ -128,15 +129,24 @@ public class PlanBGRgb extends PlanBG {
       aladin.view.repaintAll();
    }
    
+   /** Lance un wakeUp sur le loader si nécessaire */
+   protected void tryWakeUp() {
+      if( red!=null )   red.tryWakeUp();
+      if( green!=null ) green.tryWakeUp();
+      if( blue!=null )  blue.tryWakeUp();
+   }
+   
    protected int getMinOrder() { return minOrder==-1 ? 0 : minOrder; }
    
-   synchronized protected void drawLosanges(Graphics g,ViewSimple v, boolean now) { drawLosangesNow(g,v); }
+   synchronized protected void drawLosanges(Graphics g,ViewSimple v, boolean now,BufferedImage imgb) { 
+      drawLosangesNow(g,v,imgb); 
+   }
 
    /** Tracé des losanges à la résolution adéquate dans la vue
     * mais en mode synchrone */
-   protected void drawLosangesNow(Graphics g,ViewSimple v) {
+   protected void drawLosangesNow(Graphics g,ViewSimple v,BufferedImage imgb) {
       int order = Math.max(getMinOrder(), Math.min(maxOrder(v),maxOrder) );
-
+      
       long [] pix;
       if( v.isAllSky() ) {
          pix = new long[12*(int)CDSHealpix.pow2(order)*(int)CDSHealpix.pow2(order)];
@@ -153,7 +163,7 @@ public class PlanBGRgb extends PlanBG {
             k.loadNow();
             k.draw(g,v);
 //            System.out.println("drawLosangesNow("+k.order+"/"+k.npix+")");
-         } catch( Exception e ) { e.printStackTrace(); }
+         } catch( Exception e ) { /* e.printStackTrace(); */ }
 
       }
    }

@@ -238,6 +238,7 @@ public class Plan implements Runnable {
    
    /** Retourne la commande ADQL qui a permis de créer le plan */
    protected String getAdqlQuery() { return query; }
+   protected void setAdqlQuery(String query) { this.query=query; }
 
    /** Duplication du Plan */
    protected void copy(Plan p) {

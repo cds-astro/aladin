@@ -54,7 +54,16 @@ public class BuilderTiles extends BuilderRunner {
       } else {
          maxFile = nbThread * Constante.MAXOVERLAY;
          if( maxFile<300 ) maxFile=300;
-         maxMem = (long)maxFile * Constante.ORIGCELLWIDTH * Constante.ORIGCELLWIDTH * npixOrig;
+//         int bloc = context.isPartitioning() ? context.getPartitioning() : Constante.ORIGCELLWIDTH;
+//         maxMem = (long)maxFile * bloc * bloc * npixOrig;
+         
+         // si partitionné => si statmax inconnue getPartitioning, sinon min(getPartitioning,statMax)
+         int maxWidth  = context.statMaxWidth;
+         int maxHeight = context.statMaxHeight;
+         int bloc = context.getPartitioning();
+         maxWidth  = maxWidth==-1  ? bloc : Math.min(bloc,maxWidth);
+         maxHeight = maxHeight==-1 ? bloc : Math.min(bloc,maxHeight);
+         maxMem = (long)maxFile * maxWidth * maxHeight * npixOrig;
       }
 
       CacheFits cache = new CacheFits(maxMem,maxFile,limitMem, limitFile);
@@ -82,15 +91,15 @@ public class BuilderTiles extends BuilderRunner {
    /** Affichage des compteurs (s'ils ont été utilisés) */
    private void infoCounter(long duree) {
       
-      if( duree>1000L && (context.pixelIn>0 || context.pixelOut>0) ) {
+      if( duree>1000L && (context.statPixelIn>0 || context.statPixelOut>0) ) {
          long d = duree/1000L;
          context.stat("Pixel times: "+
-               (context.pixelIn==0?"":"Original images="+cds.tools.Util.getUnitDisk(context.pixelIn).replace("B","pix") 
-                  + " => "+cds.tools.Util.getUnitDisk(context.pixelIn/d).replace("B","pix")+"/s")
-               + (context.pixelOut==0?"":
-                 ("  Low tiles="+cds.tools.Util.getUnitDisk(context.pixelOut).replace("B","pix") 
-               + (context.pixelIn==0?"":" (x"+cds.tools.Util.myRound((double)context.pixelOut/context.pixelIn)+")")
-               + " => "+cds.tools.Util.getUnitDisk(context.pixelOut/d).replace("B","pix")+"/s") )
+               (context.statPixelIn==0?"":"Original images="+cds.tools.Util.getUnitDisk(context.statPixelIn).replace("B","pix") 
+                  + " => "+cds.tools.Util.getUnitDisk(context.statPixelIn/d).replace("B","pix")+"/s")
+               + (context.statPixelOut==0?"":
+                 ("  Low tiles="+cds.tools.Util.getUnitDisk(context.statPixelOut).replace("B","pix") 
+               + (context.statPixelIn==0?"":" (x"+cds.tools.Util.myRound((double)context.statPixelOut/context.statPixelIn)+")")
+               + " => "+cds.tools.Util.getUnitDisk(context.statPixelOut/d).replace("B","pix")+"/s") )
                );
      
       }

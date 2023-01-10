@@ -65,6 +65,9 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class TreeObjDir extends TreeObj implements Propable {
    
+   public final static int DEFAULTRADIUS = 3;
+   public final static String DIRECT = "DIRECT/"; // préfixe ajouté à l'ID dans le cas d'un accès direct par URL explicite
+   
    public String internalId;    // Alternative à l'ID de l'identificateur GLU
    private String url;          // L'url ou le path du survey
    public String description;   // Courte description (une ligne max)
@@ -108,7 +111,6 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    protected MyProperties prop=null; // Ensemble des propriétés associées au HiPS (via son fichier de properties ou MocServer)
 
-   public final static String DIRECT = "DIRECT/"; // préfixe ajouté à l'ID dans le cas d'un accès direct par URL explicite
    
    
    /** Retourne le titre long de la ressource, et si c'est une table VizieR, un nom composé du titre du catalogue,
@@ -1196,7 +1198,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
  
    /** Génération et exécution de la requête script correspondant au protocole SSA */
-   protected void loadSSA() { loadSSA( getDefaultTarget()+" "+getDefaultRadius(15) ); }
+   protected void loadSSA() { loadSSA( getDefaultTarget()+" "+getDefaultRadius(DEFAULTRADIUS) ); }
    protected void loadSSA( String cone ) {
       if( cone==null ) { loadSSA(); return; }
      exec( addBrowse( getSSACmd()+" "+cone) );
@@ -1215,7 +1217,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Génération et exécution de la requête script correspondant à la requête TAp AssocData */
-   protected void loadAssoc() { loadAssoc( getDefaultTarget()+" "+getDefaultRadius(15)); }
+   protected void loadAssoc() { loadAssoc( getDefaultTarget()+" "+getDefaultRadius(DEFAULTRADIUS)); }
    protected void loadAssoc( String cone ) { 
       if( cone==null ) { loadAssoc(); return; }
       String ident = "\"AD "+internalId+"\"";
@@ -1227,7 +1229,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Génération et exécution de la requête script correspondant au protocole SIA ou SIA2 */
-   protected void loadSIA() { loadSIA( getDefaultTarget()+" "+getDefaultRadius(15)); }
+   protected void loadSIA() { loadSIA( getDefaultTarget()+" "+getDefaultRadius(DEFAULTRADIUS)); }
    protected void loadSIA( String cone ) { 
       if( cone==null ) { loadSIA(); return; }
      exec( addBrowse( getSIACmd()+" "+cone) );
@@ -1275,7 +1277,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Du sur-mesure pour le live Simbad */
-   protected void loadLiveSimbad() { loadLiveSimbad(getDefaultTarget()+" "+getDefaultRadius(15)); }
+   protected void loadLiveSimbad() { loadLiveSimbad(getDefaultTarget()+" "+getDefaultRadius(DEFAULTRADIUS)); }
    protected void loadLiveSimbad( String cone ) {
       if( cone==null ) { loadLiveSimbad(); return; }
      exec( addBrowse(  getLiveSimbadCmd()+" "+cone));
@@ -1287,7 +1289,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Génération et exécution de la requête script correspondant au protocole CS ou assimilé ASU */
-   protected void loadCS() { loadCS(getDefaultTarget()+" "+getDefaultRadius(15)); }
+   protected void loadCS() { loadCS(getDefaultTarget()+" "+getDefaultRadius(DEFAULTRADIUS)); }
    protected void loadCS(Coord c,double radius) {
       loadCS( aladin.localisation.ICRSToFrame( c ).getDeg()+" "+Coord.getUnit( radius ) );
    }

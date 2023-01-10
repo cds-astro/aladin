@@ -21,33 +21,56 @@
 
 package cds.allsky;
 
+/**
+ * Liste des options supportées par Hipsgen
+ * @author Pierre Fernique [CDS]
+ *
+ */
 public enum ParamOption {
       
    clean            ("Delete previous computations"),
    n                ("Just print process information, but do not execute it"),
-   notouch          ("Do not touch the hips_release_date"),
    color            ("Colorize console log messages"),
    nocolor          ("Uncolorize console log messages"),
-//   check            ("[MIRROR] Check date&size of local tiles",A.UNDOC),
-//   nocheck          ("[MIRROR] Do not check date&size of local tiles"),
    nice             ("[MIRROR] Slow download for avoiding to overload remote http server"),
    clone            ("[MIRROR] Force clone (ignoring \"unclonable\" hips_status)",A.UNDOC),
+   notouch          ("Do not touch the hips_release_date"),
    hhhcar           ("[INDEX] Generate hhh file for an all sky image"),
-//   live             ("[TILES,CONCAT,APPEND] Incremental HiPS (keep weight associated to each HiPS pixel"),
    trim             ("[TILES,CONCAT,APPEND] Trim FITS tiles if possible"),
    gzip             ("[TILES,CONCAT,APPEND] Gzip FITS tiles"),
-   cds              ("[LINT] CDS dedicated feature",A.UNDOC),
+   cds              ("[LINT] CDS dedicated LINT features",A.UNDOC),
    d                ("Debug messages"),
    h                ("Inline help"),
    man              ("Full inline man (may bo followed by a parameter or an action for a full explanation)"),
-;
+   html             ("HTML output",A.UNDOC),
+   ;
    
-   String info;
-   int m=0;
+   class A {
+      static final int UNDOC=1;         // Option non documentée
+      static final int TEST =2;         // prototypage d'une nouvelle option
+   }
+
+   /** Les champs */
+   private String info;    // Courte description
+   private int m=0;        // modes associés (cf class A)
    
    ParamOption(String info) { this.info=info;}
    ParamOption(String info,int m) { this.info=info; this.m=m;}
    
+   /** Retourne le nom de l'option suivi de sa description */
+   String info() { return "-"+this+" => "+info; }
+   
+   /** Surcharge de l'égalité pour ignorer la case des lettres */
+   boolean equals(String s) {
+      return ("-"+toString().toLowerCase()).equals(s.toLowerCase());
+   }
+   
+   /********************************* Méthodes statiques  *********************************/
+
+   /**
+    * Retourne l'aide en ligne pour l'ensemble des options
+    * @return l'aide en ligne
+    */
    static String help() {
       StringBuilder s = new StringBuilder();
       for( ParamOption a : values() ) {
@@ -58,16 +81,5 @@ public enum ParamOption {
       return s.toString();
    }
 
-   class A {
-      static final int UNDOC=1;
-      static final int TEST =2;
-   }
-
    
-   public boolean equals(String s) {
-      s = s.toLowerCase();
-      return ("-"+toString().toLowerCase()).equals(s);
-   }
-   
-   String info() { return "-"+this+" => "+info; }
 }

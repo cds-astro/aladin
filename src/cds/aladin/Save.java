@@ -757,6 +757,7 @@ public class Save extends JFrame implements ActionListener {
          // @todo A POURSUIVRE DES QUE J'AURAIS LE TEMPS (voir le complement dans LocalServer
          aladin.view.sauvegarde();
          append("  <MODEVIEW");
+         append(CR+"    reticle=\""+aladin.view.repere.raj+" "+aladin.view.repere.dej+"\"");
          append(CR+"    overlays=\""+aladin.calque.getOverlayList()+"\"");
          append(CR+"    overlay=\""+aladin.calque.flagOverlay+"\"");
          //         append(CR+"    grid=\""+aladin.calque.hasGrid()+"\"");
@@ -1028,7 +1029,8 @@ public class Save extends JFrame implements ActionListener {
       append("  </PLANE>"+CR);
    }
 
-   /** Sauvegarde du contenu d'un plan Catalog ou des sources d'un paln Tool sous forme XML (utilise le buffer f) */
+   /** Sauvegarde du contenu d'un plan Catalog ou des sources d'un plan Tool
+    * sous forme XML (utilise le buffer f) */
    private void appendPCatXML(Pcat pcat) throws java.io.IOException {
       Legende leg=null;
 
@@ -1201,6 +1203,7 @@ public class Save extends JFrame implements ActionListener {
       append(CR+"     depth=\""+p.folder+"\"");
       append(CR+"     activated=\""+p.active+"\"");
       if( p.label!=null )      append(CR+"     label=\""+XMLParser.XMLEncode(p.label)+"\"");
+      if( p.id!=null )         append(CR+"     id=\""+XMLParser.XMLEncode(p.id)+"\"");
       if( p.objet!=null )      append(CR+"     object=\""+XMLParser.XMLEncode(p.objet)+"\"");
       if( p.body!=null )       append(CR+"     body=\""+XMLParser.XMLEncode(p.body)+"\"");
       if( p.param!=null )      append(CR+"     param=\""+XMLParser.XMLEncode(p.param)+"\"");
@@ -1364,6 +1367,17 @@ public class Save extends JFrame implements ActionListener {
             append("]]></FILTER>"+CR);
          }
          append("    </FILTERS>"+CR);
+      }
+      
+      // une commande SIA ou TAP à sauvegarder pour un éventuel "redo"
+      if( p instanceof PlanCatalog && ((PlanCatalog)p).isRedoable() ) {
+         PlanCatalog p1 = (PlanCatalog)p;
+         String code =  p1.getBookmarkCode();
+         String query = p1.getAdqlQuery();
+         append("    <REDO>"+CR);
+         if( code!=null ) append("       <REDOCODE><![CDATA["+code+"]]></REDOCODE>"+CR);
+         if( query!=null ) append("      <REDOQUERY><![CDATA["+query+"]]></REDOQUERY>"+CR);
+         append("    </REDO>"+CR);
       }
 
       if( p instanceof PlanImage && ((PlanImage)p).hasFitsHeader() ) {

@@ -117,7 +117,7 @@ public class Context {
    public double maxRatio = Constante.PIXELMAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
    protected boolean fake=false;             // Activation du mode "just-print norun"
    protected boolean cdsLint=false;          // Activation du mode "cds" pour LINT (plus de vérif)
-   protected boolean partitioning=true;     // Activation de la lecture par blocs des fimages originales
+   protected int partitioning=Constante.ORIGCELLWIDTH;     // Lecture par blocs des fimages originales (<=0 si inactif)
    public String skyvalName;                 // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    public double pourcentMin=-1;             // Pourcentage de l'info à garder en début d'histog. si autocut (ex: 0.003), -1 = défaut
    public double pourcentMax=-1;             // Pourcentage de l'info à garder en fin d'histog. si autocut (ex: 0.9995), -1 = défaut
@@ -182,8 +182,13 @@ public class Context {
    protected long bytes=0L;                 // Taille du HiPS généré en Kb
    protected boolean flagGlobalDataSum=false; // true si on veut calculer un DATASUM global (cf Action CHECKDATASUM)
    
-   protected long pixelIn=0L;               // Nombre de pixels en entrée
-   protected long pixelOut=0L;              // Nombre de pixels en sortie
+   protected long statPixelIn=0L;               // Nombre de pixels en entrée
+   protected long statPixelOut=0L;              // Nombre de pixels en sortie
+   protected int statMaxWidth =-1;              // Largeur max des images d'entrée
+   protected int statMaxHeight =-1;             // Longueur max des images d'entrée
+   protected int statMaxDepth =-1;              // Profondeur max des images d'entrée
+   protected int statMaxNbyte =-1;              // Nombre d'octet/pix max des images d'entrée
+
    protected long trimMem=0L;               // Volume memoire sauve par la methode TRIM
    
    protected boolean trim=false;            // true s'il faut l'appliquer
@@ -205,6 +210,7 @@ public class Context {
 
    public void reset() {
       bitpix=-1;
+      partitioning=Constante.ORIGCELLWIDTH;
       mocArea=mocIndex=moc=null;
       modeMerge=ModeMerge.getDefault();
       modeOverlay=ModeOverlay.getDefault();
@@ -243,13 +249,21 @@ public class Context {
    
    /** Remise à zéro des compteurs sauf le pixelIn */
    public void resetCounter() { 
-      pixelOut=0L;
+      statPixelOut=0L;
       trimMem=0L;
    }
    
    // Mise à jour des compteurs
-   protected void addPixelIn(long t)  { pixelIn+=t; }
-   protected void addPixelOut(long t) { pixelOut+=t; }
+   protected void addPixelIn(long t)  { statPixelIn+=t; }
+   protected void addPixelOut(long t) { statPixelOut+=t; }
+      
+   // Maj des stats des images en input
+   protected void addMaxImgSize( int statMaxWidth, int statMaxHeight, int statMaxDepth, int statMaxNbyte) {
+      this.statMaxWidth = statMaxWidth;
+      this.statMaxHeight = statMaxHeight;
+      this.statMaxDepth = statMaxDepth;
+      this.statMaxNbyte = statMaxNbyte;
+   }
   
    public void resetProgressParam() {
       lastNorder3=-2;
@@ -340,8 +354,8 @@ public class Context {
    public int getTileSide() { return (int) CDSHealpix.pow2( getTileOrder() ); }
    public int getDepth() { return depth; }
    public boolean isCDSLint() { return cdsLint; }
-   public boolean isPartitioning() { return isColor() ? false : partitioning; }
-   public int getPartitioning() { return Constante.ORIGCELLWIDTH; }
+   public boolean isPartitioning() { return isColor() ? false : partitioning>0; }
+   public int getPartitioning() { return partitioning; }
    
    // Setters
    public void setfastCheck(boolean flag) { this.fastCheck = flag; }
@@ -361,12 +375,12 @@ public class Context {
    public void setMixing(String s) { 
       setModeOverlay( s.equalsIgnoreCase("false")? ModeOverlay.overlayNone : ModeOverlay.getDefault()); }
    public void setPartitioning(String s) {
+      if( s==null ) s=Constante.ORIGCELLWIDTH+"";
       try {
          int val = Integer.parseInt(s);
-         Constante.ORIGCELLWIDTH = val;
-         partitioning = true;
+         partitioning = val;
       } catch( Exception e ) {
-         partitioning = s.equalsIgnoreCase("false") ? false : true;
+         partitioning = s.equalsIgnoreCase("false") ? 0 : Constante.ORIGCELLWIDTH;
       }
    }
 //   public void setCircle(String r) throws Exception { this.circle = Integer.parseInt(r); }
@@ -1847,9 +1861,9 @@ public class Context {
    }
    public void endAction() throws Exception {
       if( action==null ) return;
-      if( isTaskAborting() ) abort(action+" abort (after "+Util.getTemps(action.getDuree()*1000L)+")");
+      if( isTaskAborting() ) abort(action+" abort (after "+Util.getTemps(action.getDuration()*1000L)+")");
       else {
-         done(action+" done (in "+Util.getTemps(action.getDuree()*1000L)+")");
+         done(action+" done (in "+Util.getTemps(action.getDuration()*1000L)+")");
          //         updateProperties( getKeyActionEnd(action), getNow(),true);
       }
       action=null;

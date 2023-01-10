@@ -714,7 +714,7 @@ public class ServerFile extends Server implements XMLConsumer {
    }
 
    /* Variables temporaires associees au parsing du XML */
-   private boolean inValue,inFilterScript,inFitsHeader,inFilter;  // Etat
+   private boolean inValue,inFilterScript,inFitsHeader,inFilter,inRedoCode,inRedoQuery;  // Etat
    private int nFilter=0;   // Indice du filtre en cours d'insertion
    private Vector vField;	// Vecteur contenant les FIELDS de la table courante
    private Legende leg=null;	// Legende de la table courante
@@ -766,7 +766,7 @@ public class ServerFile extends Server implements XMLConsumer {
       String s;
       String type = (String)atts.get("type");
       typePlan= Util.indexInArrayOf(type, Plan.Tp);
-      inFilter = inFitsHeader = inFilterScript = false;
+      inRedoCode = inRedoQuery = inFilter = inFitsHeader = inFilterScript = false;
       footprintIdx = -1;
       
       switch(typePlan) {
@@ -923,6 +923,7 @@ public class ServerFile extends Server implements XMLConsumer {
       // Traitements génériques
       if( plan!=null ) {
          if( (s=(String)atts.get("label"))!=null )      plan.label = s;
+         if( (s=(String)atts.get("id"))!=null )         plan.id = s;
          if( (s=(String)atts.get("body"))!=null )       plan.body = s;
 
          if( (s=(String)atts.get("depth"))!=null ) plan.folder = Integer.parseInt(s);
@@ -1046,6 +1047,8 @@ public class ServerFile extends Server implements XMLConsumer {
          inFitsHeader=true;
       }
       else if( name.equals("FILTER") ) inFilter=true;
+      else if( name.equals("REDOCODE") ) inRedoCode=true;
+      else if( name.equals("REDOQUERY") ) inRedoQuery=true;
 
       else if( name.equals("FILTERS") ) {
          try {
@@ -1067,6 +1070,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
             if( (s=(String)atts.get("overlay"))!=null )  aladin.calque.flagOverlay = (new Boolean(s)).booleanValue();
             if( (s=(String)atts.get("overlays"))!=null ) aladin.calque.setOverlayList(s);
+            if( (s=(String)atts.get("reticle"))!=null )  aladin.view.setRepereByString(s);
          } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
 
       } else if( name.equals("VIEW") ) {
@@ -1136,10 +1140,14 @@ public class ServerFile extends Server implements XMLConsumer {
             flagCatalogSource=false;
          }
 
-      } else if( name.equals("MODEVIEW") )  {
-         aladin.view.scrollOn(firstView,0,1);
-      } else if( name.equals("SCRIPT") )  { inFilterScript =false;
-      } else if( name.equals("TABLE") )   { 
+      } else if( name.equals("MODEVIEW") )  { aladin.view.scrollOn(firstView,0,1);
+      } else if( name.equals("SCRIPT") )    { inFilterScript =false;
+      } else if( name.equals("REDOCODE") )  { inRedoCode =false;
+      } else if( name.equals("REDOQUERY") ) { inRedoQuery =false;
+      } else if( name.equals("FILTER") )    { inFilter =false;
+      } else if( name.equals("SCRIPT") )    { inFilterScript =false;
+      
+      } else if( name.equals("TABLE") )     { 
          leg=null; vField=null; 
          if( flagCatalogSource ) typePlan=CATALOGTOOL;
       } else if( name.equals("VALUE") )   {
@@ -1229,7 +1237,7 @@ public class ServerFile extends Server implements XMLConsumer {
     */
    private int getSource(char [] ch, int cur, int end) {
       double ra,de;
-      String id,glu;
+      String id;
 
       // On skippe un eventuel \r
       while( cur<end && (ch[cur]=='\r' || ch[cur]=='\n') ) cur++;
@@ -1238,7 +1246,6 @@ public class ServerFile extends Server implements XMLConsumer {
       cur=getSourceField(ch,cur,end);	ra=Double.valueOf(rec).doubleValue();
       cur=getSourceField(ch,cur,end);	de=Double.valueOf(rec).doubleValue();
       cur=getSourceField(ch,cur,end);   id=rec;
-      cur=getSourceField(ch,cur,end);   glu=rec;
 
       // Recuperation des infos
       int start=cur;
@@ -1250,8 +1257,13 @@ public class ServerFile extends Server implements XMLConsumer {
       // Ajout de l'objet dans le plan courant
       Source o = (leg!=null)?new Source(plan,ra,de,id,rec,leg): new Source(plan,ra,de,id,rec);
       
-      // Par défaut on active l'affichage du label des tags (du grand bricolage PF 5/9/2022)
-      if( typePlan==CATALOGTOOL && glu!=null && glu.endsWith("|Tags>")) o.setWithLabel(true);
+      // Par défaut on active l'affichage du label des tags (un peu du bricolage PF 5/9/2022 + correction 10/1/2023)
+      if( typePlan==CATALOGTOOL && o.info!=null ) {
+         int i = o.info.indexOf('\t');
+         if( i<0 ) i=o.info.length();
+         String glu = o.info.substring(0,i);
+         if( glu!=null && glu.endsWith("|Tags>")) o.setWithLabel(true);
+      }
       
       // Génération d'un footprint associé à la source
       if( footprintIdx!=-1 ) {
@@ -1498,6 +1510,10 @@ public class ServerFile extends Server implements XMLConsumer {
       } else if( inFilter ) {
          if( plan.filters==null ) return;
          plan.filters[nFilter++] = new String(ch,start,length);
+      } else if( inRedoCode ) {
+         ((PlanCatalog)plan).setBookmarkCode(new String(ch,start,length));
+      } else if( inRedoQuery ) {
+         ((PlanCatalog)plan).setAdqlQuery(new String(ch,start,length));
       }
    }
 }

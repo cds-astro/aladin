@@ -235,9 +235,7 @@ public class PlanMoc extends PlanBGCat {
       int maxOrder = getRealMaxOrder(moc);
       ArrayList<double[]> a = new ArrayList<>();
       if( maxOrder==-1 || moc.isFull() ) return a;
-//      SMoc done = new SMoc( moc.getSys(), moc.getMinOrder(),maxOrder );
       SMoc done = moc.dup();
-//      long nside = CDSHealpix.pow2( maxOrder );
 
       Iterator<Long> it = moc.valIterator();
       while( it.hasNext() ) {
@@ -295,28 +293,9 @@ public class PlanMoc extends PlanBGCat {
    static private double [][] getCorners(int order,long pix) throws Exception {
       double [][] radec =  CDSHealpix.borders(order,pix,1);
       double [][] corners = new double[radec.length][2];
-      for (int i=0; i<radec.length; ++i) {
-         int j=A[i];
-         corners[j] = CDSHealpix.polarToRadec( radec[i] );
-      }
+      for (int i=0; i<radec.length; ++i) corners[A[i]] = radec[i];
       return corners;
    }
-
-//   static private double [][] getCorners(long nside,long pix) throws Exception {
-//      Vec3[] tvec = hpx.boundaries(pix,1);   // N W S E
-//      double [][] corners = new double[tvec.length][2];
-//      for (int i=0; i<tvec.length; ++i) {
-//         Pointing pt = new Pointing(tvec[i]);
-//         int j=A[i];
-//         corners[j][0] = ra(pt);
-//         corners[j][1] = dec(pt);
-//      }
-//      return corners;
-//   }
-//   
-//   public static final double cPr = Math.PI / 180;
-//   static private double dec(Pointing ptg) { return (Math.PI*0.5 - ptg.theta) / cPr; }
-//   static private double ra(Pointing ptg) { return ptg.phi / cPr; }
 
    // Retourne la liste des numéros HEALPix des 4 voisins directs ou -1 s'ils sont en dehors du MOC   
    // Ordre des voisins => W, N, E, S

@@ -131,7 +131,8 @@ final public class ThreadBuilderTile {
 //   static public int nbThreads;
 
    protected boolean requiredMem(long nbProgen,int nbThreads ) throws Exception {
-      long rqMem = 4 * nbProgen * Constante.ORIGCELLWIDTH*Constante.ORIGCELLWIDTH*context.getNpixOrig();
+      int bloc = context.isPartitioning() ? context.getPartitioning() : Constante.ORIGCELLWIDTH;
+      long rqMem = 4 * nbProgen * bloc * bloc *context.getNpixOrig();
       rqMem += 2*tileSide*tileSide*context.getNpix();
       return needMem(nbThreads*rqMem);
    }
@@ -989,7 +990,8 @@ final public class ThreadBuilderTile {
             return Integer.parseInt( s.substring(o2+1,o3) ); 
          } catch( Exception e ) {}
       }
-      return Constante.ORIGCELLWIDTH*Constante.ORIGCELLWIDTH* (context.bitpixOrig==0?32:Math.abs(context.bitpixOrig)/8);   // Approximation en l'absence de l'info
+      int bloc = context.isPartitioning() ? context.getPartitioning() : Constante.ORIGCELLWIDTH;
+      return bloc * bloc * (context.bitpixOrig==0?32:Math.abs(context.bitpixOrig)/8);   // Approximation en l'absence de l'info
    }
 
    /**

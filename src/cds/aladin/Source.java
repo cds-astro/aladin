@@ -1117,7 +1117,7 @@ public class Source extends Position implements Comparator {
     /** Returns the catalog name for the source */
     protected String getCatalogue() {
         if( info!=null) {
-            int tab = info.indexOf("\t");
+            int tab = info.indexOf('\t');
             if(tab<0) return null;
             String name = info.substring(0,tab);
             // on vire les marques GLU

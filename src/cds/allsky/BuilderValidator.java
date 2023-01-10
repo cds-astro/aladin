@@ -40,11 +40,12 @@ public class BuilderValidator extends Builder {
    
    static private int OUTPUTBITPIX= 16;
    static private int INPUTBITPIX = -32;
-   static private double BLANK=Double.NaN;
+   static private double BLANK=0;
    static private double RA=90;
    static private double DEC=41;
-   static private long GLOBALDATASUM = 1253912246L;
-   static private long TIMETILEREF = 80 * 1000L;
+   static private long GLOBALDATASUMARITHM = 3199876792L;
+   static private long GLOBALDATASUM = 3149592267L;
+   static private long TIMETILEREF = 154158L;
    
    String path;
    String input,output;
@@ -66,15 +67,19 @@ public class BuilderValidator extends Builder {
    
    public void run() throws Exception {
       path = context.getOutputPath();
-      validate("fits");
-//      validate("png");
+      
+//      validate("fits");
+      validate("png");
 //      validateArith();
+      
+      
 //      validateTrim();
       
       if( ALLTEST ) {
          context.valid("FINAL REPORT");
          if( globalDatasum!=GLOBALDATASUM ) context.error("Global DATASUM not matching => Hips modifications");
          else context.info("The HiPS is conformed");
+         context.info("TimeFitsTile:" + timetimeFitsTiles);
          if( (timetimeFitsTiles-TIMETILEREF)>0 && timetimeFitsTiles-TIMETILEREF>0.5*TIMETILEREF )
             context.warning("Fits tile generation seems to be slower than before ("+getFct(timetimeFitsTiles,TIMETILEREF)+")");
          else if(  (TIMETILEREF-timetimeFitsTiles)>0 && TIMETILEREF-timetimeFitsTiles>0.5*TIMETILEREF )
@@ -167,7 +172,7 @@ public class BuilderValidator extends Builder {
       context.flagGlobalDataSum=true;
       BuilderCheckDataSum b = (BuilderCheckDataSum)execute(Action.CHECKDATASUM);
       globalDatasum = b.getDataGlobalDataSum();
-      if( 91761891L!=globalDatasum ) {
+      if( GLOBALDATASUMARITHM!=globalDatasum ) {
          context.error("Global DATASUM not matching !");
          throw new Exception("Global DATASUM not matching !");
       }
@@ -184,11 +189,11 @@ public class BuilderValidator extends Builder {
       output = path+Util.FS+"Hips"+fmt;
       context.setOutputPath(output);
       cds.tools.Util.deleteDir(new File(output));
-      context.setFov("true");
       if( !flagColor ) {
+         context.setFov("true");
          context.setDataRange("0 1000");
          context.setPixelCut("5 256");
-//      context.setLive(true);
+         context.setLive(true);
       }
       
       context.valid("INDEX (HpxFinder) in "+output+"....");
@@ -224,7 +229,7 @@ public class BuilderValidator extends Builder {
       validateAppend(fmt,"add",  dd);     dd+=a;
       validateAppend(fmt,"mergeAdd,overlayMean", dd);   dd+=a;
       validateAppend(fmt,"mean",          dd);   dd+=a;
-      validateAppend(fmt,"mul,first",     dd);    dd+=a;
+      if( !flagColor ) validateAppend(fmt,"mul,first",     dd);    dd+=a;
       
 
       context.valid("DETAILS in "+output+"....");
@@ -395,7 +400,8 @@ public class BuilderValidator extends Builder {
 
       String filename = input+Util.FS+"Image"+(++SUFFIXE)+"."+fmt;
       if( fmt.equals("fits") ) f.writeFITS(filename);
-      else if( fmt.equals("png"))  f.writePng(filename);
+      else 
+         if( fmt.equals("png"))  f.writePng(filename);
       else f.writeJpg(filename);
       
       return filename;

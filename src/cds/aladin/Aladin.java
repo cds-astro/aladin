@@ -187,7 +187,6 @@ ActionListener,
 DropTargetListener, DragSourceListener, DragGestureListener
 {
 
-
    //   static final boolean VP=true;
 
    //   static final Dimension SCREENSIZE= Toolkit.getDefaultToolkit().getScreenSize();
@@ -199,7 +198,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v12.025";
+   static public final    String VERSION = "v12.027";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -241,8 +240,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.cds.unistra.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
-   static String COPYRIGHT         = PREMIERE | BETA || PROTO ? "(c) 2022 Université de Strasbourg/CNRS - developed by CDS, ALL RIGHT RESERVED" :
-                               "(c) 2022 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
+   static String COPYRIGHT         = PREMIERE | BETA || PROTO ? "(c) 2023 Université de Strasbourg/CNRS - developed by CDS, ALL RIGHT RESERVED" :
+                               "(c) 2023 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -552,7 +551,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Les objets associees a l'interface
    public FrameFullScreen fullScreen=null;   // Gère le Frame du mode plein écran, null si non actif
    public Bookmarks bookmarks;          // Gère les favoris
-   View view;                    // Gere la "View frame"
+   public View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
    Tips urlStatus;               // Gere la ligne de l'info sur les URLs
    IconMatch match;                  // Gere le logo pour la grille

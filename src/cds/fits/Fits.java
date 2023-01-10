@@ -1466,8 +1466,8 @@ final public class Fits {
 //   }
 
    /** Ecriture de l'image sous la forme PNG ou JPG avec fichier HHH */
-   public void writePng(String filename) throws Exception { writeColorHHH(filename,"jpg"); }
-   public void writeJpg(String filename) throws Exception { writeColorHHH(filename,"png"); }
+   public void writePng(String filename) throws Exception { writeColorHHH(filename,"png"); }
+   public void writeJpg(String filename) throws Exception { writeColorHHH(filename,"jpg"); }
    public void writeColorHHH(String filename,String fmt) throws Exception {
       if( bitpix!=0 || (pixMode!=PIX_RGB && pixMode!=PIX_ARGB ) ) throw new Exception("Not an RGB image");
       createDir(filename);

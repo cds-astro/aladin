@@ -543,8 +543,8 @@ Runnable, SwingWidgetFinder, Widget {
       // Recherche du plan clique
       if( (currentPlan = getPlan(y))==null ) return;
       
-      // Un double clic sur le logo, sur ca marche
-      if( x>gapL && x<gapL+DX && e.getClickCount()>1 ) { //&& e.getWhen()-lastClick<250) {
+      // Un double clic sur le logo pour que le plan clignote brièvement
+      if( Aladin.TESTBLINKING && x>gapL && x<gapL+DX && e.getClickCount()>1 ) { //&& e.getWhen()-lastClick<250) {
          planIn=currentPlan;
          planIn.setActivated(true);
          doBlinkPlan(currentPlan);

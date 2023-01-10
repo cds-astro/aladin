@@ -21,6 +21,11 @@
 
 package cds.allsky;
 
+/**
+ * Liste des paramètres associés par les différentes actions de Hipsgen
+ * @author Anaïs Oberto & Pierre Fernique [CDS]
+ *
+ */
 public enum Param {
    
    in               ("dir",             "Source directory", 
@@ -291,7 +296,7 @@ public enum Param {
          "Dedicated to the MIRROR action. Specifies the list of tile formats to be copied "
          + "(e.g. `fits jpeg` - by default all formats).",
          A.SPE),
-   mirrorSplit            ("size;altPath]",   "Multi disk partition split",
+   mirrorSplit            ("size;altPath ...",   "Multi disk partition split",
          "Dedicated to the MIRROR action. Indicate one or more alternative directories needed for the "
          + "copy if the default directory does not have the required size. "
          + "For example `10g;/data/hips-ext1 200g;/data/hips-ext2` will cause the first "
@@ -307,58 +312,7 @@ public enum Param {
    verbose          ("nn",              "Debug information",A.UNDOC),
    skyvalues        ("x1 x2 x3 x4",     "4 skyvalues",A.IMG|A.UNDOC),
  ;
-   
-   String synopsis;             // syntaxe d'utilisation
-   String info;                 // Description courte
-   String description=null;     // Description longue
-   int m;                       // Caractéristiques (voir classe A)
-   
-   Param(String synopsis,String info, int m ) { this.synopsis=synopsis; this.info=info; this.m=m; }
-   Param(String synopsis,String info, String description, int m ) { this.synopsis=synopsis; this.info=info; this.description=description; this.m=m; }
-   
-   String info() { return info; }
-   String synopsis() { return synopsis; }
-   String description() { return Action.fold(description); }
-   
-   static String help(String launcher, boolean full) {
-      StringBuilder s = new StringBuilder();
-      for( Param a : values() ) {
-         if( (a.m&(A.TEST|A.UNDOC)) !=0 ) continue;
-         if( full ) s.append( "\n\n"+Action.LINE+a.fullHelp(launcher) );
-         else {
-            String s1 = String.format("%-20s: ",(a+"="+a.synopsis));
-            s.append("   "+s1+a.info+"\n");
-         }
-      }
-      if( full ) s.append("\n\n"+Action.LINE);
-      return s.toString();
-   }
-   
-   String fullHelp(String launcher) {
-      StringBuilder s = new StringBuilder();
-      s.append("PARAMETER\n   "+this+" - "+info);
-      String a[] = ParamObsolete.aliases(this.toString());
-      s.append("\n\nSYNOPSIS\n   "+this+"="+synopsis);
-      if( a!=null ) {
-         s.append("\n\nALIAS");
-         for( String s1: a ) s.append("\n   "+s1);
-      }
-      if( description!=null ) s.append("\n\nDESCRIPTION\n   "+description());
-      return s.toString();
-   }
-   
-   public boolean equals(String s) {
-      if( s==null ) return false;
-      return toString().toLowerCase().equals( s.toLowerCase() );
-   }
-   
-   static Param get(String s) throws Exception {
-      for( Param p : values() ) {
-         if( p.equals(s) ) return p;
-      }
-      throw new Exception("Param unknown");
-   }
-   
+
    class A {
       static final int REQ  = 1;        // Requis
       static final int META = 2;        // Métadonnée
@@ -371,4 +325,113 @@ public enum Param {
       static final int UNDOC= 256;      // Paramètre non documenté
       static final int TEST = 512;      // Paramètre en cours de développement
    }
+
+   /** Les champs */
+   String info;                 // Description courte
+   String synopsis;             // syntaxe d'utilisation
+   String description=null;     // Description longue
+   int m;                       // Caractéristiques (voir classe A)
+
+   Param(String synopsis,String info, int m ) { this.synopsis=synopsis; this.info=info; this.m=m; }
+   Param(String synopsis,String info, String description, int m ) { this.synopsis=synopsis; this.info=info; this.description=description; this.m=m; }
+
+   /** Retourne la description courte */
+   String info() { return info; }
+
+   /** Retourne la syntaxe d'utilisation */
+   String synopsis() { return synopsis; }
+
+   /** Retourne la description longue, repliée en ligne de 80 caractères et 3 blancs en marge gauche */
+   String description() { return Action.fold(description); }
+
+   /** Aide en ligne correspondante au paramètre
+    * @param launcher le lanceur (Hipsgen ou Aladin)
+    * @param mode le mode d'affichage => Hipsgen.HTML:au format HTML
+    * @return le paragraphe de l'aide en ligne
+    */
+   String fullHelp(String launcher,int mode) {
+      boolean html = (mode&HipsGen.HTML)!=0;
+      StringBuilder s = new StringBuilder();
+      if( html ) {
+         s.append("<B>PARAMETER  <FONT COLOR=green SIZE=+1>"+this+"</FONT></B> - "+info);
+         String a[] = ParamObsolete.aliases(this.toString());
+         s.append("\n<P><B>SYNOPSIS</B>   <PRE>"+this+"="+htmlEncode(synopsis)+"</PRE>");
+         if( a!=null ) {
+            s.append("\n<P><B>ALIAS</B>");
+            for( String s1: a ) s.append(" "+s1);
+         }
+         if( description!=null ) s.append("\n<P><B>DESCRIPTION</B><P>   "+description());
+      } else {
+         s.append("PARAMETER\n   "+this+" - "+info);
+         String a[] = ParamObsolete.aliases(this.toString());
+         s.append("\n\nSYNOPSIS\n   "+this+"="+synopsis);
+         if( a!=null ) {
+            s.append("\n\nALIAS");
+            for( String s1: a ) s.append("\n   "+s1);
+         }
+         if( description!=null ) s.append("\n\nDESCRIPTION\n   "+description());
+      }
+      return s.toString();
+   }
+
+   /** Surcharge de l'égalité pour ignorer la case des lettres */
+   boolean equals(String s) {
+      if( s==null ) return false;
+      return toString().toLowerCase().equals( s.toLowerCase() );
+   }
+
+   /********************************* Méthodes statiques  *********************************/
+
+   /** Retournele paramètre correspondante à la chaine
+    * @param param paramètre demandée
+    * @return Le paramètre correspondant, ou exception sinon
+    * @throws Exception
+    */
+   static Param get(String param) throws Exception {
+      for( Param p : values() ) if( p.equals(param) ) return p;
+      throw new Exception("Param unknown");
+   }
+
+   /**
+    * Retourne l'aide en ligne pour l'ensemble des paramètres
+    * @param launcher le lanceur (Hipsgen ou Aladin)
+    * @param mode Le mode d'affichage 
+    *                Hipsgen.FULL: un paragraphe au lieu d'une ligne
+    *                Hipsgen.HTML: en codage HTML
+    * @return l'aide en ligne
+    */
+   static String help(String launcher, int mode) {
+      boolean full = (mode&HipsGen.FULL)!=0;
+      boolean html = (mode&HipsGen.HTML)!=0;
+
+      StringBuilder s = new StringBuilder();
+      for( Param a : values() ) {
+         if( (a.m&(A.TEST|A.UNDOC)) !=0 ) continue;
+         if( html ) {
+            if( full ) s.append( "\n<HR>\n"+a.fullHelp(launcher,mode) );
+            else {
+               String s1 = String.format("%-20s: ",(a+"="+a.synopsis));
+               s.append("   "+s1+a.info+"<BR>");
+            }
+         } else {
+            if( full ) s.append( "\n\n"+Action.LINE+a.fullHelp(launcher,mode) );
+            else {
+               String s1 = String.format("%-20s: ",(a+"="+a.synopsis));
+               s.append("   "+s1+a.info+"\n");
+            }
+         }
+      }
+      if( full ) {
+         if( html ) s.append("\n<HR>\n");
+         else s.append("\n\n"+Action.LINE);
+      }
+      return s.toString();
+   }
+
+   /** Encodage HTML du < */
+   static final private String htmlEncode(String s) {
+      return s.replace("<","&lt;");
+   }
+
+
 }

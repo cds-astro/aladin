@@ -28,7 +28,7 @@ import cds.allsky.TabRgb;
 import cds.fits.Fits;
 
 /**
- * Gère un losange Healpix pour un PlanBGRgb (HiPS RGB dynamique
+ * Gère un losange Healpix pour un PlanBGRgb (HiPS RGB dynamique)
  * @author Pierre Fernique [CDS]
  * @version 1.0 - Janvier 2020
  */
@@ -158,7 +158,7 @@ public class HealpixKeyRgb extends HealpixKey {
          }
          
       } catch( Exception e ) {
-         e.printStackTrace();
+//         e.printStackTrace();
       }
    }
 

@@ -551,7 +551,21 @@ public abstract class BuilderRunner extends Builder {
       //      long maxMemPerThread = 4L * Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
       int npixOrig = context.getNpixOrig();
       if( npixOrig<=0 ) npixOrig=4;
-      long bufMem =  4L * Constante.ORIGCELLWIDTH * Constante.ORIGCELLWIDTH * npixOrig;
+      
+      // si partitionné => si statmax inconnue getPartitioning, sinon min(getPartitioning,statMax)
+      // non partitionné => statMax, et si inconnu OrigineCELLW
+      int maxWidth  = context.statMaxWidth;
+      int maxHeight = context.statMaxHeight;
+      int bloc = context.getPartitioning();
+      if( context.isPartitioning() ) {
+         maxWidth  = maxWidth==-1  ? bloc : Math.min(bloc,maxWidth);
+         maxHeight = maxHeight==-1 ? bloc : Math.min(bloc,maxHeight);
+      } else {
+         if( maxWidth==-1 )  maxWidth = Constante.ORIGCELLWIDTH;
+         if( maxHeight==-1 ) maxHeight = Constante.ORIGCELLWIDTH;
+      }
+      
+      long bufMem =  4L * maxWidth * maxHeight * npixOrig;
       long oneRhomb = context.getTileSide()*context.getTileSide()*context.getNpix();
       long maxMemPerThread = 4*oneRhomb + bufMem;
       if( isColor )  maxMemPerThread += oneRhomb*(ordermax-ordermin);

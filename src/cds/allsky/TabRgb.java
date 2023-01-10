@@ -251,9 +251,9 @@ public class TabRgb extends JPanel implements ActionListener {
    private void seeCmd() {
       String s = getCmdLine();
       aladin.copyToClipBoard( s );
-      aladin.console.printInPad(s);
+      aladin.console.printInPad(s+"\n");
       aladin.console.show();
-      aladin.info(this, getString("CMDLINEINFO"));
+      aladin.info(this, getString("CMDLINEINFO")+"\n=> "+s);
    }
    
    // Génère le JPanel dédié aux paramètres
@@ -487,7 +487,17 @@ public class TabRgb extends JPanel implements ActionListener {
    // Crée/remplace le plan de prévisualisation montrant immédiatement le résultat du HiPS couleur qui sera généré
    // en fonction des paramètres sélectionnés.
    private void createPreview() {
-      planPreview = aladin.calque.createPlanBGRgb( this, getSelectedPlan(0), getSelectedPlan(1), getSelectedPlan(2) );
+      aladin.view.autoViewGenerator();
+      final TabRgb ici = this;
+      try {
+         SwingUtilities.invokeLater( new Runnable() {
+            public void run() {
+               Util.pause(500);
+               planPreview = aladin.calque.createPlanBGRgb( ici, getSelectedPlan(0), getSelectedPlan(1), getSelectedPlan(2) );
+               aladin.view.autoViewGenerator();
+            }
+         });
+      } catch( Exception e ) { }
    }
    
    /** Retourne le numéro de la composante manquante, -1 si aucune (0-red, 1-green, 2-blue) */
@@ -543,9 +553,16 @@ public class TabRgb extends JPanel implements ActionListener {
    public String getTransfertFct(int c){ return function[c].getText(); }
    
    /** Retourne les différents paramètres de l'algo de Lupton pour la composante c */
-   public double getLuptonM(int c)     { return Double.parseDouble( luptonM[c].getText() ); }
-   public double getLuptonS(int c)     { return Double.parseDouble( luptonS[c].getText() ); }
-   public double getLuptonQ()          { return Double.parseDouble( luptonQ.getText() ); }
+   public double getLuptonM(int c)     { return getLuptonVal( luptonM[c]); }
+   public double getLuptonS(int c)     { return getLuptonVal( luptonS[c]); }
+   public double getLuptonQ()          { return getLuptonVal( luptonQ); }
+   
+   private double getLuptonVal(JText t) {
+      try {
+         return Double.parseDouble( t.getText() );
+      } catch( Exception e ) {}
+      return 0;
+   }
    
    // "dés'applique" le bscale et le bzero sur la valeur passée en paramètre pour la composante couleur c
    private double noScaleAndZero(int c,double val) {
@@ -619,7 +636,7 @@ public class TabRgb extends JPanel implements ActionListener {
          for( Object p : x ) {
             if( ((PlanBG)p).isColored() ) n--;
             else if( !((PlanBG)p).canbeTruePixels() ) n--;
-            else if( !Aladin.PROTO && !((PlanBG)p).isLocalAllSky() ) n--;
+            else if( !Aladin.BETA && !((PlanBG)p).isLocalAllSky() ) n--;
          }
          
          // Copie
@@ -690,7 +707,7 @@ public class TabRgb extends JPanel implements ActionListener {
          PlanBG p = getSelectedPlan(c);
          cmd.append( " in"+RGB[c]+"=\""+p.getUrl()+"\"");
       }
-      cmd.append( getFormat()==Constante.TILE_PNG ? " color=png" :" color=jpg");
+      cmd.append(" "+Param.color+(getFormat()==Constante.TILE_PNG ? "=png" :"=jpg"));
 //      if( getGauss() ) cmd.append(" filter=gauss");
       
       boolean flagLupton = getRGBMethod()==1;
@@ -709,9 +726,9 @@ public class TabRgb extends JPanel implements ActionListener {
             if( !Double.isNaN(os) && sx!=os ) sameS=false;
             os=sx;
          }
-         cmd.append(" luptonM="+(sameM ? mx+"" : m));
-         cmd.append(" luptonS="+(sameS ? sx+"" : s));
-         cmd.append(" luptonQ="+getLuptonQ());
+         cmd.append(" "+Param.luptonM+"="+(sameM ? mx+"" : m));
+         cmd.append(" "+Param.luptonS+"="+(sameS ? sx+"" : s));
+         cmd.append(" "+Param.luptonQ+"="+getLuptonQ());
 
          // Paramètre de la méthode RGB classique   
       } else {
@@ -726,7 +743,7 @@ public class TabRgb extends JPanel implements ActionListener {
          }
       }
       
-      cmd.append(" out=\""+outputField.getText()+"\" RGB");
+      cmd.append(" "+Param.id+"=TEST/P/hipsrgb out=\""+outputField.getText()+"\" RGB");
       return cmd.toString();
    }
    
@@ -794,7 +811,7 @@ public class TabRgb extends JPanel implements ActionListener {
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
          context.setProgressBar(progressBar);
          
-         new Task(context, Action.RGB, false);
+         new Task(context, Action.RGB, true);
 
       } catch( Exception e1 ) {
          aladin.error(this, "RGB HiPS creation error");

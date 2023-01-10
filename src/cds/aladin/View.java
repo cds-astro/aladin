@@ -1646,7 +1646,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Génèration automatiquement d'une vue pour chaque plan image qui n'est
     *  pas encore associé à une vue. */
-   protected void autoViewGenerator() {
+   public void autoViewGenerator() {
       int n=0;
       Plan [] allPlans = calque.getPlans();
       for( int i=allPlans.length-1; i>=0; i-- ) {
@@ -1656,12 +1656,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          createViewForPlan(p);
          n++;
       }
-
+System.out.println("n="+n);
       // Détermination du nombre de vues visibles
-      int m=ViewControl.MVIEW16;
-      for( int i=0; i<ViewControl.MODE.length; i++ ) {
-         if( n<ViewControl.MODE[i] ) { m=ViewControl.MODE[i]; break; }
-      }
+      int m = n>9 ? ViewControl.MVIEW16 : n>4 ? ViewControl.MVIEW9
+            : n>2 ? ViewControl.MVIEW4 : n>1 ? ViewControl.MVIEW2C : ViewControl.MVIEW1;
       if( m!=getModeView() ) setModeView(m);
       aladin.calque.select.repaint();
       repaintAll();
@@ -3903,6 +3901,18 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return rep;
    }
 
+   /** Positionnement du repere en fonction des coordonnees ICRS de la chaine "s"
+    * ex: 123.34 -12.56
+    */
+   protected void setRepereByString(String s) {
+      try {
+         Coord c = new Coord( s );
+         setRepere(c,true);
+      } catch( Exception e ) { 
+         if( aladin.levelTrace>=3 ) System.err.println(e.getMessage());
+      }
+   }
+
 
    /** Positionnement du repere en fonction du target du plan de reference */
    protected void setRepere(Plan p) {
@@ -4550,7 +4560,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     * Positionne le nombre de vues visiblement simultanément.
     * @param m nombre de vues (ViewControl.MVIEW1, MVIEW4, MVIEW9, VIEW16)
     */
-   protected void setModeView(int m) {
+   public void setModeView(int m) {
       if( aladin.viewControl.modeView!=m ) aladin.viewControl.setModeView(m);
       if( modeView==m ) return;
       
