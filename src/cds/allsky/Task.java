@@ -72,7 +72,7 @@ public class Task extends Thread {
        perform(now);
     }
     
-    static public Builder validator(Context context, Action action) throws Exception {
+    static public Builder factoryRunner(Context context, Action action) throws Exception {
        Task task = new Task();
        task.context=context;
        task.actions = new Vector<>();

@@ -134,7 +134,7 @@ public class BuilderUpdate extends Builder {
       }
       context.info("Adding check codes...");
 //      context.setCheckForce(true);
-      Task.validator(context, Action.CHECKCODE);
+      Task.factoryRunner(context, Action.CHECKCODE);
       context.writePropertiesFile();
       context.done("Check code done");
       b=null; 

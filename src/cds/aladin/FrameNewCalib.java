@@ -813,6 +813,7 @@ e.printStackTrace();
 
          // Methode par quadruplets
          } else if( modeCalib==QUADRUPLET ) {
+            flagModif=false;    // TOUJOURS CAR SINON CA NE MARCHE PAS BIEN => PF JAN 2023
             Coord coo[] = getCoo(/*getHauteur()*/);
             if( coo==null ) return;
             if( flagModif ) p=oldp;

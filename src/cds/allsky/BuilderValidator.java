@@ -60,7 +60,7 @@ public class BuilderValidator extends Builder {
    public Action getAction() { return Action.VALIDATOR; }
    
    private Builder execute(Action a) throws Exception {
-      Builder b=Task.validator(context,a);
+      Builder b=Task.factoryRunner(context,a);
       if( context.isTaskAborting() ) throw new Exception("Aborting");
       return b;
    }
@@ -68,8 +68,8 @@ public class BuilderValidator extends Builder {
    public void run() throws Exception {
       path = context.getOutputPath();
       
-//      validate("fits");
-      validate("png");
+      validate("fits");
+//      validate("png");
 //      validateArith();
       
       

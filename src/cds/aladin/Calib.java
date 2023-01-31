@@ -32,7 +32,6 @@ import cds.astro.Astroframe;
 import cds.fits.HeaderFits;
 //import cds.healpix.Projection ;
 import  cds.healpix.Healpix ;
-import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -4496,11 +4495,11 @@ public final class Calib  implements Cloneable {
 
    /** PF Nov 2022 - Meilleur choix des fonctions trigo */
 
-   static final double sin(double d)   { return FastMath.sin(d);  }
-   static final double cos(double d)   { return FastMath.cos(d);  }
-   static final double asin(double d)  { return FastMath.asin(d); }
-   static final double acos(double d)  { return FastMath.acos(d); }
-   static final double atan(double d)  { return FastMath.atan(d); }
+   static final double sin(double d)   { return cds.tools.FastMath.sin(d);  }
+   static final double cos(double d)   { return cds.tools.FastMath.cos(d);  }
+   static final double asin(double d)  { return cds.healpix.common.math.FastMath.asin(d); }
+   static final double acos(double d)  { return cds.healpix.common.math.FastMath.acos(d); }
+   static final double atan(double d)  { return cds.healpix.common.math.FastMath.atan(d); }
 
    /** PF - Nov 2022
     * Teste les différentes fonctions trigo des librairies disponibles

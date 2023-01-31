@@ -30,11 +30,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.Vector;
 
 import cds.aladin.Aladin;
+import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
@@ -81,10 +83,12 @@ public class HipsGen {
     public String launcher = "Aladin.jar -hipsgen";
 
     private Vector<Action> actions;
+    private ArrayList<Param> listParam; 
 
     public HipsGen() {
         this.context = new Context();
         actions = new Vector<>();
+        listParam=new ArrayList<>();
     }
 
     /**
@@ -167,6 +171,7 @@ public class HipsGen {
         String info=null;
         try {
            Param pa = Param.valueOf(opt);
+           listParam.add(pa);
            opt=pa.toString();
            info=pa.info();
         } catch( Exception e) {}
@@ -248,13 +253,16 @@ public class HipsGen {
 
     }
     
-    private void generateHHHcar( String file ) throws Exception {
+    private void generateHHHcar( String file, int frame) throws Exception {
        if( (new File(file)).isDirectory() ) throw new Exception("hhh generation failed");
        Fits f = new Fits();
        f.loadPreview(file);
        int w = f.width;
        int h = f.height;
        context.info("Creating hhh file (assuming full sky CAR projection) for "+file);
+       
+       String prefLon = frame==Localisation.ICRS ? "RA---" : frame==Localisation.GAL ? "GLON--" : "ELON--";
+       String prefLat = frame==Localisation.ICRS ? "DE---" : frame==Localisation.GAL ? "GLAT--" : "ELAT--";
 
        String filehhh = Fits.getHHHName(file);
        context.setInputPath(filehhh);
@@ -275,8 +283,8 @@ public class HipsGen {
           t.write("CRPIX2  = "+crpix2);  t.newLine();
           t.write("CRVAL1  = "+crval1);  t.newLine();
           t.write("CRVAL2  = "+crval2);  t.newLine();
-          t.write("CTYPE1  = RA---CAR"); t.newLine();
-          t.write("CTYPE2  = DEC--CAR"); t.newLine();
+          t.write("CTYPE1  = "+prefLon+"CAR"); t.newLine();
+          t.write("CTYPE2  = "+prefLat+"CAR"); t.newLine();
           t.write("CD1_1   = "+(-cd));      t.newLine();
           t.write("CD1_2   = 0");        t.newLine();
           t.write("CD2_1   = 0");        t.newLine();
@@ -629,8 +637,9 @@ public class HipsGen {
 
         if( flagHHHcar ) {
            try {
-              generateHHHcar(context.getInputPath());
+              generateHHHcar(context.getInputPath(),context.getFrame());
            } catch( Exception e ) {
+              if( Aladin.levelTrace>=3 ) e.printStackTrace();
               context.error("hhh file generation failed for "+context.getInputPath());
               return;
            }
@@ -739,7 +748,7 @@ public class HipsGen {
         // Ajustement du mode par défaut dans le cas d'une génération d'une HiPS RGB
         if( flagRGB && !flagMode ) context.setModeMerge(ModeMerge.mergeOverwriteTile);
 
-        // Ajustement de la méthode par défaut (moyenne pour les FITS, médiane pour les couleurs)
+        // Ajustement de la méthode par défaut (moyenne pour les FITS, médiane first pour les couleurs)
         // à moins qu'elle n'ait été spécifiquement indiquée
         if( context.isColor() && !flagModeTree ) {
             context.setModeTree( ModeTree.treeMedian );
@@ -779,6 +788,11 @@ public class HipsGen {
         for( Action a : actions ) {
             context.param("Action => "+a+": "+a.info());
             if( !flagMapFits && a==Action.MAPTILES ) flagMapFits=true;
+        }
+
+        // Alertes sur les paramètres inutiles
+        for( Param p : listParam ) {
+           if( !p.checkActions(actions) ) context.warning(p+" not use for these actions => param ignored");
         }
 
         // Positionnement du frame par défaut
@@ -880,7 +894,7 @@ public class HipsGen {
        
        boolean flagHtml = (mode&HTML)!=0;
        
-       if( flagHtml ) System.out.println("<HTML><H1>Hipsgen manual reference"
+       if( flagHtml ) System.out.println("<HTML><H1>Hipsgen reference manual"
           + "<BR><FONT SIZE=-1>related to Hipsgen/Aladin "+Aladin.VERSION+"</FONT></H1>\n<PRE>\n");
        System.out.println("Usage: java -jar "+launcher+" in=dir [otherParams ...ACTIONs...]");
        System.out.println("       java -jar "+launcher+" -param=configfile [...ACTIONs...]\n");

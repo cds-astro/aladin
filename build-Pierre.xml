@@ -114,5 +114,16 @@
       </jar>
    </target>
    
+   <target name="signexe">
+   <exec executable="C:\Users\Pierre\Mes documents perso\Utilitaires perso\Launch4j\sign4j\sign4j.exe">
+        <arg line="--verbose java -jar 'C:\Users\Pierre\Mes documents perso\Utilitaires perso\Launch4j\sign4j\jsign-2.0.jar'
+        --keystore ${cert}/Aladin.jks --alias server --storepass bal$bol
+         /Users/Pierre/Desktop/Aladin.exe"/>
+    </exec>
+</target>
+
+
+
+   
 </project>
 

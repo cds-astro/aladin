@@ -37,6 +37,7 @@ public enum ParamObsolete {
    hips_data_range (Param.dataRange,false),
    hips_pixel_cut (Param.pixelCut,false),
    hips_title (Param.title,false),
+   obs_title (Param.title,false),
    hips_creator (Param.creator,false),
    hips_status (Param.status,false),
    hips_moc_order (Param.mocOrder,false),

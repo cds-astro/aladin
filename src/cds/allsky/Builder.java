@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import cds.aladin.Calib;
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.fits.Fits;
@@ -150,12 +151,41 @@ public abstract class Builder {
       if( f.isFile() ) {
          context.info("Unique input image detected");
          context.setFlagInputFile(true);
+         if( !input.endsWith(".hhh") ) {
+            try {
+               Fits f1 = new Fits();
+               f1.loadHeaderFITS(input, false);
+               new Calib(f1.headerFits);
+            } catch( Exception e ) {
+               String hhh = Fits.getHHHName(input);
+               if( (new File(hhh).exists()) ) {
+                  context.setInputPath(hhh);
+                  context.info("Switch input file to "+hhh);
+               }
+            } 
+         }
+
       }
       if( context.isExistingAllskyDir(input) && context.hasPropertyFile(input) ) {
          throw new Exception("The input directory must be a image collection, not a HiPS => aborted");
       }
       context.setValidateInput(true);
    }
+   
+//   // dans le cas où ce n'est pas un fichier hhh, peut être est-ce un fichier image avec un fichier hhh associé ?
+//   if( !rootPath.endsWith(".hhh") ) {
+//      try {
+//         Fits f = new Fits();
+//         f.loadHeaderFITS(rootPath, false);
+//         new Calib(f.headerFits);
+//
+//      }catch( Exception e ) {
+//         String hhh = Fits.getHHHName(rootPath);
+//         if( (new File(hhh).exists()) ) rootPath=hhh;
+//      } 
+//   }
+//   return rootPath;
+
    
    
    static private String FS = cds.tools.Util.FS;
@@ -739,5 +769,32 @@ public abstract class Builder {
       return weight;
    }
 
+   /** Charge une valeur d'un mot clé d'un fichier de properties pour un répertoire particulier, null sinon */
+   protected String loadProperty(String path,String key) throws Exception {
+      MyProperties prop = loadProperties(path);
+      if( prop==null ) return null;
+      return prop.getProperty(key);
+   }
+   
+   /** Charge les propriétés d'un fichier properties, retourne null si problème */
+   protected MyProperties loadProperties(String path) {
+      InputStreamReader in = null;
+      try {
+         String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
+         MyProperties prop = new MyProperties();
+         File f = new File( propFile );
+         if( f.exists() ) {
+            in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
+            prop.load(in);
+            in.close();
+            in=null;
+            return prop;
+         }
+      } 
+      catch( Exception e ) {}
+      finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
+      return null;
+   }
+   
 
 }

@@ -21,12 +21,8 @@
 
 package cds.allsky;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 
-import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.fits.Fits;
 import cds.tools.pixtools.Util;
@@ -47,6 +43,7 @@ public class BuilderAppend extends Builder {
    private String inputPath;
    private ModeMerge mode;
    private boolean live=false;            // true si on doit utiliser les cartes de poids
+   private String color;
    private String addHipsPath;
    private int order;
    private String skyval;
@@ -71,6 +68,15 @@ public class BuilderAppend extends Builder {
       removeAddHips();
    }
    
+   
+   private String hipsName=null;
+   
+   // Retourne le nom du HiPS temporaire
+   private String getAddHipsName() {
+      if( hipsName==null ) hipsName="AddsHips"+(System.currentTimeMillis()/1000L);
+      return hipsName;
+   }
+   
    // Generation du HiPS additionnel
    private void createAddHips() throws Exception  {
       
@@ -79,6 +85,7 @@ public class BuilderAppend extends Builder {
       String spixelCut = pixelCut==null  ? "" : " \""+Param.pixelCut+"="+pixelCut+"\"";
       String sdataRange= dataRange==null ? "" : " \""+Param.dataRange+"="+dataRange+"\"";
       String sbitpix = "";
+      String sformat= color!=null ? " "+Param.color+"="+color : "";
       if( bitpix!=-1 ) sbitpix=" "+Param.bitpix+"="+bitpix;
       String slive = live ? " "+Param.incremental+"=true":"";
       
@@ -108,6 +115,7 @@ public class BuilderAppend extends Builder {
             +slive
             +spart
             +smode
+            +sformat
             +sbitpix
             +spixelCut
             +sdataRange
@@ -165,7 +173,7 @@ public class BuilderAppend extends Builder {
    public void validateContext() throws Exception {
       outputPath = context.getOutputPath();
       inputPath = context.getInputPath();
-      addHipsPath = cds.tools.Util.concatDir( outputPath,"AddsHiPS");
+      addHipsPath = cds.tools.Util.concatDir( outputPath,getAddHipsName());
       mode = context.getModeMerge();
       
       if( inputPath==null ) throw new Exception("\"in\" parameter required !");
@@ -221,10 +229,22 @@ public class BuilderAppend extends Builder {
          if( !live ) context.warning("Target HiPS does not provide weight tiles => assuming weigth 1 for each output pixel");
       }
       
+      color = getColorFormat(context.getOutputPath());
+      
       // On s'invente un ID pour l'ajout
       addendumId = "APPEND/P/"+System.currentTimeMillis()/1000;
    }
    
+   /** Retourne le format des tuiles si HiPS couleur, sinon null */
+   protected String getColorFormat(String path) {
+      try {
+         String s = loadProperty(path,Constante.KEY_DATAPRODUCT_SUBTYPE);
+         if( s==null ||  s.indexOf("color")<0 ) return null;
+         return loadProperty(path,Constante.KEY_HIPS_TILE_FORMAT);
+      } catch( Exception e ) {}
+      return null;
+   }
+
    /** Vérifie que les 2 hips disposent des cartes de poids */
    protected boolean checkLiveByProperties(String path) {
       try {
@@ -252,30 +272,4 @@ public class BuilderAppend extends Builder {
    }
 
 
-   /** Charge une valeur d'un mot clé d'un fichier de properties pour un répertoire particulier, null sinon */
-   protected String loadProperty(String path,String key) throws Exception {
-      MyProperties prop = loadProperties(path);
-      if( prop==null ) return null;
-      return prop.getProperty(key);
-   }
-   
-   /** Charge les propriétés d'un fichier properties, retourne null si problème */
-   protected MyProperties loadProperties(String path) {
-      InputStreamReader in = null;
-      try {
-         String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
-         MyProperties prop = new MyProperties();
-         File f = new File( propFile );
-         if( f.exists() ) {
-            in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
-            prop.load(in);
-            in.close();
-            in=null;
-            return prop;
-         }
-      } 
-      catch( Exception e ) {}
-      finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
-      return null;
-   }
 }

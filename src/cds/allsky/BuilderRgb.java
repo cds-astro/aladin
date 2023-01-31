@@ -22,10 +22,7 @@
 package cds.allsky;
 
 import java.awt.image.IndexColorModel;
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 
 import cds.aladin.CanvasColorMap;
 import cds.aladin.KernelList;
@@ -373,21 +370,6 @@ public class BuilderRgb extends BuilderRunner {
       }
       if( order==-1 ) order = Util.getMaxOrderByPath( path );
       return order;
-   }
-
-   // Chargement d'un fichier de propriétés
-   private MyProperties loadProperties(String path) throws Exception {
-      MyProperties prop;
-      String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
-      prop = new MyProperties();
-      File f = new File( propFile );
-      if( f.exists() ) {
-         if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-         InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
-         prop.load(in);
-         in.close();
-      }
-      return prop;
    }
 
    /** Préparation de la table des couleurs pour la composante c

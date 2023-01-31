@@ -36,6 +36,7 @@ import java.util.StringTokenizer;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
+import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.image.Bzip2;
 import cds.tools.Util;
@@ -1612,6 +1613,9 @@ public class MyInputStream extends FilterInputStream {
     * @return true si ça ressemble au moins un peu à une entête FITS
     */
    private boolean memoPNGCalib(int pos,int size,boolean compress) {
+      return memoPNGCalib(cache,pos,size,compress);
+   }
+   private boolean memoPNGCalib(byte [] cache,int pos,int size,boolean compress) {
 
       // Un commentaire PNG commence par un mot clé, suivi d'un octet à 0, puis le commentaire libre
       while( cache[pos]!=0 && size>1 ) { pos++; size--; }
@@ -1633,7 +1637,20 @@ public class MyInputStream extends FilterInputStream {
          }
       }
 //             System.out.println("CALIB=["+commentCalib+"]");
-      if( commentCalib.indexOf("CTYPE1")<0 ) {
+      
+      // Serait-ce des tags AVM  en format => keyword : value \n  ?
+      if( commentCalib.indexOf("Spatial")>=0 ) {
+         try {
+            Tok tok = new Tok(commentCalib,"\n:");
+            commentCalib=null;
+            while( tok.hasMoreTokens() ) {
+               memoOneAVM(new StringBuilder( tok.nextToken()),new StringBuilder(tok.nextToken()));
+            }
+         } catch( Exception e ) { }
+      }
+      
+      // Sinon ce doit êre une calib WCS
+      else if( commentCalib.indexOf("CTYPE1")<0 ) {
          commentCalib=null;
          return false;
       }
@@ -1694,8 +1711,8 @@ public class MyInputStream extends FilterInputStream {
     *
     * @return true si une entête AVM a été trouvée
     */
-   private boolean memoJpegAVMCalib(int pos,int size) { return memoJpegAVMCalib(pos,size,cache); }
-   private boolean memoJpegAVMCalib(int pos,int size,byte [] cache) {
+   private boolean memoXMPAVMCalib(int pos,int size) { return memoXMPAVMCalib(pos,size,cache); }
+   private boolean memoXMPAVMCalib(int pos,int size,byte [] cache) {
       boolean rep=false;
       int mode=0;
       int omode=-1;
@@ -1774,19 +1791,37 @@ public class MyInputStream extends FilterInputStream {
       return rep;
    }
 
-   private void createJpegAVMCalib(int width) {
+   // Création d'une calib WCS depuis la liste des mots clés AVM
+   // Supporte 2 syntaxes de mots clés AVM
+   // ex: "Spatial.CoordsystemProjection" ou bien "Spatial Coordsystem Projection"
+   // Supporte 2 syntaxes pour les valeurs AVM
+   // ex: "xxx yyy" ou bien "xxx, yyy"
+   private void createAVMCalib(int width) {
       StringBuilder fits = new StringBuilder(1000);
-      StringTokenizer st;
-      String s;
+      Tok st;
+      String s,s1;
       double ratio=1;
 
       fits.append("COMMENT FITS header built by Aladin from AVM tags\n");
+      
+//      if( width==-1 ) {
+//         try {
+//            s1 = avm.get("Spatial.ReferenceDimension");
+//            if( s1==null ) s1 = avm.get("Spatial Reference Dimension");
+//            st = new Tok( s1, " ," );
+//            fits.append("NAXIS   = 2\n");
+//            fits.append("NAXIS1  = "+st.nextToken()+"\n");
+//            fits.append("NAXIS2  = "+st.nextToken()+"\n");
+//         } catch( Exception e ) {};
+//      }
 
       String projs=avm.get("Spatial.CoordsystemProjection");
+      if( projs==null ) projs = avm.get("Spatial Coordsystem Projection");
       if( projs==null ) projs="TAN";
       String slon="RA---";
       String slat="DEC--";
       s = avm.get("Spatial.CoordinateFrame");
+      if( s==null ) s = avm.get("Spatial Coordinate Frame");
       if( s!=null ) {
          if( s.equals("GAL") ) { slon="GLON-"; slat="GLAT-"; }
          else if( s.equals("ECL") ) { slon="ELON-"; slat="ELAT-"; }
@@ -1797,21 +1832,27 @@ public class MyInputStream extends FilterInputStream {
 
       // Faut-il prendre en compte un changement d'échelle ?
       try {
-         st = new StringTokenizer( avm.get("Spatial.ReferenceDimension") );
+         s1 = avm.get("Spatial.ReferenceDimension");
+         if( s1==null ) s1 = avm.get("Spatial Reference Dimension");
+         st = new Tok( s1, " ," );
          ratio=width/Double.parseDouble(st.nextToken());
       } catch( Exception e ) {};
 
 
       //      boolean refSpacial = false;
       try {
-         st = new StringTokenizer( avm.get("Spatial.ReferencePixel") );
+         s1 = avm.get("Spatial.ReferencePixel");
+         if( s1==null ) s1 = avm.get("Spatial Reference Pixel");
+         st = new Tok( s1, " ," );
          fits.append("CRPIX1  = "+Double.parseDouble(st.nextToken())*ratio+"\n");
          fits.append("CRPIX2  = "+Double.parseDouble(st.nextToken())*ratio+"\n");
          //         refSpacial=true;
       } catch( Exception e ) {};
 
       try {
-         st = new StringTokenizer( avm.get("Spatial.ReferenceValue") );
+         s1 = avm.get("Spatial.ReferenceValue");
+         if( s1==null ) s1 = avm.get("Spatial Reference Value");
+         st = new Tok( s1, " ," );
          fits.append("CRVAL1  = "+st.nextToken()+"\n");
          fits.append("CRVAL2  = "+st.nextToken()+"\n");
          //         refSpacial=true;
@@ -1828,27 +1869,35 @@ public class MyInputStream extends FilterInputStream {
       //      }
 
       try {
-         st = new StringTokenizer( avm.get("Spatial.Scale") );
+         s1 = avm.get("Spatial.Scale");
+         if( s1==null ) s1 = avm.get("Spatial Scale");
+         st = new Tok( s1, " ," );
          fits.append("CDELT1  = "+Double.parseDouble(st.nextToken())/ratio+"\n");
          fits.append("CDELT2  = "+Double.parseDouble(st.nextToken())/ratio+"\n");
       } catch( Exception e ) {};
 
       try {
-         st = new StringTokenizer( avm.get("Spatial.CDMatrix") );
+         s1 = avm.get("Spatial.CDMatrix");
+         if( s1==null ) s1 = avm.get("Spatial CDMatrix");
+         st = new Tok( s1, " ," );
          fits.append("CD1_1   = "+st.nextToken()+"\n");
          fits.append("CD1_2   = "+st.nextToken()+"\n");
          fits.append("CD2_1   = "+st.nextToken()+"\n");
          fits.append("CD2_2   = "+st.nextToken()+"\n");
       } catch( Exception e ) {};
 
-
-      if( (s=avm.get("Spatial.Rotation"))!=null )
+      s = avm.get("Spatial.Rotation");
+      if( s==null ) s = avm.get("Spatial Rotation");
+      if( s!=null )
          fits.append("CROTA2  = "+s+"\n");
 
-      if( (s=avm.get("Spatial.Equinox"))!=null )
+      s = avm.get("Spatial.Equinox");
+      if( s==null ) s = avm.get("Spatial Equinox");
+      if( s!=null )
          fits.append("EQUINOX = "+s+"\n");
 
       s=avm.get("Spatial.CoordinateFrame");
+      if( s==null ) s = avm.get("Spatial Coordinate Frame");
       if( s!=null && (s.equals("FK4") || s.equals("FK5") || s.equals("ICRS") ) )
          fits.append("RADECSYS= "+s+"\n");
 
@@ -1865,14 +1914,14 @@ public class MyInputStream extends FilterInputStream {
       commentCalib = fits.toString();
    }
 
-   /** Petit rajout en préfixe dans le commentaire JPEG contenant une Calib
+   /** Petit rajout en préfixe dans le commentaire contenant une Calib
     * pour pouvoir compléter les entêtes à la SLOAN ou AVM qui ne comportent pas les
     * NAXIS et NAXIS
     * @param width Largeur de l'image
     * @param height hauteur de l'image
     */
-   protected void jpegCalibAddNAXIS(int width,int height) {
-      if( avm!=null ) createJpegAVMCalib(width);
+   protected void appendNAXIS2Calib(int width,int height) {
+      if( avm!=null ) createAVMCalib(width);
       if( commentCalib==null ) return;
       commentCalib =  "SIMPLE  = T\n"
             +"BITPIX  = 8\n"
@@ -1890,14 +1939,14 @@ public class MyInputStream extends FilterInputStream {
       return new FrameHeaderFits(plan,commentCalib);
    }
 
-   /** Construction d'un HeaderFits à partir de l'entête JPEG si possible,
+   /** Construction d'un HeaderFits à partir de l'entête JPEG ou PNG si possible,
     * sinon génère une exception */
    public HeaderFits createHeaderFitsFromCommentCalib(int width,int height) throws Exception {
       HeaderFits headerFits;
       try {
          headerFits=new HeaderFits(commentCalib);
       } catch( Exception e ) {
-         jpegCalibAddNAXIS(width,height);
+         appendNAXIS2Calib(width,height);
          headerFits=new HeaderFits(commentCalib);
       }
 
@@ -1906,7 +1955,7 @@ public class MyInputStream extends FilterInputStream {
 
    /** Extraction directe et rapide des données AVM ou CalibFits du fichier
     * JPEG ou PNG. Il est nécessaire de réouvrir le fichier pour pouvoir
-    * faire les seeks qui vont bien => ne peut s'appliquerà un simple Stream
+    * faire les seeks qui vont bien => ne peut s'appliquer à un simple Stream
     * => Ne change rien au flux initial (cache, pos...)
     */
    public HeaderFits fastExploreCommentOrAvmCalib(String filename) throws Exception {
@@ -1915,7 +1964,7 @@ public class MyInputStream extends FilterInputStream {
       try {
          file = new RandomAccessFile(filename, "rw");
          if( (type&JPEG)!=0 ) fastExploreJpg(file);
-         //         else if( (type&PNG)!=0 ) explorePNG(file);   // A FAIRE QUAND J'AURAIS LE TEMPS PF Mars 2015
+         else if( (type&PNG)!=0 ) fastExplorePNG(file);
          else return null;
       }
       finally { if( file!=null) try { file.close(); } catch( Exception e) {} }
@@ -1935,7 +1984,7 @@ public class MyInputStream extends FilterInputStream {
          if( mode==0xE1 ) {
             byte [] buf = new byte[size-2];
             file.readFully(buf);
-            if( memoJpegAVMCalib(0,buf.length,buf) ) return true;
+            if( memoXMPAVMCalib(0,buf.length,buf) ) return true;
          } else if( mode==0xFE ) {
             byte [] buf = new byte[size-2];
             file.readFully(buf);
@@ -1945,7 +1994,37 @@ public class MyInputStream extends FilterInputStream {
       }
       return false;
    }
+   
+   // Extraction directe et rapide des données AVM ou CalibFits du bon
+   // segment commentaire d'un fichier PNG
+   private boolean fastExplorePNG(RandomAccessFile file) throws Exception {
+      file.seek(8);  // on saute le magic code
+      boolean encore=true;
+      while( encore ) {
+         try {
+            int size = g(file)<<24 | g(file)<<16 | g(file)<<8 | g(file);
+            String chunk = new String( new char[] { (char)g(file),(char)g(file),(char)g(file),(char)g(file)});
+//            System.out.println("("+file.getFilePointer()+") Segment PNG "+chunk+" "+size+" octets : ");
 
+            if( chunk.equals("tEXt") ||  chunk.equals("zTXt") ) {
+               byte [] buf = new byte[size];
+               file.readFully(buf, 0, size);
+               if( memoPNGCalib(buf,0,size,chunk.charAt(0)=='z') ) return true;
+                              
+            } else file.skipBytes(size);
+            
+            if( chunk.equals("IEND") ) encore=false;
+            
+            file.skipBytes(4);  // CRC
+            
+         } catch( IOException e ) { encore=false; }
+      }
+      return false;
+   }
+   
+   // Lecture d'un byte en tant qu'entier non signé
+   private int g(RandomAccessFile file) throws Exception { return file.read() & 0xFF; }
+      
    /** Retourne true si ce flux dispose d'une calib dans un segment commentaire (JPEG ou PNG) */
    public boolean hasCommentCalib() { return commentCalib!=null || avm!=null; }
 
@@ -1973,7 +2052,7 @@ public class MyInputStream extends FilterInputStream {
 //               Aladin.trace(6,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
 //            }
             if( mode==0xE1 ) {
-               memoJpegAVMCalib(offsetCache+i+4,size-2);
+               memoXMPAVMCalib(offsetCache+i+4,size-2);
 
             } else if( mode==0xFE ) {
                if( memoJpegCalib(offsetCache+i+4,size-2) ) return true;
@@ -2457,6 +2536,17 @@ public class MyInputStream extends FilterInputStream {
       }while(n<0);
 
       return n;
+   }
+   
+   static public void main(String [] argv) {
+      try {
+         Aladin.levelTrace=3;
+         Fits fits = new Fits();
+         fits.loadHeaderFITS("/data/potw2303a.png");
+         System.out.println("Calib = "+fits.headerFits.getOriginalHeaderFits());
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
    }
 
 //      public static void main(String[] args) {

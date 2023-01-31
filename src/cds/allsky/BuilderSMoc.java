@@ -28,7 +28,6 @@ import java.util.List;
 
 import cds.aladin.Aladin;
 import cds.aladin.HealpixProgen;
-import cds.aladin.Localisation;
 import cds.aladin.SourceFootprint;
 import cds.aladin.stc.STCObj;
 import cds.moc.Moc;
@@ -74,10 +73,11 @@ public class BuilderSMoc extends Builder {
       validateOutput();
       validateIndex();
       
-      int frame = context.getFrame();
-      if( frame!=Localisation.ICRS ) {
-         throw new Exception("Only applicable for equatorial HiPS => abort");
-      }
+      // IL N'Y A PAS DE RAISON - PF JANV 2023
+//      int frame = context.getFrame();
+//      if( frame!=Localisation.ICRS ) {
+//         throw new Exception("Only applicable for equatorial HiPS => abort");
+//      }
 
       hipsOrder = context.getOrder();
       if( hipsOrder==-1 ) {

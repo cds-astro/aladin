@@ -24,12 +24,13 @@ package cds.allsky;
 /** La méthode utilisée pour calculer les pixels d'une tuile d'ordre N à l'ordre N-1 */
 public enum ModeTree {
    
-      treeMedian,   // Médiane des 4 pixels du niveau N+1
-      treeMean,     // Moyenne des 4 pixels du niveau N+1
-      treeFirst;    // Le premier pixels des 4 pixels du niveau N+1
+      treeMedian,        // Médiane des 4 pixels du niveau N+1
+      treeMiddle,   // L'un des deux pixels de valeurs intermédiaires
+      treeMean,          // Moyenne des 4 pixels du niveau N+1
+      treeFirst;         // Le premier pixels des 4 pixels du niveau N+1
 
    public static ModeTree getDefault(int bitpix) {
-      return bitpix==0 ? treeMedian : treeMean;   // En couleur, on préfèrera la médiane
+      return bitpix==0 ? treeMedian : treeMean;   // En couleur, on préfèrera la médiane first
    }
    
    public static String contains(String test) {
@@ -52,6 +53,7 @@ public enum ModeTree {
    
    public static String getExplanation(ModeTree m) {
       if( m==treeMedian )   return m+": "+"The median of the 4 sublevel pixel values";
+      if( m==treeMiddle )   return m+": "+"One of the two intermediate values amongs the 4 sublevel pixel values";
       if( m==treeMean )     return m+": "+"The mean of the 4 sublevel pixel values";
       if( m==treeFirst )    return m+": "+"The first of the 4 sublevel pixel values";
       return "";

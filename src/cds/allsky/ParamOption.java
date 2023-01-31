@@ -41,7 +41,7 @@ public enum ParamOption {
    cds              ("[LINT] CDS dedicated LINT features",A.UNDOC),
    d                ("Debug messages"),
    h                ("Inline help"),
-   man              ("Full inline man (may bo followed by a parameter or an action for a full explanation)"),
+   man              ("Full inline man (may be followed by a parameter or an action for a full explanation)"),
    html             ("HTML output",A.UNDOC),
    ;
    

@@ -925,15 +925,18 @@ public class Context {
       typicalImgWidth = Math.max(fitsfile.width,fitsfile.height);
       
       // Peut être s'agit-il d'un cube ?
+      
       try {
-         setDepth( fitsfile.headerFits.getIntFromHeader("NAXIS3") );
+         if( fitsfile.headerFits.getIntFromHeader("NAXIS")>2 ) {
+            setDepth( fitsfile.headerFits.getIntFromHeader("NAXIS3") );
 
-         try {
-            crpix3 = fitsfile.headerFits.getDoubleFromHeader("CRPIX3");
-            crval3 = fitsfile.headerFits.getDoubleFromHeader("CRVAL3");
-            cdelt3 = fitsfile.headerFits.getDoubleFromHeader("CDELT3");
-            cunit3 = fitsfile.headerFits.getStringFromHeader("CUNIT3");
-         }catch( Exception e ) { crpix3=crval3=cdelt3=0; cunit3=null; }
+            try {
+               crpix3 = fitsfile.headerFits.getDoubleFromHeader("CRPIX3");
+               crval3 = fitsfile.headerFits.getDoubleFromHeader("CRVAL3");
+               cdelt3 = fitsfile.headerFits.getDoubleFromHeader("CDELT3");
+               cunit3 = fitsfile.headerFits.getStringFromHeader("CUNIT3");
+            }catch( Exception e ) { crpix3=crval3=cdelt3=0; cunit3=null; }
+         }
 
       } catch( Exception e ) { setDepth(1); }
 
@@ -1068,20 +1071,9 @@ public class Context {
 
    String justFindImgEtalon(String rootPath) throws MyInputStreamCachedException {
       MyInputStream in = null;
-      
-      if( isInputFile ) {
-         
-//         // Cas particulier d'une image couleur avec un fichier .hhh qui l'accompagne
-//         if( isColor() ) {
-//            String file = rootPath;
-//            int offset = file.lastIndexOf('.');
-//            if( offset!=-1 )  file = file.substring(0,offset);
-//            file += ".hhh";
-//            if( (new File(file).exists()) ) rootPath=file;
-//         }
-         
-         return rootPath;
-      }
+
+      // Une seule image
+      if( isInputFile ) return rootPath;
 
       File main = new File(rootPath);
       String[] list = main.list();

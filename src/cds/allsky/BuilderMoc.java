@@ -26,6 +26,7 @@ import static cds.tools.Util.FS;
 import java.io.File;
 import java.io.FileInputStream;
 
+import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.fits.Fits;
 import cds.moc.Moc;
@@ -44,6 +45,7 @@ public class BuilderMoc extends Builder {
    protected int fileOrder;
    protected int tileOrder;
    protected boolean isMocHight;
+   protected boolean flagICRS;
    
    protected String ext=null; // Extension à traiter, null si non encore affectée.
    protected int frameCube=-1; // Numéro de la frame à utiliser pour générer le MOC dans le cas d'un gros cube (depth>10)
@@ -71,41 +73,30 @@ public class BuilderMoc extends Builder {
       moc = new SMoc();
       fileOrder = mocOrder = Util.getMaxOrderByPath(path);
       tileOrder = context.getTileOrder();
-
-      // dans le cas d'un survey à faible résolution
-      // ou qui couvre une petite partie du ciel, 
-//      boolean isLarge=true;
-//      try { 
-//         if( context.mocIndex==null ) context.loadMocIndex();
-//         isLarge = context.mocIndex.getCoverage()>1/6.;
-//      } catch( Exception e ) { }
       
+      flagICRS = context.getFrame()==Localisation.ICRS;
       
-      // mocOrder explicitement fourni par l'utilisateur ?
-      if( context.getMocOrder()!=-1 ) mocOrder = context.getMocOrder();
-      
-      // Sinon on prend classiquement le niveau des tuiles
-      else {
+      if( !flagICRS ) {
          mocOrder = fileOrder;
-         if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
+         context.warning("Non-equatorial HiPS ("+context.getFrameName()+") => generating SMoc.fits (Moc.fits non-standard)");
+         
+      } else {
+         // mocOrder explicitement fourni par l'utilisateur ?
+         if( context.getMocOrder()!=-1 ) mocOrder = context.getMocOrder();
+
+         // Sinon on prend classiquement le niveau des tuiles
+         else {
+            mocOrder = fileOrder;
+            if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
+         }
       }
+      
+      
       
       // Taille limite explicitement fournie par l'utilisateur ?
       maxSize = context.getMocMaxSize();
       
     
-// POSAIT TROP DE SOUCI DE MOC TROP LONG A CALCULER => LA DERTERMINATION AUTOMATIQUE EST SUPPRIME (PF 14/1/2019)
-//      // mocOrder déterminé par la nature du survey
-//      else {
-//         if( mocOrder<Constante.DEFAULTMOCORDER || !isLarge ) {
-//            mocOrder = context.getOrder()+context.getTileOrder()-Constante.DIFFMOCORDER;
-//         }
-//         if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
-//         
-//         // Couleur
-//         if( context.isColor() ) mocOrder=fileOrder;
-//      }
-      
       // On ne peut prendre un MOC order supérieur à la résolution nomimale
       if( mocOrder>tileOrder+fileOrder ) {
          context.warning("Too high mocOrder ("+mocOrder+") => assume "+(tileOrder+fileOrder));
@@ -135,28 +126,20 @@ public class BuilderMoc extends Builder {
       String  frame = getFrame();
       moc.setSpaceSys(frame);
       generateMoc(moc,fileOrder, path);
-      adjustSize(moc,true);
+      if( flagICRS ) adjustSize(moc,true);
       moc.write(outputFile);
       
-      // Faut-il changer le référentiel du MOC ?
-      // A EVITER JUSQU'A CE QUE LA VERSION 10.135 ET SUIVANTES SOIENT SUFFISAMMENT REPANDUE
-//      if( !frame.equals("C") ) {
-//         SMoc moc1 = convertTo(moc,"C");
-//         context.info("MOC convertTo ICRS...");
-//         moc = moc1;
-//      }
+      // Hips non equatorial => Génération du Moc Equatorial dans SMoc.fits 
+      if( !flagICRS ) {
+         context.info("SMoc.fits generation (equatorial standard MOC) ...");
+         Task.factoryRunner(context,Action.SMOC);
+      }
       
       long time = System.currentTimeMillis() - t;
-      context.info("MOC done in "+cds.tools.Util.getTemps(time*1000L)
-                        +": mocOrder="+moc.getMocOrder()
-                        +" size="+cds.tools.Util.getUnitDisk( moc.getMem()));
+      context.info("MOC done in "+cds.tools.Util.getTemps(time*1000L));
    }
    
    private String getDefaultExt(String path) {
-//      if( (new File(path+FS+"Norder3"+FS+"Allsky.fits")).exists() ) return "fits";
-//      if( (new File(path+FS+"Norder3"+FS+"Allsky.jpg")).exists() ) return "jpg";
-//      if( (new File(path+FS+"Norder3"+FS+"Allsky.png")).exists() ) return "png";
-      
       for( String ext : new String[]{"fits","jpg","png"} ) {
          if( context.findOneNpixFile(path,ext)!=null ) return ext;
       }
@@ -189,7 +172,6 @@ public class BuilderMoc extends Builder {
    public long getUsedArea() { return moc.getNbValues(); }
 
    /** Retourne le nombre de cellule de plus bas niveau pour la sphère complète */
-//   public long getArea() { return moc.getNbCellsFull(); }
    public long getArea() { return moc.maxVal(); }
    
    // retourne true s'il est temps de tester un ajustement de taille

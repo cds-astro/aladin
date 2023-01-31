@@ -3644,7 +3644,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             }
 
             // Show info de la source dans le canvas des mesures
-//            if( cPlan.isCatalog() && memoObj instanceof Source ) {
             if( cPlan.isCatalog() && memoObj.asSource() ) {
                Source o = (Source) memoObj;
                if( o.isSelected() ) ok=aladin.mesure.mcanvas.show(o,1);
@@ -3702,9 +3701,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          repereshow=ok;
       }
 
-      // C'EST DESORMAIS FAIT LORS DU DEPLACEMENT DU REPERE (moveRepere() )
-//      restartQuickSimbad( getProjSyncView(), tool);
-      
       boolean rep=false;
       if( tool==ToolBox.SELECT && !trouve
             && aladin.view.repere!=null

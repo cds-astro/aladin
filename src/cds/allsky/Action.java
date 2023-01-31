@@ -45,12 +45,12 @@ public enum Action {
                + "buffer needed for decompression.",
          "in=/data/img out=/data/hips hdu=all INDEX"),
    TINDEX    ("Build time index (in TimeFinder directory) + TMOC index",A.TEST),
-   TILES     ("Build all true value pixel tiles + Allsky + MOC",
+   TILES     ("Build all true value pixel tiles",
          "The TILES action generates the HiPS tiles in the target directory (see out parameter) "
                + "from the source images (see in parameter). Except in the case where the source "
                + "data are extracted from a Healpix card, the INDEX action must necessarily have "
                + "been executed previously. The transcription of the pixels depends on the nature "
-               + "of the original images, and is controlled by the `bitpix` and "
+               + "of the original images, and may be controlled by the `bitpix` and "
                + "`dataRange` parameters. The method used for the various pixel co-additions "
                + "also depends on various parameters, the main one being `mode`.) Finally, "
                + "the performance obtained can be adjusted by the `maxThread` and `partitioning` "
@@ -423,7 +423,7 @@ public enum Action {
    }
 
    // Une ligne de tirets
-   static public String LINE = "-".repeat(80)+"\n";
+   static public String LINE = "--------------------------------------------------------------------------------\n";
 
 
 }

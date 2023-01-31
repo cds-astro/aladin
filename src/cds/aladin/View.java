@@ -2198,6 +2198,10 @@ System.out.println("n="+n);
          Projection proj = v.pref.projd;
          if( Projection.isOk(proj) && coo!=null ) {
             proj.getXY(coo);
+//            if( Double.isNaN(coo.x) ) {
+//               System.out.println("Souci : => "+coo.al+" "+coo.del+" => ("+coo.x+","+coo.y+")");
+//               proj.getXY(coo);
+//            }
             if( !Double.isNaN(coo.x) /* && v.isInView(coo.al, coo.del) */) {
                PointD p = new PointD(coo.x,coo.y);
                if( v.pref instanceof PlanBG ) s = ((PlanBG)v.pref).getPixelInfo(p.x, p.y,getPixelMode());

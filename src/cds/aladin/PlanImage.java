@@ -1765,7 +1765,7 @@ public class PlanImage extends Plan {
                            headerFits=dis.createFrameHeaderFitsFromCommentCalib(this);
                            c = new Calib(headerFits.getHeaderFits());
                         } catch( Exception e ) {
-                           dis.jpegCalibAddNAXIS(width,height);   // Peut être une entete partielle à la Sloan
+                           dis.appendNAXIS2Calib(width,height);   // Peut être une entete partielle à la Sloan
                            headerFits=dis.createFrameHeaderFitsFromCommentCalib(this);
                            c = new Calib(headerFits.getHeaderFits());
                         }

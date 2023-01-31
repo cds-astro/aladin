@@ -93,6 +93,7 @@ public abstract class BuilderRunner extends Builder {
       String ext = getTileExt().replace('.',' ');
       int tileWidth = context.getTileSide();
       context.info("Creating "+context.getNbLowCells()+ext+" "+tileWidth+"x"+tileWidth+" tiles (order="+context.getOrder()+")...");
+      if( context.live ) context.info("Will store pixel weights in "+context.getNbLowCells()+" fits"+" "+tileWidth+"x"+tileWidth+" weighted tiles...");
       
       context.resetCheckCode( context.getTileExt());
 
@@ -1141,6 +1142,8 @@ public abstract class BuilderRunner extends Builder {
                                  pix = 0xFF000000 | getMean(pixi, nbPix,16) | getMean(pixi,nbPix,8) | getMean(pixi, nbPix,0);
                               } else if( modeTree==ModeTree.treeMedian ) {
                                  pix = 0xFF000000 | getMedian(pixi,buf,nbPix,16) | getMedian(pixi,buf,nbPix,8) | getMedian(pixi,buf,nbPix,0);
+                              } else if( modeTree==ModeTree.treeMiddle ) {
+                                 pix = 0xFF000000 | getMiddle(pixi,buf,nbPix,16) | getMiddle(pixi,buf,nbPix,8) | getMiddle(pixi,buf,nbPix,0);
                               } else pix = pixi[0];
                            }
                         }
@@ -1202,6 +1205,11 @@ public abstract class BuilderRunner extends Builder {
       return out;
    }
    
+   final protected double getMiddle(double px[], int nbpix ) {
+      Arrays.sort(px,0,nbpix);
+      return nbpix>=3 ? px[1] : px[0];
+   }
+   
    final protected double getMedian(double px[], int nbpix ) {
       Arrays.sort(px,0,nbpix);
       return nbpix==4 ? (px[1]/2+px[2]/2) : nbpix==3 ? px[1] : nbpix==2 ? (px[0]/2+px[1]/2) : px[0];
@@ -1217,6 +1225,12 @@ public abstract class BuilderRunner extends Builder {
       for( int i=0; i<nbpix; i++ ) buf[i]= (p[i]>>shiftRgb)&0xFF;
       Arrays.sort(buf,0,nbpix);
       return (nbpix==4 ? (buf[1]+buf[2])/2 : nbpix==3 ? buf[1] : nbpix==2 ? (buf[0]+buf[1])/2 : buf[0] ) <<shiftRgb;
+   }
+
+   final private int getMiddle(int p[], int buf[], int nbpix, int shiftRgb ) {
+      for( int i=0; i<nbpix; i++ ) buf[i]= (p[i]>>shiftRgb)&0xFF;
+      Arrays.sort(buf,0,nbpix);
+      return (nbpix>=4 ? buf[1]: buf[0] ) <<shiftRgb;
    }
 
    final private int getMean(int px[], int nbpix, int shiftRgb  ) {

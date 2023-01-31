@@ -71,6 +71,7 @@ import cds.allsky.Constante;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;
 import cds.moc.Healpix;
+import cds.moc.Moc;
 import cds.moc.MocCell;
 import cds.moc.SMoc;
 import cds.tools.Util;
@@ -825,41 +826,95 @@ public class PlanBG extends PlanImage {
 
    protected SMoc moc;
 
-   /** Chargement du MOC associé au HiPS, soit depuis le cache, soit depuis le net */
-   protected void loadInternalMoc() throws Exception {
-      String fcache = getCacheDir()+"/"+getCacheName()+"/"+Constante.FILE_MOC;
+   /** Chargement du MOC directement associé au HiPS, soit depuis le cache, soit depuis le net 
+    * Ajustement du MinOrder à 3, et suppression des losanges hors MOC déjà chargés
+    */
+   protected void loadInternalMoc() throws Exception { 
+      Moc moc = loadInternalMoc(Constante.FILE_MOC);
+      if( moc instanceof SMoc ) {
+         this.moc = (SMoc)moc;
+         this.moc.setMinOrder(3);
+         removeHealpixOutsideMoc();
+      }
+   }
+   
+   /**
+    * Chargement d'un Moc associé au PlanBG, d'abord depuis le cache,
+    * puis à distance (+ sauvegarde dans le cache)
+    * @param mocName nom du Moc (ex: Moc.fits, SMoc.fits, STMoc.fits...)
+    * @return Le Moc chargé
+    * @throws Exception
+    */
+   protected Moc loadInternalMoc(String mocName) throws Exception {
+      SMoc moc=null;
+      String fcache = getCacheDir()+"/"+getCacheName()+"/"+mocName;
       if( !local && useCache ) {
          if( new File(fcache).exists() ) {
             InputStream in = null;
             try {
                in = new BufferedInputStream( new FileInputStream(fcache) );
-               moc = new SMoc(in);
-               moc.setMinOrder(3);
-               removeHealpixOutsideMoc();
-               Aladin.trace(3,"Loading "+id+" MOC from cache");
+               moc = new SMoc();
+               moc.read(in);
+               Aladin.trace(3,"Loading "+id+" "+mocName+" from cache");
             } catch( Exception e ) { e.printStackTrace(); }
             finally { if( in!=null ) in.close(); }
-            return;
+            return moc;
          }
       }
-//      String f = getProperty("moc_access_url");
-//      if( f==null ) f = getUrl()+"/"+Constante.FILE_MOC;
-      String f = getUrl()+"/"+Constante.FILE_MOC;
+      String f = getUrl()+"/"+mocName;
       MyInputStream mis = null;
       try {
          mis = Util.openAnyStream(f);
-         moc = new SMoc(mis);
-         moc.setMinOrder(3);
-         removeHealpixOutsideMoc();
-         Aladin.trace(3,"Loading "+id+" MOC from net");
+         moc = new SMoc();
+         moc.read(mis);
+         Aladin.trace(3,"Loading "+id+" "+mocName+" from net");
       } catch( Exception e ) { e.printStackTrace(); }
       finally { if( mis!=null) mis.close(); }
 
-      if( !local && useCache ) {
+      if( !local && useCache && moc!=null) {
          moc.write(fcache);
          Aladin.trace(3,"Saving "+survey+" MOC in cache");
       }
+      return moc;
    }
+
+//   /**
+//    * Chargement d'un Moc associé au PlanBG, d'abord depuis le cache,
+//    * puis à distance (+ sauvegarde dans le cache)
+//    * @param mocName nom du Moc (ex: Moc.fits, SMoc.fits, STMoc.fits...)
+//    * @return Le Moc chargé
+//    * @throws Exception
+//    */
+//   protected Moc loadInternalMoc(String mocName) throws Exception {
+//      Moc moc=null;
+//      String fcache = getCacheDir()+"/"+getCacheName()+"/"+mocName;
+//      if( !local && useCache ) {
+//         if( new File(fcache).exists() ) {
+//            InputStream in = null;
+//            try {
+//               in = new BufferedInputStream( new FileInputStream(fcache) );
+//               moc = Moc.createMoc(in);
+//               Aladin.trace(3,"Loading "+id+" "+mocName+" from cache");
+//            } catch( Exception e ) { e.printStackTrace(); }
+//            finally { if( in!=null ) in.close(); }
+//            return moc;
+//         }
+//      }
+//      String f = getUrl()+"/"+mocName;
+//      MyInputStream mis = null;
+//      try {
+//         mis = Util.openAnyStream(f);
+//         moc = Moc.createMoc(mis);
+//         Aladin.trace(3,"Loading "+id+" "+mocName+" from net");
+//      } catch( Exception e ) { e.printStackTrace(); }
+//      finally { if( mis!=null) mis.close(); }
+//
+//      if( !local && useCache && moc!=null) {
+//         moc.write(fcache);
+//         Aladin.trace(3,"Saving "+survey+" MOC in cache");
+//      }
+//      return moc;
+//   }
 
    // Suppression des losanges hors du surveys qu'on a essayé de charger par erreur
    // en attendant que le MOC soit disponible

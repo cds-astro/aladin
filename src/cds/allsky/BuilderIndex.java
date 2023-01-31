@@ -503,7 +503,7 @@ public class BuilderIndex extends Builder {
       Coord coo = new Coord();
       Coord corner[] = new Coord[4];
       Coord cornerCell[] = new Coord[4];
-      StringBuffer stc = new StringBuffer("POLYGON J2000");
+      StringBuilder stc = new StringBuilder("POLYGON J2000");
       boolean hasCell = fitsfile.hasCell();
 //      System.out.print("draw blue polygon");
       for( int i=0; i<4; i++ ) {
@@ -580,19 +580,17 @@ public class BuilderIndex extends Builder {
       }
       double radius=maxRadius;
       
+//    System.out.print("draw stc polygon");
+//    for( double [] c1 : cooList ) System.out.print(" "+c1[0]+" "+c1[1]);
+      
       // on évite les rayons trop grands pour ne pas tomber sur le cas d'un polygone concave
       if( radius<30 && !isRECT ) {
          try {
-//            System.out.print("draw stc polygon");
-//            for( double [] c1 : cooList ) System.out.print(" "+c1[0]+" "+c1[1]);
 //            System.out.println();
 //            System.out.print("draw moc "+order+"/");
-            
             npixs = CDSHealpix.query_polygon(order, cooList, true);
-            
 //            for( long a : npixs ) System.out.print(" "+a);
 //            System.out.println();
-            
          } catch( Exception e ) { }
       }
          

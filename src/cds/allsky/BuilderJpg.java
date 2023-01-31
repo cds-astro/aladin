@@ -151,6 +151,10 @@ public class BuilderJpg extends BuilderRunner {
       return out;
    }
 
+//   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
+//      return createLeaveHpx(null,file,path,order,npix,z);
+//   }
+
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
       Fits out = createNodePreview(fils, modeHierarchy );
       if( out==null ) return null;
@@ -238,6 +242,7 @@ public class BuilderJpg extends BuilderRunner {
                      else {
                         if( modeTree==ModeTree.treeMean ) pix = getMean(pixd, nbPix);
                         else if( modeTree==ModeTree.treeMedian )  pix = getMedian(pixd, nbPix);
+                        else if( modeTree==ModeTree.treeMiddle )  pix = getMiddle(pixd, nbPix);
                         else pix = pixd[0];
                      }
                   }

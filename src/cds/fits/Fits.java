@@ -245,7 +245,7 @@ final public class Fits {
       try{
          Fits fits = new Fits();
          MyInputStream is1 = new MyInputStream(new FileInputStream(filename));
-         fits.loadPreview(is1);
+         fits.loadPreview(is1,true);
          dim = new Dimension(fits.width,fits.height);
          fits.free();
       }catch( Exception e1 ) {}
@@ -414,8 +414,12 @@ final public class Fits {
                int xc = x1-xCell;
                if( xc<0 || xc>=widthCell ) continue;
 
-               int pix = (0xFF & pixel[ off+scansize*j +i ]);
-               pix = (pix<<16) | (pix<<8) | pix;
+               // CODE HISTORIQUE - BUGUE POUR PNG INDEXE - PF 27 JAN 2023
+//               int pix = (0xFF & pixel[ off+scansize*j +i ]);
+//               pix = (pix<<16) | (pix<<8) | pix;
+               int pix = model.getRGB(pixel[off+scansize*j +i] & 0xFF);
+
+               
                if( !hasAlpha ) pix |=0xFF000000;
                rgb[ yc*widthCell + xc ] = pix;
             }
@@ -728,7 +732,7 @@ final public class Fits {
       bitpix = headerFits.getIntFromHeader("BITPIX");
       width = headerFits.getIntFromHeader("NAXIS1");
       height = headerFits.getIntFromHeader("NAXIS2");
-      try { depth = headerFits.getIntFromHeader("NAXIS3"); }
+      try { depth = naxis<3 ? 1 : headerFits.getIntFromHeader("NAXIS3"); }
       catch( Exception e ) { depth=1; }
       
       // ATTENTION RICE IMAGE NON ENCORE SUPPORTEE
@@ -945,6 +949,8 @@ final public class Fits {
       // nom fichier.fits[ext:x,y-wxh]
       int code = 0;
       MyInputStream is = null;
+      int naxis=-1;
+      
       try {
          is = new MyInputStream(new FileInputStream(filename));
          if( is.isGZ() ) {
@@ -972,7 +978,7 @@ final public class Fits {
             // Cas d'un fichier PNG ou JPEG avec un commentaire contenant la
             // calib
          } else if( is.hasCommentCalib() ) {
-            Dimension dim = new Dimension(0,0);;
+            Dimension dim = new Dimension(0,0);
             if( is.hasCommentAVM() )  dim = getSizeJPEGPNG(filename);  // il me faut les dimensions a priori
             headerFits = is.createHeaderFitsFromCommentCalib(dim.width,dim.height);
             bidouilleJPEGPNG(headerFits,filename);
@@ -983,7 +989,6 @@ final public class Fits {
             headerFits = new HeaderFits(is);
 
             // Si jamais la première HDU est vide, on se cale automatiquement sur la suivante, sinon on sort
-            int naxis = -1;
             try { naxis = headerFits.getIntFromHeader("NAXIS"); } catch( Exception e ) {}
             
             // Cas tordu on l'entête est tout de même vide (du genre NAXIS=1, et NAXIS1=0)
@@ -1031,7 +1036,7 @@ final public class Fits {
          try {
             width = headerFits.getIntFromHeader("NAXIS1");
             height = headerFits.getIntFromHeader("NAXIS2");
-            try { depth = headerFits.getIntFromHeader("NAXIS3"); }
+            try { depth = naxis<3 ? 1 : headerFits.getIntFromHeader("NAXIS3"); }
             catch( Exception e ) { depth = 1; }
 
             if( !hasCell() ) {
@@ -2663,8 +2668,11 @@ final public class Fits {
       return bitpixOrig==8 ? 0: -getMax(bitpixOrig);
    }
    
-   /** Modification des valeurs BZERO, BSCALE et BLANK si nécessaire */
+   /** Ajustement des paramètres avant d'un merge
+    * Pour les images classiques  modification des valeurs BZERO, BSCALE et BLANK si nécessaire 
+    */
    public void adjustParams(double bzero,double bscale, double blank) throws Exception {
+      if( bitpix==0 ) return;
       
       // Inutile car deja les bons parametres ?
       if( bzero==this.bzero && bscale==this.bscale 
@@ -2792,11 +2800,19 @@ final public class Fits {
       }
 
       if( a.rgb != null && rgb != null ) {
-         for( int i = 0; i < taille; i++ ) {
-            if( (rgb[i] & 0xFF000000)!=0 ) continue;
-            if( (a.rgb[i] & 0xFF000000)==0 ) continue;
-            rgb[i] = a.rgb[i];
-            weightOut[i] = weightIn[i];
+         if( pixMode==PIX_RGB ) {
+            for( int i = 0; i < taille; i++ ) {
+               if( (rgb[i] & 0x00FEFEFE)!=0 ) continue;   // Merge des pixels non noirs (ou presque)
+               rgb[i] = a.rgb[i];
+               weightOut[i] = weightIn[i];
+            }
+         } else {
+            for( int i = 0; i < taille; i++ ) {
+               if( (rgb[i] & 0xFF000000)!=0 ) continue;
+               if( (a.rgb[i] & 0xFF000000)==0 ) continue;
+               rgb[i] = a.rgb[i];
+               weightOut[i] = weightIn[i];
+            }
          }
       }
    }
@@ -2818,10 +2834,18 @@ final public class Fits {
       }
 
       if( a.rgb != null && rgb != null ) {
-         for( int i = 0; i < taille; i++ ) {
-            if( (rgb[i] & 0xFF000000)!=0 ) continue;
-            if( (a.rgb[i] & 0xFF000000)==0 ) continue;
-            rgb[i] = a.rgb[i];
+         if( pixMode==PIX_RGB ) {
+            for( int i = 0; i < taille; i++ ) {
+               if( (rgb[i] & 0x00FEFEFE)!=0 ) continue;   // Merge des pixels non noirs (ou presque)
+               rgb[i] = a.rgb[i];
+            }
+         } else {
+            for( int i = 0; i < taille; i++ ) {
+               if( (rgb[i] & 0xFF000000)!=0 ) continue;
+               if( (a.rgb[i] & 0xFF000000)==0 ) continue;
+               rgb[i] = a.rgb[i];
+            }
+            
          }
       }
    }

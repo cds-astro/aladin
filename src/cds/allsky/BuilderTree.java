@@ -45,9 +45,18 @@ public class BuilderTree extends BuilderRunner {
    // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
       validateOutput();
+      String out=context.getOutputPath();
       if( !context.isExistingAllskyDir() ) throw new Exception("No HiPS tile found");
-      validateOrder(context.getOutputPath());
-      validateTileSide(context.getOutputPath());
+      validateOrder(out);
+      validateTileSide(out);
+      
+      // Pour pouvoir faire un TREE sur un HiPS couleur
+      String s = loadProperty(out, Constante.KEY_DATAPRODUCT_SUBTYPE);
+      if( s!=null && s.indexOf("color")>=0 ) {
+         context.setBitpixOrig(0);
+         s = loadProperty(out, Constante.KEY_HIPS_TILE_FORMAT);
+         context.setColor(s);
+      }
       
       try { context.loadMoc(); }
       catch( Exception e ) {

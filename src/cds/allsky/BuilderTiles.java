@@ -78,7 +78,7 @@ public class BuilderTiles extends BuilderRunner {
                ThreadBuilderTile.statOnePass+" in one step, "+
                ThreadBuilderTile.statMultiPass+" in multi steps");
       if( context.cacheFits!=null ) {
-         Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
+         Aladin.trace(4,"Cache FITS status: "+ context.cacheFits);
          context.cacheFits.reset();
          context.setCache(null);
       }
