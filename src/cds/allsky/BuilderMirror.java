@@ -490,7 +490,7 @@ public class BuilderMirror extends BuilderRunner {
       super.build();
    }
    
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
+   protected Fits createLeafHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
     return createLeaveHpx(hpx,file,path,order,npix,z,true);
  }
 

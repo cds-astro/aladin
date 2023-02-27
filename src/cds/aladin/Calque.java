@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Scrollbar;
 import java.io.EOFException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -3592,6 +3593,20 @@ public class Calque extends JPanel implements Runnable {
       suiteNew(plan[n]);
       return n;
    }
+   
+   /** Lecture bidon pour debugging */
+   protected int newPlanDebug(HttpURLConnection in) {
+      try {
+         MyInputStream mis = new MyInputStream( in.getInputStream());
+         byte [] buf = mis.readFully();
+         System.out.println("---DEBUG---\n");
+         System.out.println( new String(buf) );
+         mis.close();
+      } catch( IOException e ) {
+         e.printStackTrace();
+      }
+      return 0;
+   }
 
    protected int newPlanCatalog(MyInputStream in, String label, String origin, Server server, URL url, String query, int requestNumber) {
       int n=getStackIndex(label);
@@ -3696,19 +3711,61 @@ public class Calque extends JPanel implements Runnable {
       stack();
    }
    
-   // thomas (AVO)
-   /** Enregistre un catalog via InputStream dans le prochain plan libre.
-    * @param dis  L'input Stream
-    * @param aladinLabel nom du plan
-    * @param origin origine du catalogue
-    *
-	protected int newPlanCatalog(MyInputStream in, String label, String origin) {
-	   int n=getFirstFree();
-	   if( n<0 ) return -1;
-	   plan[n] = new PlanCatalog(aladin,in,label,origin);
-	   suiteNew();
-	   return n;
-	}
+   /** Découpage d'un Moc : un composante indépendante par plan */
+   protected void splitMoc(Plan pm) {
+      try {
+         PlanMoc p = (PlanMoc)pm;
+         Vector v = splitMoc1(p);
+         int m=v.size()-1;
+         if( m<=0 ) throw new Exception();
+         getStackIndex(null,m);
+         synchronized( pile ) {
+            int n = getIndex(p);
+            for( int i=0; i<n-m; i++) plan[i]=plan[i+m];
+            for( int i=0; i<=m; i++ ) {
+               Plan p1 = (Plan)v.elementAt(i);
+               plan[n-m+i]= p1;
+               p1.setActivated(true);
+               if( i>1 ) p1.c = Couleur.getNextDefault(this);
+            }
+         }
+         stack();
+      } catch( Exception e ) {
+         // TODO Auto-generated catch block
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         aladin.error("Moc split error on "+pm.label);
+      }
+   }
+   
+   private Vector splitMoc1(PlanMoc p) throws Exception {
+      Vector v = new Vector();
+      int folder = p.folder;
+
+      SMoc [] smoc = p.getMoc().getSpaceMoc().split(new cds.moc.Healpix(), true);
+      boolean collapse=false;
+      if( smoc.length>10 ) {
+         if( !aladin.confirmation("Do you really want to create "+smoc.length+" sub-MOCs") ) return v;
+         collapse=true;
+      }
+
+      PlanFolder fold=new PlanFolder(aladin,p.label,folder,false);
+      fold.label="Split "+p.label;
+      fold.active=true;
+      fold.headerFits = p.headerFits;
+      fold.u=p.u;
+      fold.body=p.body;
+      v.addElement(fold);
+
+      int i=0;
+      for( SMoc moc: smoc) {
+         PlanMoc p1 = new PlanMoc(aladin,moc,"subMoc "+(++i));
+         p1.folder=folder+1;
+         p1.body=p.body;
+         p1.collapse=collapse;
+         v.add(p1 );
+      }
+      return v;
+   }
 
 
 // thomas

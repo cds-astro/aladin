@@ -2243,6 +2243,13 @@ public final class Util {
             //       return t;
 
    }
+   
+   /**
+    * Affiche la valeur en pourcentage avec arrondi automatique
+    * @param x la valeur entre 0 et 1
+    * @return la valeur en pourcentage (ex:10.1%)
+    */
+   public static String getPourcent(double x) { return myRound(x*100)+"%"; }
 
    /** Retourne la lettre code d'un champ TFORM FITS nD */
    static final public char getFitsType(String form) {

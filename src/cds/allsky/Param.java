@@ -47,7 +47,7 @@ public enum Param {
          + "resolution equivalent to, or slightly better than, the original images (based "
          + "on the reference image - see img parameter). Altering the default value is "
          + "intended to oversample, or undersample, the output HiPS. Note that each additional "
-         + "order quadruples the size of the resulting HiPS.",A.INDEX|A.TILES),
+         + "order quadruples the size of the resulting HiPS.",A.INDEX|A.TILES|A.MIRROR),
    minOrder   ("nn",              "HiPS min order",
          "Specifies the minimum order of the HiPS. The default is 0. Altering this setting "
          + "is not recommended unless you want to generate a partial HiPS and then rebuild "
@@ -78,14 +78,22 @@ public enum Param {
          + "the source images (see img parameter). The specified values are to be considered as "
          + "physical pixel values (i.e. taking into account a possible linear bzero/bscale operation "
          + "on the encoded pixel values)",A.TILES),
-   pixelCut   ("min max [fct]",    "8 bits pixel mapping",
+   pixelCut   ("[min[%] max[%]] [byRegion] [fct]",    "8 bits pixel mapping method",
          "Specifies the range of pixel values and how these pixels will be rendered in the "
-         + "HiPS preview tiles (PNG or JPG). The pixel values between min and max are "
+         + "HiPS preview 8 bits tiles (PNG or JPG). "
+         + "The pixel values between min and max (or min% and max% of the pixel histogram) "
          + "distributed over the 255 (resp. 256) possible values using by default a linear "
-         + "change, or one of the possible transfer functions (log, sqrt, asinh, pow2). The "
+         + "mapping, or one of the possible transfer functions (log, sqrt, asinh, pow2). The "
          + "specified values are to be considered as "
          + "physical pixel values (i.e. taking into account a possible linear bzero/bscale operation "
-         + "on the encoded pixel values)",A.PNG|A.JPEG),
+         + "on the encoded pixel values). "
+         + "By default, these 2 thresholds are automatically evaluated "
+         + "based on the reference image (see img parameter). "
+         + "In the case of pointed observation survey, the alternative `byRegion` "
+         + "indicates to Hipsgen to automatically evaluate the min% and max% thresholds "
+         + "of the pixel distribution according to each observed region and no longer globally. "
+         + "This evaluation by regions will be done if required by the CUT action, before "
+         + "generating the PNG, JPEG or RGB tiles)",A.PNG|A.JPEG|A.RGB),
    img              ("filename",            "Reference image for default initializations",
          "Indicates the file name of the source image used as a reference. This image determines "
          + "the parameters of the final HiPS: order, pixel encoding, value ranges, etc. By default, "
@@ -100,7 +108,7 @@ public enum Param {
          "Specifies an alternative pixel value to be considered null. This value would normally "
          + "have been specified directly in the FITS image header using the BLANK keyword. "
          + "The indicated value is to be considered at the FITS coding level, i.e. without "
-         + "taking into account a possible linear bzero/bscale change.",A.TILES),
+         + "taking into account a possible linear bzero/bscale change.",A.TILES|A.PNG|A.JPEG),
    validRange        ("min max",         "Range of valid pixels",
          "Specifies the range of valid pixels. All other values are considered null "
          + "(see `"+Param.blank+"` parameter). Note that, unlike the blank parameter, "

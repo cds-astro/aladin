@@ -225,7 +225,7 @@ public class PlanCatalog extends Plan {
       int nbObj = getCounts();
       if( nbObj<=0 || isSED() ) return true;
       
-      if( flagAskInterrupt && nbObj>0 && !isReady() ) {
+      if( flagAskInterrupt && !flagLocal && nbObj>0 && !isReady() ) {
          if( aladin.confirmation(aladin.chaine.getString("INTERRUPTCAT")) ) {
             loadInterrupt();
             return false;

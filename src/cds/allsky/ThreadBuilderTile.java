@@ -631,7 +631,7 @@ final public class ThreadBuilderTile {
                         }
 
                         // Changement de bitpix ?
-                        if( flagModifBitpix ) {
+                        if( flagModifBitpix && !context.cutByImage ) {
                            pixelFinal = Double.isNaN(pixelFinal) ? blank
                                  : pixelFinal<=cutOrig[2] ? cut[2]
                                        : pixelFinal>=cutOrig[3] ? cut[3]

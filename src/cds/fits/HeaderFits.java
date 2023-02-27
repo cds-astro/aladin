@@ -525,6 +525,7 @@ public final class HeaderFits {
    /** Surcharge ou ajout d'un mot clé */
    public void setKeyword(String key,String value) {
       header.put(key,value);
+      if( !keysOrder.contains(key) ) keysOrder.add(key);
    }
 
    /** Surcharge ou ajout d'un mot clé */
@@ -643,10 +644,20 @@ public final class HeaderFits {
     * comme à l'origine - les commentaires sont restitués 
     * @return le nombre d'octets écrits */
    public int writeHeader(OutputStream os ) throws Exception {
+      byte [] buf = makeHeaderBuf();
+      os.write(buf);
+      return buf.length;
+   }
+
+   /** Prépapration de l'entête FITS des mots clés mémorisés. L'ordre est conservé
+    * comme à l'origine - les commentaires sont restitués 
+    * @return le buffer contenant la totalité de l'entete (2880 aligné) */
+   public byte [] makeHeaderBuf() throws Exception {
+
       int n=keysOrder.size()*80;
       byte [] b= getEndBourrage(n);
       byte buf [] = new byte[n + b.length];
-      
+
       int m=0;
       Enumeration e = keysOrder.elements();
       while( e.hasMoreElements() ) {
@@ -658,9 +669,7 @@ public final class HeaderFits {
          m+=80;
       }
       System.arraycopy(b,0,buf,m,b.length);
-      n+=b.length;
-      os.write(buf);
-      return n;
+      return buf;
    }
 
    /** Génération de la fin de l'entête FITS, càd le END et le byte de bourrage

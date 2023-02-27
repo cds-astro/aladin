@@ -407,8 +407,8 @@ public class ContextGui extends Context {
    public void setCutOrig(double [] c) {
       super.setCutOrig(c);
       if( c!=null ) {
-         mainPanel.tabJpg.setCutMin( Util.myRound(c[0]*bScaleOrig+bZeroOrig) );
-         mainPanel.tabJpg.setCutMax( Util.myRound(c[1]*bScaleOrig+bZeroOrig) );
+         mainPanel.tabJpg.setCutMin( Util.myRound(c[Context.CUTMIN]*bScaleOrig+bZeroOrig) );
+         mainPanel.tabJpg.setCutMax( Util.myRound(c[Context.CUTMAX]*bScaleOrig+bZeroOrig) );
       }
    }
 

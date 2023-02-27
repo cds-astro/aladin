@@ -256,7 +256,14 @@ public enum Action {
    SMOC      ("Build a SMOC.fits based on HpxFinder tile descriptions (TEST)",A.TEST),            // PROTO
    TMOC      ("Build a TMOC.fits based on HpxFinder tile descriptions (TEST)",A.TEST),            // PROTO
 
-   VALIDATOR ("Global Hipsgen validator (TEST)",A.NODOC);                                          // PROTO
+   VALIDATOR ("Global Hipsgen validator (TEST)",A.NODOC),                                          // PROTO
+   CUT ("Pixel cut evaluation by regions",
+         "Computation of the range of pixel values to be displayed in 8-bit mode, specific "
+         + "to each observation region. Stored in the FITS tile headers under the keywords "
+         + "'CUTMIN' and 'CUTMAX'. Taken into account for PNG, JPEG and RGB actions "
+         + "with the 'pixelcul=byRegion' parameter.",
+         "out=/data/hips CUT",
+         A.TEST);  // PROTO
 
    /** Liste des actions effectuées par défaut */
    static final Action[] DEFAULT = { INDEX, TILES, PNG, CHECKCODE, DETAILS };

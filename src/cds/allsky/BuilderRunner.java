@@ -104,7 +104,8 @@ public abstract class BuilderRunner extends Builder {
             context.info("BITPIX conversion from "+context.getBitpixOrig()+" to "+context.getBitpix());
             double cutOrig[] = context.getCutOrig();
             double cut[] = context.getCut();
-            context.info("Map original raw pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] to ["+cut[2]+" .. "+cut[3]+"]");
+            if( context.cutByImage ) context.info("Map original cut pixel range to ["+cut[2]+" .. "+cut[3]+"]");
+            else context.info("Map original raw pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] to ["+cut[2]+" .. "+cut[3]+"]");
          }
          else context.info("BITPIX = "+b1+" (no conversion)");
 //         if( context.getDiskMem()!=-1 ) {
@@ -123,38 +124,6 @@ public abstract class BuilderRunner extends Builder {
 
       build();
       
-      // Mise à jour des propriétés liées au traitement
-      if( !context.isColor() ) {
-         if( context.bitpix!=-1 ) context.setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,context.bitpix+"");
-         if( context.bitpixOrig!=-1 ) context.setPropriete(Constante.KEY_DATA_PIXEL_BITPIX,context.bitpixOrig+"");
-         context.setPropriete(Constante.KEY_HIPS_PROCESS_SAMPLING, context.isMap() ? "none" : "bilinear");
-         if( context.skyvalName!=null ) {
-            context.setPropriete(Constante.KEY_HIPS_SKYVAL,context.skyvalName);
-            StringBuilder s1 = null;
-            double cutOrig[] = context.getCutOrig();
-            for( int i=0; i<4; i++ ) {
-               double x = cutOrig[i];
-               if( s1==null ) s1 = new StringBuilder(""+x);
-               else s1.append(" "+x);
-            }
-            context.setPropriete(Constante.KEY_HIPS_SKYVAL_VALUE,s1.toString());
-         }
-      }
-      context.setPropriete(Constante.KEY_HIPS_COADD,
-               context.isMap() ? "none" : 
-                  context.getModeOverlay().toString()+" "+
-                  context.getModeMerge().toString()+" "+
-                  context.getModeTree().toString() );
-      
-      if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
-      if( !context.isTaskAborting() ) {
-         if( isTooSmallForAllsky() ) {
-            context.warning("ALLSKY ignored (too small coverage). Use ALLSKY action if required"); 
-            (new BuilderAllsky(context)).postJob();
-         } else { (new BuilderAllsky(context)).run(); context.done("ALLSKY file done"); }
-      }
-
-      context.removeListReport();
       execTime = System.currentTimeMillis() - t0;
    }
    
@@ -230,7 +199,7 @@ public abstract class BuilderRunner extends Builder {
 
          double [] cutOrigBefore = context.getPixelRangeCut();
          if( cutOrigBefore!=null ) {
-            memoCutOrig = new double[4];
+            memoCutOrig = new double[7];
             for( int i=0; i<4; i++ ) {
                if( Double.isNaN(cutOrigBefore[i]) ) continue;
                memoCutOrig[i] = (cutOrigBefore[i] - context.bZeroOrig)/context.bScaleOrig;
@@ -238,17 +207,25 @@ public abstract class BuilderRunner extends Builder {
          }
 
          // repositionnement des cuts et blank passés par paramètre
+         // Attention, si un pourcentage a été indiquée, le cutmin/cutmax ne sera
+         // pas reprit de l'origine, mais remplacé par celui calculé
          double [] cutOrig = context.getCutOrig();
          double bs = context.bScaleOrig;
          double bz = context.bZeroOrig;
          if( memoCutOrig!=null ) {
-            if( memoCutOrig[0]!=0 || memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
-            if( memoCutOrig[2]!=0 || memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
+            if( Context.hasCut(memoCutOrig) ) { 
+               cutOrig[Context.CUTMIN]=memoCutOrig[Context.CUTMIN]; 
+               cutOrig[Context.CUTMAX]=memoCutOrig[Context.CUTMAX]; }
+            if( Context.hasRange(memoCutOrig) ) {
+               cutOrig[Context.RANGEMIN]=memoCutOrig[Context.RANGEMIN]; 
+               cutOrig[Context.RANGEMAX]=memoCutOrig[Context.RANGEMAX]; 
+            }
             context.setCutOrig(cutOrig);
          }
-
+         
          if( cutOrig[0]==cutOrig[1] ) {
-            context.warning("Suspicious pixel cut: ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"] => YOU WILL PROBABLY HAVE TO CHANGE/EDIT THE properties FILE VALUES");
+            context.warning("Suspicious pixel cut: ["+ip(cutOrig[Context.CUTMIN],bz,bs)
+            +" .. "+ip(cutOrig[Context.CUTMAX],bz,bs)+"] => YOU WILL PROBABLY HAVE TO CHANGE/EDIT THE properties FILE VALUES");
          }
 
          context.setValidateCut(true);
@@ -256,7 +233,15 @@ public abstract class BuilderRunner extends Builder {
          if( hasAlternateBlank ) context.setBlankOrig(blankOrig);
 
          context.initParameters();
-         context.info("Data range ["+ip(cutOrig[2],bz,bs)+" .. "+ip(cutOrig[3],bz,bs)+"], pixel cut ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"]");
+         
+         if( this instanceof BuilderJpg ) {
+            context.info("Generating 8-bit tiles (PNG or JPEG) directly from the original images...");
+         } else {
+            context.info("Data range ["+ip(cutOrig[Context.RANGEMIN],bz,bs)
+            +" .. "+ip(cutOrig[Context.RANGEMAX],bz,bs)+"], pixel cut ["
+            +ip(cutOrig[Context.CUTMIN],bz,bs)+" .. "
+            +ip(cutOrig[Context.CUTMAX],bz,bs)+"]");
+         }
 
       } else context.initParameters();
 
@@ -605,8 +590,109 @@ public abstract class BuilderRunner extends Builder {
       buildPost(duree);
     }
    
-   protected void buildPre() {}
-   protected void buildPost(long duree) throws Exception { }
+   protected void buildPre() throws Exception {
+      long size = context.getMem();
+      int npixOrig = context.getNpixOrig();
+
+      // Initialisation du cache en lecture
+      long limitMem = 2*size/3L;
+      int limitFile = 5000;
+
+      int maxFile;
+      long maxMem;
+
+      // Dans le cas d'un relevé JPEG ou PNG, on va utiliser un simple cache
+      if( context.isColor() || !context.isPartitioning() ) {
+         maxFile=limitFile;
+         maxMem=limitMem;
+
+      // Sinon, on va paramètrer le cache pour être dynamique et relativement petit au démarrage
+      } else {
+         maxFile = nbThread * Constante.MAXOVERLAY;
+         if( maxFile<300 ) maxFile=300;
+//         int bloc = context.isPartitioning() ? context.getPartitioning() : Constante.ORIGCELLWIDTH;
+//         maxMem = (long)maxFile * bloc * bloc * npixOrig;
+         
+         // si partitionné => si statmax inconnue getPartitioning, sinon min(getPartitioning,statMax)
+         int maxWidth  = context.statMaxWidth;
+         int maxHeight = context.statMaxHeight;
+         int bloc = context.getPartitioning();
+         maxWidth  = maxWidth==-1  ? bloc : Math.min(bloc,maxWidth);
+         maxHeight = maxHeight==-1 ? bloc : Math.min(bloc,maxHeight);
+         maxMem = (long)maxFile * maxWidth * maxHeight * npixOrig;
+      }
+
+      CacheFits cache = new CacheFits(maxMem,maxFile,limitMem, limitFile);
+      context.setCache( cache );
+      context.info("Available RAM: "+cds.tools.Util.getUnitDisk(size)+" => RAM cache size: "+cache.getMaxFile()
+          +" items / "+ cds.tools.Util.getUnitDisk( cache.getMaxMem()));
+   }
+   
+   protected void buildPost(long duree) throws Exception {
+      
+      // Mise à jour des propriétés liées au traitement
+      if( !context.isColor() ) {
+         if( context.bitpix!=-1 ) context.setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,context.bitpix+"");
+         if( context.bitpixOrig!=-1 ) context.setPropriete(Constante.KEY_DATA_PIXEL_BITPIX,context.bitpixOrig+"");
+         context.setPropriete(Constante.KEY_HIPS_PROCESS_SAMPLING, context.isMap() ? "none" : "bilinear");
+         if( context.skyvalName!=null ) {
+            context.setPropriete(Constante.KEY_HIPS_SKYVAL,context.skyvalName);
+            StringBuilder s1 = null;
+            double cutOrig[] = context.getCutOrig();
+            for( int i=0; i<4; i++ ) {
+               double x = cutOrig[i];
+               if( s1==null ) s1 = new StringBuilder(""+x);
+               else s1.append(" "+x);
+            }
+            context.setPropriete(Constante.KEY_HIPS_SKYVAL_VALUE,s1.toString());
+         }
+      }
+      context.setPropriete(Constante.KEY_HIPS_COADD,
+               context.isMap() ? "none" : 
+                  context.getModeOverlay().toString()+" "+
+                  context.getModeMerge().toString()+" "+
+                  context.getModeTree().toString() );
+      
+      if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
+      if( !context.isTaskAborting() ) {
+         if( isTooSmallForAllsky() ) {
+            context.warning("ALLSKY ignored (too small coverage). Use ALLSKY action if required"); 
+            (new BuilderAllsky(context)).postJob();
+         } else { (new BuilderAllsky(context)).run(); context.done("ALLSKY file done"); }
+      }
+
+      context.removeListReport();
+      
+      if( ThreadBuilderTile.statMaxOverlays>0 )
+         context.stat("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
+               ThreadBuilderTile.statOnePass+" in one step, "+
+               ThreadBuilderTile.statMultiPass+" in multi steps");
+      if( context.cacheFits!=null ) {
+         Aladin.trace(4,"Cache FITS status: "+ context.cacheFits);
+         context.cacheFits.reset();
+         context.setCache(null);
+      }
+      if( context.trimMem>0 ) context.stat("Tiles trim method saves "+cds.tools.Util.getUnitDisk(context.trimMem,1,2));
+
+      infoCounter(duree);
+   }
+
+   /** Affichage des compteurs (s'ils ont été utilisés) */
+   private void infoCounter(long duree) {
+      
+      if( duree>1000L && (context.statPixelIn>0 || context.statPixelOut>0) ) {
+         long d = duree/1000L;
+         context.stat("Pixel times: "+
+               (context.statPixelIn==0?"":"Original images="+cds.tools.Util.getUnitDisk(context.statPixelIn).replace("B","pix") 
+                  + " => "+cds.tools.Util.getUnitDisk(context.statPixelIn/d).replace("B","pix")+"/s")
+               + (context.statPixelOut==0?"":
+                 ("  Low tiles="+cds.tools.Util.getUnitDisk(context.statPixelOut).replace("B","pix") 
+               + (context.statPixelIn==0?"":" (x"+cds.tools.Util.myRound((double)context.statPixelOut/context.statPixelIn)+")")
+               + " => "+cds.tools.Util.getUnitDisk(context.statPixelOut/d).replace("B","pix")+"/s") )
+               );
+     
+      }
+   }
    
    private static final long MAXCHECKTIME = 3*60*1000L;   // 3mn
    private long lastCheckTime=-1;
@@ -700,7 +786,7 @@ public abstract class BuilderRunner extends Builder {
       // Création d'un losange terminal
       if( order==ordermax )  {
          hpx.threadBuilder.setInfo("createLeavveHpx "+file+"...");
-         try { f = createLeaveHpx(hpx,file,path,order,npix,z); }
+         try { f = createLeafHpx(hpx,file,path,order,npix,z); }
          catch( Exception e ) {
             hpx.threadBuilder.setInfo("createLeavveHpx error "+file+"...");
             System.err.println("BuilderTiles.createLeave error: "+file);
@@ -1077,7 +1163,7 @@ public abstract class BuilderRunner extends Builder {
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[],int z1) throws Exception {
       long t1,t2;
       int width=context.getTileSide();
-
+      
       boolean inTree = context.isInMocTree(order,npix);
       if( !inTree ||
             fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) {
@@ -1265,7 +1351,7 @@ public abstract class BuilderRunner extends Builder {
     * @param z numéro de la frame (pour un cube)
     * @return null si rien trouvé pour construire ce fichier
     */
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path, int order,long npix,int z) throws Exception {
+   protected Fits createLeafHpx(ThreadBuilderTile hpx, String file,String path, int order,long npix,int z) throws Exception {
       long t = System.currentTimeMillis();
 
       Fits oldOut=null;
@@ -1310,10 +1396,7 @@ public abstract class BuilderRunner extends Builder {
 
       long duree;
       if (out!=null) {
-         context.updateHeader(out,order,npix);
-         write(file,out);
-         context.addPixelOut( out.getNbPix() );
-
+         writeLeaf(out,file,order,npix);
          hpx.threadBuilder.setInfo("createLeavveHpx write done "+file+"...");
          duree = System.currentTimeMillis()-t;
          updateStat(0,1,0,duree,0,0);
@@ -1325,6 +1408,12 @@ public abstract class BuilderRunner extends Builder {
 
       addFits(Thread.currentThread(), out);
       return out;
+   }
+   
+   protected void writeLeaf(Fits out,String file,int order,long npix) throws Exception {
+      context.updateHeader(out,order,npix);
+      write(file,out);
+      context.addPixelOut( out.getNbPix() );
    }
    
    protected String getTileExt() { return context.getTileExt(); }
@@ -1351,9 +1440,7 @@ public abstract class BuilderRunner extends Builder {
    
    protected void loadLeaf(Fits out,MyInputStream is) throws Exception {
       if( isColor ) out.loadPreview(is, true);
-      else {
-         out.loadFITS(is);
-      }
+      else out.loadFITS(is);
    }
 
 }

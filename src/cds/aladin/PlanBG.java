@@ -2362,7 +2362,7 @@ public class PlanBG extends PlanImage {
       else return (colorPNG || inPNG ? "PNG":"JPEG")+" 8 bits pixels";
    }
 
-   /** Change le format d'affichage truePixels (Fits) <=> 8bits (JPEG) */
+   /** Change le format d'affichage truePixels (Fits) <=> 8bits (PNG ou JPEG) */
    protected void switchFormat() {
       
       // mémorisation de la fonction de transfert de l'ancien mode
@@ -2370,7 +2370,7 @@ public class PlanBG extends PlanImage {
       else transferFct4Preview = transfertFct;
       
       truePixels = !truePixels;
-      setPixMode(truePixels ? PIX_TRUE : colorPNG ? PIX_255 : PIX_256);
+      setPixMode(truePixels ? PIX_TRUE : inPNG ? PIX_255 : PIX_256);
       
       // Positionnement de la fonction de transfert pour le nouveau mode
       transfertFct = truePixels ? transferFct4Fits : transferFct4Preview;
@@ -2389,7 +2389,6 @@ public class PlanBG extends PlanImage {
       flagRecutRadius = aladin.view.getCurrentView().getTaille()/2;
       resetHist();
    }
-
 
    /** Retourne la résolution angulaire du pixel au NSIDE max (en degrés)
     *  avec une unité adéquate */

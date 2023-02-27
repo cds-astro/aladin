@@ -212,6 +212,13 @@ public class CacheFits {
       
    }
    
+   /** Positionnement du Blank alternatif */
+   private void setAltBlank(Fits f) {
+      if( context==null ) return;
+      if( context.getBlankKey()!=null ) f.setBlank(context.getBlankKey());
+      else if( context.hasAlternateBlank() ) f.setBlank( context.getBlankOrig() );
+   }
+   
    // Ouvre un fichier
    private FitsFile open(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception,MyInputStreamCachedException {
       boolean flagChangeOrig=false;
@@ -228,12 +235,15 @@ public class CacheFits {
 
       FitsFile f = new FitsFile();
       f.fits = new Fits();
-      if( context!=null && context.skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
-      if( context!=null && context.getBlankKey()!=null ) f.fits.setBlank(context.getBlankKey());
+      if( context!=null && (context.skyvalName!=null || context.cutByImage)) { 
+         flagLoad=true; 
+         f.fits.setReleasable(false); 
+      }
 
       // Il faut lire deux fichiers, le HHH, puis le JPEG ou PNG, voire FITS suivant le cas
       if( (mode&HHH)!=0 ) {
          f.fits.loadHeaderFITS(fileName);
+         setAltBlank(f.fits);
 //         String pngFile  = fileName.replaceAll("\\.hhh",".png");
 //         String jpgFile  = fileName.replaceAll("\\.hhh",".jpg");
          String pngFile   = replaceExt(fileName,"hhh","png");
@@ -267,9 +277,10 @@ public class CacheFits {
                : (mode&JPEG)!=0 ? Fits.PREVIEW_JPEG
                      : Fits.PREVIEW_UNKOWN;
          f.fits.loadPreview(fileName,true, (mode&HHH)==0, format);
-      }
-      else {
+         
+      } else {
          f.fits.loadFITS(fileName, false, flagLoad,true);
+         setAltBlank(f.fits);
          if( context!=null ) {
             flagChangeOrig = f.fits.bzero!=context.bZeroOrig || f.fits.bscale!=context.bScaleOrig;
             if( flagChangeOrig && firstChangeOrig ) {
@@ -310,6 +321,9 @@ public class CacheFits {
          applyPostFilter(f.fits,flagChangeOrig);
       }
 
+      // passage en 8 bits ?
+      if( context!=null && context.cutByImage ) applyTo8(f.fits);
+      
       // On ne conserve pas le HeaderFits
       if( !keepHeader ) f.fits.freeHeader();
       return f;
@@ -545,6 +559,11 @@ public class CacheFits {
       // Estimation au centre
       try {
          
+         double pcMin = pourcentMin;
+         double pcMax = pourcentMax;
+         if( pcMin==pcMax ) { pcMin=Fits.POURCENT_MIN; pcMax=Fits.POURCENT_MAX; }
+         String eval = "from "+Util.getPourcent(pcMin)+" to "+Util.getPourcent(pcMax);
+         
          // Initialisation de la taille
          if( WIDTHAUTOCUT==-1 ) {
             if( f1.width>512 && f1.height>512 ) {
@@ -552,11 +571,11 @@ public class CacheFits {
                if( WIDTHAUTOCUT>1024 ) WIDTHAUTOCUT=1024;
                HEIGHTAUTOCUT = (int)(f1.height/3.5);
                if( HEIGHTAUTOCUT>1024 ) HEIGHTAUTOCUT=1024;
-               context.info("skyval estimation based on median on 5 regions ("+WIDTHAUTOCUT+"x"+HEIGHTAUTOCUT+" pixels)");
+               context.info("Cut estimation ("+eval+") based on median on 5 regions ("+WIDTHAUTOCUT+"x"+HEIGHTAUTOCUT+" pixels)");
             } else {
-               WIDTHAUTOCUT = (int)(f1.width*0.8);
-               WIDTHAUTOCUT = (int)(f1.width*0.8);
-               context.info("skyval estimation based central region ("+WIDTHAUTOCUT+"x"+HEIGHTAUTOCUT+" pixels)");
+               WIDTHAUTOCUT  = (int)(f1.width*0.8);
+               HEIGHTAUTOCUT = (int)(f1.height*0.8);
+               context.info("Cut estimation ("+eval+") based on central region ("+WIDTHAUTOCUT+"x"+HEIGHTAUTOCUT+" pixels)");
            }
          }
          
@@ -569,10 +588,10 @@ public class CacheFits {
          ox=x; oy=y; oz=z; ow=w; oh=h; od=d;
 
          f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
-         if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
+         setAltBlank(f1);
          cut = f1.findAutocutRange(pourcentMin,pourcentMax);
 
-         //      System.out.println("cut central: "+cut[0]+" pour "+filename);
+//               System.out.println("cut central: "+cut[0]+" pour "+filename);
 
          // Si l'image est assez grande on va faire 4 autres mesures
          // et prendre la médiane des 5
@@ -631,7 +650,7 @@ public class CacheFits {
 
       Fits f1 = new Fits();
       f1.loadFITS(filename);
-      if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
+      setAltBlank(f1);
       shape = f1.findData();
       shapeCache.put(filename,shape);
 //      context.info("Data area range => ["+shape[0]+","+shape[1]+" "+shape[2]+"x"+shape[3]+"] for "+filename);
@@ -642,6 +661,23 @@ public class CacheFits {
 
    private boolean first=true;
    
+   /** Passe l'image à 8 bits en appliquant un autocut */
+   private void applyTo8(Fits f) throws Exception {
+      double pourcentMin=Fits.POURCENT_MIN;
+      double pourcentMax=Fits.POURCENT_MAX;
+      if( Context.hasPourcentCut( context.getPixelRangeCut() ) ) {
+         pourcentMin=context.getPixelRangeCut()[context.POURCMIN];
+         pourcentMax=context.getPixelRangeCut()[context.POURCMAX];
+      }
+      double cut [] = findAutocutRange(f,pourcentMin,pourcentMax);
+      byte [] pix8 = f.toPix8(cut[Context.CUTMIN], cut[Context.CUTMAX], null, Fits.PIX_255);
+      f.invImageLine(f.width, f.height, pix8);
+      f.bitpix=8;
+      f.setBlank(0);
+      f.setBscale(1);
+      f.setBzero(0);
+      f.pixels=pix8;
+   }
    
    /**
     * Applique un filtre (soustraction du skyval, division par le expTime, masque, Lupton, ...)
@@ -729,7 +765,7 @@ public class CacheFits {
                double pixelFull = f.getPixelDouble(x+f.xCell, y+f.yCell, z+f.zCell);
 
                if( Double.isNaN(pixelFull) ) continue;
-
+               
                if( context.good!=null && (pixelFull<context.good[0] || context.good[1]<pixelFull) ) {
                   if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, z+f.zCell, blank);
                   else f.setPixelInt(x+f.xCell, y+f.yCell, z+f.zCell, (int)blank);

@@ -1973,7 +1973,9 @@ public class Plan implements Runnable {
          if( body==null ) body="unknown";
          if( !BODYSKY.equals(body ) ) ADD( buf,"\n* Body: ",body);
       }
-
+      
+      if( error!=null ) ADD(buf,"\n* !!",error);
+      
       addMessageInfo(buf,prop);
 
       // La description du plan

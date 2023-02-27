@@ -106,7 +106,8 @@ public class Context {
    protected boolean bscaleBzeroOrigSet=false; // true si on a positionné
    protected boolean flagNoInitEtalon=false;      // true => bloque la maj du cutOrig par estimation automatique
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales (valeurs raw)
-   protected double[] pixelRangeCut;         // range et cut passé sur la ligne de commande (valeurs physiques)
+   protected double[] pixelRangeCut;         // cutmin,cutmax,rangemin,rangemax,propblank,pourcmin,pourcmax
+   protected boolean pixelCutPourcent;       // si le pixelRangeCut a été indiqué en pourcentages
    public double[] pixelGood=null;           // Plage des valeurs des pixels conservés (valeurs physiques)
    public double[] good=null;                // Plage des valeurs de pixels conservés (raw)
    public int[] borderSize = {0,0,0,0};      // Bords à couper sur les images originales
@@ -137,6 +138,8 @@ public class Context {
    protected double bscale=1;                // Valeur BSCALE de la boule HEALPix à générer
    protected double[] cut;   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
+   protected boolean cutByRegion;            // true si le cut 8 bits sera appliqué région par région
+   public boolean cutByImage;            // true si le cut 8 bits sera appliqué image par image
    private ModeTree modeTree = null;
    protected ModeOverlay modeOverlay=ModeOverlay.getDefault();   // Methode de traitement par défaut des images 
    protected ModeMerge modeMerge=ModeMerge.getDefault();   // Methode de traitement par défaut des tuiles Hips
@@ -762,17 +765,38 @@ public class Context {
       else targetColorMode=Constante.TILE_JPEG;
    }
    public void setCut(double [] cut) { this.cut=cut; }
+   
+   // Indices du tableau pixelRangeCut[]
+   static public final int CUTMIN    = 0;    // Ind. pour la valeur min du cut 8 bits
+   static public final int CUTMAX    = 1;    // Ind. pour la valeur max du cut 8 bits
+   static public final int RANGEMIN  = 2;    // Ind. pour la valeur min des pixels
+   static public final int RANGEMAX  = 3;    // Ind. pour la valeur max des pixels
+   static public final int PROPBLANK = 4;    // Ind. pour la proportion des pixels non blanks
+   static public final int POURCMIN   = 5;    // Ind. pour la proportion min des pixels 8 bits conservés
+   static public final int POURCMAX   = 6;    // Ind. pour la proportion max des pixels 8 bits conservés
+   
    public void setPixelCut(String scut) throws Exception {
-      StringTokenizer st = new StringTokenizer(scut," ");
-      int i=0;
-      if( pixelRangeCut==null ) pixelRangeCut = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
+      if( pixelRangeCut==null ) pixelRangeCut = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN,Double.NaN,Double.NaN,Double.NaN};
+      int i=0;        // Nombre de paramètres numériques qui seront lus
+      int ind=CUTMIN; // indice dans le tableau pixelRangeCut
+      
+      boolean pixelCutPourcent=false;
+      if( scut.indexOf('%')>=0 ) {
+         scut=scut.replace('%', ' ');
+         pixelCutPourcent=true;
+         ind=POURCMIN;
+      }
+      Tok st = new Tok(scut," ,;");
       while( st.hasMoreTokens() ) {
          String s = st.nextToken();
          try {
-            pixelRangeCut[i]=Double.parseDouble(s);
-            i++;
+            pixelRangeCut[ind]=Double.parseDouble(s);
+            if( pixelCutPourcent ) pixelRangeCut[ind]/=100.;
+            ind++; i++;
          } catch( Exception e) {
-            setTransfertFct(s);
+            if( s.equalsIgnoreCase("byImage") ) cutByImage=true;
+            else if( s.equalsIgnoreCase("byRegion") ) cutByRegion=true;
+            else setTransfertFct(s);
          }
 
       }
@@ -813,11 +837,12 @@ public class Context {
     * sous la forme d'une seule valeur (pourcentage centrale retenue => ex:99)
     * soit sous la forme de deux valeurs (pourcentage min et pourcentage max
     * ex => 0.3 et 99.7
+    * Note: le caractère "%" peut être accolé (avant ou après) aux valeurs, il sera simplement ignoré
     * @param sHist
     * @throws Exception
     */
    public void setHistoPercent(String sHist) throws Exception {
-      StringTokenizer st = new StringTokenizer(sHist," ");
+      Tok st = new Tok(sHist," ,;");
       int n = st.countTokens();
       
       try {
@@ -839,6 +864,22 @@ public class Context {
 
 
    public double [] getPixelRangeCut() throws Exception { return pixelRangeCut; }
+   
+   /** Retourne true si un intervalle cut 8 bits est positionné */
+   static public boolean hasCut( double [] pixelRangeCut ) { 
+      return pixelRangeCut!=null && pixelRangeCut[CUTMIN]<pixelRangeCut[CUTMAX];
+   }
+
+   /** Retourne true si l'intervalle des valeurs des pixels est positionné */
+   static public boolean hasRange( double [] pixelRangeCut ) { 
+      return pixelRangeCut!=null && !Double.isNaN(pixelRangeCut[RANGEMIN])
+            && pixelRangeCut[RANGEMIN]<pixelRangeCut[RANGEMAX];
+   }
+
+   /** Retourne true si un intervalle sur l'histogramme des pixels est positionné */
+   static public boolean hasPourcentCut( double [] pixelRangeCut ) { 
+      return pixelRangeCut!=null && pixelRangeCut[POURCMIN]<pixelRangeCut[POURCMAX];
+   }
 
 
    public TransfertFct getFct() throws Exception { return fct; }
@@ -868,8 +909,7 @@ public class Context {
    public void setDataRange(String scut) throws Exception {
       StringTokenizer st = new StringTokenizer(scut," ");
       int i=2;
-      //      if( cut==null ) cut = new double[4];
-      if( pixelRangeCut==null ) pixelRangeCut = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
+      if( pixelRangeCut==null ) pixelRangeCut = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN,Double.NaN,Double.NaN};
       while( st.hasMoreTokens() && i<4 ) {
          String s = st.nextToken();
          pixelRangeCut[i]=Double.parseDouble(s);
@@ -989,20 +1029,26 @@ public class Context {
       
       if( !flagNoInitEtalon ) {
 
-         double[] cutOrig = file.findAutocutRange();
+         double pourcentMin = -1;
+         double pourcentMax = -1;
+         if( hasPourcentCut( pixelRangeCut ) ) {
+            pourcentMin=pixelRangeCut[POURCMIN];
+            pourcentMax=pixelRangeCut[POURCMAX];
+         }
+         double[] cutOrig = file.findAutocutRange(pourcentMin,pourcentMax);
 
          //       cutOrig[2]=cutOrig[3]=0;  // ON NE MET PAS LE PIXELRANGE, TROP DANGEREUX... // J'HESITE DE FAIT !!!
 
          // PLUTOT QUE DE NE PAS INITIALISER, ON VA DOUBLER LA TAILLE DE L'INTERVALLE (sans dépasser les limites)
-         double rangeData   = cutOrig[3] - cutOrig[2];
-         double centerRange = cutOrig[2]/2 + cutOrig[3]/2;
-         if( !Double.isInfinite( centerRange-rangeData ) ) cutOrig[2] = centerRange-rangeData;
-         if( !Double.isInfinite( centerRange+rangeData ) ) cutOrig[3] = centerRange+rangeData;
+         double rangeData   = cutOrig[Context.RANGEMAX] - cutOrig[Context.RANGEMIN];
+         double centerRange = cutOrig[Context.RANGEMIN]/2 + cutOrig[Context.RANGEMAX]/2;
+         if( !Double.isInfinite( centerRange-rangeData ) ) cutOrig[Context.RANGEMIN] = centerRange-rangeData;
+         if( !Double.isInfinite( centerRange+rangeData ) ) cutOrig[Context.RANGEMAX] = centerRange+rangeData;
          
          double max = Fits.getMax(file.bitpix);
          double min = Fits.getMin(file.bitpix);
-         if( cutOrig[2]<min ) cutOrig[2]=min;
-         if( cutOrig[3]>max ) cutOrig[3]=max;
+         if( cutOrig[Context.RANGEMIN]<min ) cutOrig[Context.RANGEMIN]=min;
+         if( cutOrig[Context.RANGEMAX]>max ) cutOrig[Context.RANGEMAX]=max;
 
          setCutOrig(cutOrig);
       }
@@ -1172,10 +1218,12 @@ public class Context {
    public void setSkyval(String fieldName) throws Exception {
       boolean flagNum = false;
       
+      fieldName=fieldName.replace('%',' ');
+      
       // S'agit-il de valeurs numériques pour indiquer un
       // pourcentage de l'histogramme à conserver ?
       try {
-         StringTokenizer st = new StringTokenizer(fieldName);
+         Tok st = new Tok(fieldName," ,;");
          Double.parseDouble( st.nextToken() );
          flagNum = true;
       } catch( Exception e ) { }
@@ -1255,8 +1303,8 @@ public class Context {
          blank = getDefaultBlankFromBitpix(bitpix);
 
          // le cut de sortie est par défaut le même que celui d'entrée
-         cut = new double[5];
-         if( cutOrig==null ) cutOrig = new double[5];
+         cut = new double[7];
+         if( cutOrig==null ) cutOrig = new double[7];
          System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
 
          // si les dataCut d'origine sont nuls ou incorrects, on les mets au max
@@ -1283,12 +1331,7 @@ public class Context {
                      bitpix==16?   Short.MAX_VALUE :
                      255;
             
-//            double plageOrig = cutOrig[3]-cutOrig[2];
-//            if( bitpixOrig>0 ) plageOrig++;   // [0..N] => N+1 valeurs possibles contrairement aux réelles
-//            double plage = cut[3]-cut[2];
-//            if( bitpix>0 ) plage++;
-//            coef = plage / plageOrig;
-               coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
+            coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
 
             cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
             cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
@@ -1297,8 +1340,12 @@ public class Context {
             bscale = bScaleOrig/coef;
 
             info("Change BITPIX from "+bitpixOrig+" to "+bitpix);
-            info("Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
+
+            if( cutByImage ) info("Map cut pixel range for each image" +
                   "to ["+cut[2]+" .. "+cut[3]+"]");
+            else info("Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
+                  "to ["+cut[2]+" .. "+cut[3]+"]");
+
             info("Change BZERO,BSCALE,BLANK="+bZeroOrig+","+bScaleOrig+","+blankOrig
                   +" to "+bzero+","+bscale+","+blank);
 
@@ -1332,7 +1379,13 @@ public class Context {
       try {
          if( mocIndex==null ) {
             if( isMap() )  mocIndex=new SMoc("0/0-11"); 
-            else loadMocIndex();
+            else {
+               try {
+                  loadMocIndex();
+               } catch( Exception e ) {
+                  loadMoc();
+               }
+            }
          }
       } catch( Exception e ) {
          //         warning("No MOC index found => assume all sky");
@@ -1572,16 +1625,26 @@ public class Context {
     * @return le path de la premiere tuile trouvee, null si aucune
     */
    static public String findOneNpixFile(String path) { return findOneNpixFile(path,null); }
-   static public String findOneNpixFile(String path, String ext) {
+   static public String findOneNpixFile(String path, String ext) { return findOneNpixFile(path,ext,false); }
+   static public String findOneNpixFile(String path, String ext, boolean flagMaxOrder) {
          File root = new File(path);
          
-         // Recherche du premier NorderXX trouvé où XX est un nombre
+         // Recherche d'un NorderXX trouvé où XX est un nombre
+         // si flagMaxOrder==true, choisit XX max
          File norder = null;
-         for( String s : root.list() ) {
+         int maxOrder=-1,order;
+         String [] list = root.list();
+         for( String s : list ) {
             if( s.startsWith("Norder") ) {
-               try { Integer.parseInt( s.substring(6)); } catch( Exception e) { continue; }
+               try { 
+                  order = Integer.parseInt( s.substring(6)); 
+               } catch( Exception e) { continue; }
+               if( flagMaxOrder ) {
+                  if( order<=maxOrder ) continue;
+                  maxOrder=order;
+               }
                norder= new File(path+"/"+s);
-               break;
+               if( !flagMaxOrder ) break;
             }
          }
          if( norder==null ) return null;
@@ -2363,11 +2426,11 @@ public class Context {
 //      setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, jpegMethod.toString().toLowerCase());
 
 
-      if( cut!=null ) {
-         if( cut[0]!=0 || cut[1]!=0 ) {
-            setPropriete(Constante.KEY_HIPS_PIXEL_CUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero));
-         }
-         if( cut[2]!=0 || cut[3]!=0 ) setPropriete(Constante.KEY_HIPS_DATA_RANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
+      if( fmt.indexOf("fits")>=0 && cut!=null ) {
+         if( hasCut(cut) ) setPropriete(Constante.KEY_HIPS_PIXEL_CUT,  Util.myRound(bscale*cut[CUTMIN]+bzero)
+                  +" "+Util.myRound(bscale*cut[CUTMAX]+bzero));
+         if( hasRange(cut) ) setPropriete(Constante.KEY_HIPS_DATA_RANGE,Util.myRound(bscale*cut[RANGEMIN]+bzero)
+               +" "+Util.myRound(bscale*cut[RANGEMAX]+bzero));
       }
 
       // Ajout du target et du radius par défaut
@@ -2879,21 +2942,23 @@ public class Context {
                      mm.setMocOrder(n);
                      fov =  mm.getAngularRes()+"";
                   } catch( Exception e) {
-                     fov = moc.getAngularRes()+"";
+                     if( moc!=null ) fov = moc.getAngularRes()+"";
                   }
                   prop.replaceValue( Constante.KEY_HIPS_INITIAL_FOV,fov);
                }
                if( ra==null || dec==null ) {
-                  Healpix hpx = new Healpix();
-                  if( moc.isFull() ) { ra="0"; dec="+0"; }
-                  else {
-                     try {
-                        int o = moc.getMocOrder();
-                        long pix = moc.valIterator().next();
-                        double coo[] = hpx.pix2ang(o,pix);
-                        ra = coo[0]+"";
-                        dec = coo[1]+"";
-                     } catch( Exception e ) { }
+                  if( moc!=null ) {
+                     Healpix hpx = new Healpix();
+                     if( moc.isFull() ) { ra="0"; dec="+0"; }
+                     else {
+                        try {
+                           int o = moc.getMocOrder();
+                           long pix = moc.valIterator().next();
+                           double coo[] = hpx.pix2ang(o,pix);
+                           ra = coo[0]+"";
+                           dec = coo[1]+"";
+                        } catch( Exception e ) { }
+                     }
                   }
                   prop.replaceValue( Constante.KEY_HIPS_INITIAL_RA,ra);
                   prop.replaceValue( Constante.KEY_HIPS_INITIAL_DEC,dec);

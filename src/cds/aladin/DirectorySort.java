@@ -47,7 +47,7 @@ public class DirectorySort {
    public static final String ADDS        = "Adds";
    
    public static final String[] BRANCHES   = { 
-         "Image", "Data base", "Catalog", "Cube", "Solar system", "Ancillary", "Outreach", OTHERS, PROBLEMATIC };
+         "Image", "Data base", "Catalog", "Cube", "Solar system", "Ancillary", "Outreach", "Deprecated", OTHERS, PROBLEMATIC };
    
    public static final String[] PROTOCOLS = { "HiPS", "SIA2 (image|cube)", "SIA (image)",
          "SSA (spectrum)","CS (table)","TAP (table)"};
@@ -351,6 +351,17 @@ public class DirectorySort {
                   new SortRule("Date","Descending date, grouped by year",
                         new int[] { BRANCH, YEAR, DATE } )
       } );
+      initBranchRules("Deprecated",  
+            new SortRule[] {
+                  new SortRule("Protocol","Ascending wavelength, grouped by protocol and origin",
+                        new int[] { BRANCH, PROTOCOL, ORIGIN, WAVELEN } ),
+                  new SortRule("Regime","Ascending wavelength, grouped by regime", 
+                        new int[] { BRANCH, BRANCH2, WAVELEN  } ),
+                  new SortRule("Name","By name, grouped by origin",
+                        new int[] { BRANCH, ORIGIN, NAME} ),
+                  new SortRule("Origin","Ascending wavelength, grouped by origin", 
+                        new int[] { BRANCH, ORIGIN, WAVELEN  } ),
+       } );
    }
    
    /** Positionnement d'une règle de tris pour la branche désignée

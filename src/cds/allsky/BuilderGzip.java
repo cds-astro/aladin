@@ -90,7 +90,7 @@ public class BuilderGzip extends BuilderRunner {
       compress=true;
    }
 
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
+   protected Fits createLeafHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
 //      if( order>Constante.GZIPMAXORDER ) return bidon;
       
       String filename = Util.getFilePath(path, order, npix,z)+".fits";

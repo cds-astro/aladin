@@ -163,8 +163,14 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> "Deprecated" branch in the resource tree
  * @beta    <LI> Support AVM tags "no XMP"
- * @beta    <LI> Hipsgen inline documentation
+ * @beta    <LI> Hipsgen improvements:
+ * @beta      <LU>
+ * @beta         <LI>Cut estimation by regions (pixelCut=byRegion)
+ * @beta         <LI>In line documentation
+ * @beta      </LU>
+ * @beta    <LI> Splitting MOC facility
  * @beta    <LI> MOC inline in VOTable (xtype=*moc)
  * @beta    <LI> Planet in dev.mode (without projection compatibility test)
  * @beta    <LI> Hipsgen improvements: hhh support for FITS files
@@ -173,7 +179,8 @@ import cds.xml.XMLParser;
  * @beta </UL>
  * @beta <B>Fixed bugs:</B>
  * @beta <UL>
- * @beta    <LI> Fixed the bug that in some situations blocked the display of galactic MOCs on small fields
+ * @beta    <LI> Correction of the bug of displaying measurements in scientific notation in powers of 10 (ex: x.xxE100).
+ * @beta    <LI> Correction of the bug that in some situations blocked the display of galactic MOCs on small fields
  * @beta    <LI> Fixed conesearch "redo" function for previous queries without results.
  * @beta    <LI> EPNTAP coordinates from c1,c2 barycenter instead of c1min,c2min
  * @beta    <LI> Transfer of a single object by SAMP (bug on the calculation of the projection centre)
@@ -199,7 +206,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v12.033";
+   static public final    String VERSION = "v12.041";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -669,7 +676,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,miSpectrum,miRedo,
    miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
    miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,
-   miCropSTMOC,miCropTMOC,miCropSMOC,miCreateHpx,miCreateHpxRgb,
+   miCropSTMOC,miCropTMOC,miCropSMOC,miSplitMoc,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
    miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,
@@ -733,7 +740,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
    SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGEN,TMOCGENCAT,TMOCGENOBJ,
    STMOCGEN,STMOCGENCAT,STMOCGENOBJ,STMOCGENMOC,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
-   MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCEXTRACTSMOC,MOCEXTRACTTMOC,MOCEXTRACTSTMOC,MOCHELP,MOCLOAD,MOCHIPS,
+   MOCM,MOCTOORDER,MOCSPLIT,MOCFILTERING,MOCCROP,MOCEXTRACTSMOC,MOCEXTRACTTMOC,MOCEXTRACTSTMOC,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
    REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
@@ -1270,6 +1277,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       STMOCGENMOC =chaine.getString("MSTMOCGENMOC");
       MOCM     =chaine.getString("MMOCOP");
       MOCTOORDER     =chaine.getString("MMOCTOORDER");
+      MOCSPLIT     =chaine.getString("MMOCSPLIT");
       MOCFILTERING =chaine.getString("MMOCFILTERING");
       MOCCROP =chaine.getString("MMOCCROP");
       MOCEXTRACTSMOC =chaine.getString("MMOCEXTRACTSMOC");
@@ -1425,7 +1433,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA, MOCEXTRACTSMOC,MOCCROP}, 
                {TMOCGEN,TMOCGENCAT,TMOCGENOBJ,MOCEXTRACTTMOC}, 
                {STMOCGEN,STMOCGENCAT,STMOCGENOBJ,STMOCGENMOC,MOCEXTRACTSTMOC},
-               {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{},{MOCHELP}
+               {},{MOCM},{MOCTOORDER},{MOCSPLIT},{},{MOCFILTERING},{},{MOCHELP}
             },
             { /*{MTOOLS},
                {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
@@ -2138,6 +2146,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,MOCFILTERING) )   miMocFiltering  = ji;
       else if( isMenu(m,MOCCROP) )   miMocCrop  = ji;
       else if( isMenu(m,MOCEXTRACTSMOC) )   miCropSMOC  = ji;
+      else if( isMenu(m, MOCSPLIT) )   miSplitMoc  = ji;
       else if( isMenu(m,MOCEXTRACTTMOC) )   miCropTMOC  = ji;
       else if( isMenu(m,MOCEXTRACTSTMOC) )  miCropSTMOC  = ji;
       else if( isMenu(m,MOCGENIMG) )   miMocGenImg  = ji;
@@ -3616,6 +3625,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,STMOCGENMOC) ){ showProp();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
       } else if( isMenu(s,MOCTOORDER) ) { updateMocToOrder();
+      } else if( isMenu(s,MOCSPLIT) ) { mocSplit();
       } else if( isMenu(s,MOCCROP) )  { crop();
       } else if( isMenu(s,MOCEXTRACTSMOC) )  { cropSMOC();
       } else if( isMenu(s,MOCEXTRACTTMOC) )  { cropTMOC();
@@ -4404,6 +4414,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       toolBox.setMode(ToolBox.MOC, Tool.DOWN);
       frameMocOperation.maj();
+   }
+   
+   /** Fractionnement d'un MOC */
+   protected void mocSplit() {
+      final Plan p = calque.getFirstSelectedPlan();
+      p.flagProcessing=true;
+      (new Thread() {
+         public void run() {
+            calque.splitMoc(p );
+            p.flagProcessing=false;
+         }
+      }).start();
    }
 
    /** Mise à jour de la fenêtre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution */
@@ -6224,6 +6246,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miMocFiltering!=null ) miMocFiltering.setEnabled(nbPlanMoc>0 && nbPlanCat>0 );
          if( miMocCrop!=null ) miMocCrop.setEnabled( pc instanceof PlanMoc && !(pc instanceof PlanTMoc) );
          if( miCropSMOC!=null ) miCropSMOC.setEnabled( pc instanceof PlanSTMoc );
+         if( miSplitMoc!=null ) miSplitMoc.setEnabled( pc instanceof PlanMoc );
+         
          if( miCropTMOC!=null ) miCropTMOC.setEnabled( pc instanceof PlanSTMoc );
          if( miCropSTMOC!=null ) miCropSTMOC.setEnabled( pc instanceof PlanSTMoc && ((PlanSTMoc)pc).hasSelection());
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);

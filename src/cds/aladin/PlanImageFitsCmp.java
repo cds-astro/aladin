@@ -63,7 +63,7 @@ public class PlanImageFitsCmp extends PlanImage {
          String m = e.getMessage();
          if( m==null ) m="FITS compressed image read error";
          error=aladin.error=m;
-         Aladin.error(error,1);
+//         Aladin.error(error,1);
          return false;
       }
       if( flagSkip ) return true;

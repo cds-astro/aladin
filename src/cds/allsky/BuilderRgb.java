@@ -457,7 +457,7 @@ public class BuilderRgb extends BuilderRunner {
 
    private String L(int c) { return c==0?"red":c==1?"green":"blue"; }
 
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
+   protected Fits createLeafHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
       long t = System.currentTimeMillis();
       Fits [] in = getLeaves(order, npix);
       Fits rgb = in==null ? null : createLeaveRGB(in);

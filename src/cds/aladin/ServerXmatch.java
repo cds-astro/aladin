@@ -45,6 +45,7 @@ public class ServerXmatch extends ServerMocQuery  {
       title1      = "Choose a local table";
       title2      = "Catalog to x-match";
       baseUrl     = "http://cdsxmatch.cds.unistra.fr/xmatch/api/v1/sync";
+//      baseUrl      = "http://axel.u-strasbg.fr/cgi-bin/qat2s.cgi.bash";
    }
 
    protected void createChaine() {

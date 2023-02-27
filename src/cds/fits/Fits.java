@@ -65,6 +65,7 @@ import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.MyInputStream;
 import cds.allsky.Constante;
+import cds.allsky.Context;
 import cds.allsky.MyInputStreamCached;
 import cds.allsky.MyInputStreamCachedException;
 import cds.image.Hdecomp;
@@ -74,6 +75,10 @@ import cds.tools.Util;
  * Classe de manipulation d'un fichier image FITS
  */
 final public class Fits {
+   
+   static public final double POURCENT_MIN = 0.003;
+//   static public final double POURCENT_MAX = 0.985;
+   static public final double POURCENT_MAX = 0.9995;
 
    // Modes previews supportés
    static public final int PREVIEW_UNKOWN = 0;
@@ -543,7 +548,7 @@ final public class Fits {
 
    }
 
-   protected static void invImageLine(int width, int height, byte[] pixels) {
+   public static void invImageLine(int width, int height, byte[] pixels) {
       byte[] tmp = new byte[width];
       for( int h = height / 2 - 1; h >= 0; h-- ) {
          int offset1 = h * width;
@@ -555,7 +560,7 @@ final public class Fits {
       tmp = null;
    }
 
-   protected static void invImageLine(int width, int height, int[] pixels) {
+   public static void invImageLine(int width, int height, int[] pixels) {
       int[] tmp = new int[width];
       for( int h = height / 2 - 1; h >= 0; h-- ) {
          int offset1 = h * width;
@@ -1902,9 +1907,7 @@ final public class Fits {
       for( int y = 0; y < heightCell; y++ ) {
          for( int x = 0; x < widthCell; x++ ) {
             double pixIn = getPixelDouble(x + xCell, y + yCell);
-            if( isBlankPixel(pixIn) ) {
-               pixOut = 0;
-            }
+            if( isBlankPixel(pixIn) )  pixOut = 0;
             else {
                int pix = ((gap + (pixIn <= min ? 0x00 : pixIn >= max ? range
                      : (int) (((pixIn - min) * r)))) & 0xff);
@@ -2070,9 +2073,6 @@ final public class Fits {
    }
    
    
-   static final private double POURCENT_MIN = 0.003;
-   static final private double POURCENT_MAX = 0.9995;
-   
 
    /**
     * Détermine l'intervalle pour un autocut "à la Aladin".
@@ -2112,17 +2112,19 @@ final public class Fits {
    }
    public double[] findAutocutRange(double min, double max,
          double pourcentMin, double pourcentMax, boolean full) throws Exception {
-      double[] range = new double[5];
+      double[] range = new double[7];
       if( pourcentMin==-1 ) pourcentMin=POURCENT_MIN;
       if( pourcentMax==-1 ) pourcentMax=POURCENT_MAX;
+      range[Context.POURCMIN]=pourcentMin;
+      range[Context.POURCMAX]=pourcentMax;
       try {
          if( isReleased() ) reloadBitmap();
          findMinMax(range, pixels, bitpix, widthCell, heightCell, depthCell, min, max, 
                pourcentMin, pourcentMax,true, full,0);
       } catch( Exception e ) {
-         range[0] = range[2] = min;
-         range[1] = range[3] = max;
-         range[4]=0;
+         range[Context.CUTMIN] = range[Context.RANGEMIN] = min;
+         range[Context.CUTMAX] = range[Context.RANGEMAX] = max;
+         range[Context.PROPBLANK]=0;
       }
       return range;
    }
@@ -2359,13 +2361,12 @@ final public class Fits {
       double c;
 
       if( !autocut && (minCut != 0. || maxCut != 0.) ) {
-         range[2] = min = minCut;
-         range[3] = max = maxCut;
+         range[Context.RANGEMIN] = min = minCut;
+         range[Context.RANGEMAX] = max = maxCut;
 
       } else {
          int nblank=0; // Nombre de valeurs BLANK
          boolean first = true;
-//         long nmin = 0, nmax = 0;
          for( i = margeH; i < height - margeH; i++ ) {
             for( j = margeW; j < width - margeW; j++ ) {
                for( int z = margeZ; z< depth - margeZ; z++ ) {
@@ -2381,17 +2382,9 @@ final public class Fits {
                   if( first ) {
                      max = max1 = min = min1 = c;
                      first = false;
-                  }
-
-                  if( min > c ) {
-                     min = c;
-//                     nmin = 1;
-                  } else if( max < c ) {
-                     max = c;
-//                     nmax = 1;
                   } else {
-//                     if( c == min ) nmin++;
-//                     if( c == max ) nmax++;
+                     if( min > c ) min = c;
+                     else if( max < c ) max = c;
                   }
 
                   // On mémorise les extremums et les "penultièmes" extremums
@@ -2409,12 +2402,12 @@ final public class Fits {
             if( max - max1 > max1 - min1 && max1 != Double.MIN_VALUE
                   && max1 != min ) max = max1;
          }
-         range[2] = min;
-         range[3] = max;
+         range[Context.RANGEMIN] = min;
+         range[Context.RANGEMAX] = max;
 
-         // Proportion de pixel significatif [0..1]
+         // Proportion de pixels blanks [0..1]
          try {
-            range[4] = (double)nblank / ((height-2*margeH) * (width-2*margeW));
+            range[Context.PROPBLANK] = (double)nblank / ((height-2*margeH) * (width-2*margeW));
          } catch( Exception e ) { e.printStackTrace(); }
       }
 
@@ -2424,19 +2417,21 @@ final public class Fits {
          int[] bean = new int[nbean];
          for( i = margeH; i < height - margeH; i++ ) {
             for( k = margeW; k < width - margeW; k++ ) {
-               c = getPixValDouble(pIn, bitpix, i * width + k);
-               if( isBlankPixel(c) ) continue;
+               for( int z = margeZ; z< depth - margeZ; z++ ) {
+                  c = getPixValDouble(pIn, bitpix, z*height*width+ i*width + k);
+                  if( isBlankPixel(c) ) continue;
 
-               j = (int) ((c - min) / l);
-               if( j == bean.length ) j--;
-               if( j >= bean.length || j < 0 ) continue;
-               bean[j]++;
+                  j = (int) ((c - min) / l);
+                  if( j == bean.length ) j--;
+                  if( j >= bean.length || j < 0 ) continue;
+                  bean[j]++;
+               }
             }
          }
 
          // Selection du min et du max en fonction du volume de l'information
          // que l'on souhaite garder
-         int[] mmBean = getMinMaxBean(bean,pourcentMin,pourcentMax);
+         double[] mmBean = getMinMaxBean(bean,pourcentMin,pourcentMax);
 
          // Verification que tout s'est bien passe
          if( mmBean[0] == -1 || mmBean[1] == -1 ) {
@@ -2461,8 +2456,8 @@ final public class Fits {
       }
 
       // Memorisation des parametres de l'autocut
-      range[0] = min;
-      range[1] = max;
+      range[Context.CUTMIN] = min;
+      range[Context.CUTMAX] = max;
    }
 
    /**
@@ -2473,29 +2468,45 @@ final public class Fits {
     * @param pourcentMax % de l'info ignoré en fin d'histogramme (ex: 0.9995);
     * @return mmBean[2] qui contient les indices du bean min et du bean max
     */
-   private int[] getMinMaxBean(int[] bean, double pourcentMin,double pourcentMax) {
-      int totInfo; // Volume de l'information
-      int curInfo; // Volume courant en cours d'analyse
-      int[] mmBean = new int[2]; // indice du bean min et du bean max
+   private double[] getMinMaxBean(int[] bean, double pourcentMin,double pourcentMax) {
+      double totInfo=0; // Volume de l'information
+      double curInfo; // Volume courant en cours d'analyse
+      double[] mmBean = new double[2]; // indice du bean min et du bean max
       int i;
-
+      
       // Determination du volume de l'information
-      for( totInfo = i = 0; i < bean.length; i++ ) {
-         totInfo += bean[i];
-      }
-
-      // Positionnement des indices des beans min et max respectivement
-      // dans mmBean[0] et mmBean[1]
-      for( mmBean[0] = mmBean[1] = -1, curInfo = i = 0; i < bean.length; i++ ) {
-         curInfo += bean[i];
-         double p = (double) curInfo / totInfo;
-         if( mmBean[0] == -1 ) {
-            if( p > pourcentMin ) mmBean[0] = i;
-         } else if( p > pourcentMax ) {
-            mmBean[1] = i;
+      for( int t : bean ) totInfo += t;
+      
+      double totMin = totInfo*pourcentMin;
+      double totMax = totInfo*pourcentMax;
+      
+      for( mmBean[0] = mmBean[1] = -1, curInfo = i = 0; i < bean.length; i++) {
+         if( mmBean[0]==-1 && curInfo+bean[i]>totMin ) {
+            // Quelle est la proportion en trop
+            double prop = (totMin - curInfo) / bean[i];
+            mmBean[0] = i + prop;
+         }
+         if( mmBean[1]==-1 && curInfo+bean[i]>totMax ) {
+            // Quelle est la proportion en trop
+            double prop = (totMax - curInfo) / bean[i];
+            mmBean[1] = i + prop;
             break;
          }
+         curInfo += bean[i];
       }
+      
+      // Positionnement des indices des beans min et max respectivement
+      // dans mmBean[0] et mmBean[1]
+//      for( mmBean[0] = mmBean[1] = -1, curInfo = i = 0; i < bean.length; i++) {
+//         curInfo += bean[i];
+//         double p = curInfo / totInfo;
+//         if( mmBean[0] == -1 ) {
+//            if( p > pourcentMin ) mmBean[0] = i;
+//         } else if( p > pourcentMax ) {
+//            mmBean[1] = i;
+//            break;
+//         }
+//      }
 
       return mmBean;
    }

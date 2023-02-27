@@ -104,6 +104,7 @@ public abstract class Builder {
          case TMOC:      return new BuilderTMoc(context);
          case STMOC:     return new BuilderSTMoc(context);
          case VALIDATOR: return new BuilderValidator(context);
+         case CUT:       return new BuilderCut(context);
 //         case ZIP:       return new BuilderZip(context);
          default: break;
       }
@@ -340,15 +341,14 @@ public abstract class Builder {
       double [] pixelGood = context.pixelGood;
       boolean missingGood = pixelGood!=null && context.good!=null;
 
-      boolean missingCut   = cut==null || cut[0]==0 && cut[1]==0;
-      boolean missingRange = cut==null || cut[2]==0 && cut[3]==0;
+      boolean missingCut   = !Context.hasCut(cut);
+      boolean missingRange = !Context.hasRange(cut);
 
       // S'il y a des pixelRange et/ou pixelCut indiqués sur la ligne de commande, il faut les convertir
-      // en cut[] à récupérant le bzero et le bscale depuis le fichier Allsky.fits ou depuis une image étalon
+      // en cut[] à récupérant le bzero et le bscale depuis une tuile ou depuis une image étalon
       double [] pixelRangeCut = context.getPixelRangeCut();
       if( (missingCut  || missingRange ) && pixelRangeCut!=null || missingGood ) {
          try {
-//            setBzeroBscaleFromPreviousAllsky( context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits" );
             setBzeroBscaleFromPreviousAllsky( context.findOneNpixFile(context.getOutputPath(), "fits"));
          } catch( Exception e ) {
 
@@ -364,7 +364,7 @@ public abstract class Builder {
          }
 
          try {
-            if( cut==null ) cut = new double[5];
+            if( cut==null ) cut = new double[7];
             for( int i=0; i<4; i++ ) {
                if( Double.isNaN(pixelRangeCut[i]) ) continue;
                cut[i] = (pixelRangeCut[i] - context.bzero)/context.bscale;
@@ -385,7 +385,7 @@ public abstract class Builder {
 
       // S'il me manque le cut du pixelCut ou du pixelRange, il faut que je récupère une image étalon
       // que j'en déduise les cutOrig, bzeroOrig, bscaleOrig, puis que j'en calcule le bzero, bscale et donc les cut
-      missingCut   = cut==null || cut[0]==0 && cut[1]==0;
+      missingCut   = !Context.hasCut(cut);
       if( missingCut ) {
          String img = context.getImgEtalon();
          if( img==null && context.getInputPath()!=null) {
@@ -400,25 +400,31 @@ public abstract class Builder {
          context.initParameters();
 
          double [] imgCut = context.getCut();
-         if( cut==null ) cut = new double[5];
+         if( cut==null ) cut = new double[7];
          if( missingCut )   {
-            cut[0]= imgCut[0];
-            cut[1]= imgCut[1];
-            if( cut[0]!=cut[1] ) context.info("Estimating pixel cut from the reference image => ["+cut[0]+" .. "+cut[1]+"]");
+            cut[Context.CUTMIN]= imgCut[Context.CUTMIN];
+            cut[Context.CUTMAX]= imgCut[Context.CUTMAX];
+            if( cut[Context.CUTMIN]!=cut[Context.CUTMAX] ) context.info("Estimating pixel cut from the reference image => ["
+                     +cut[Context.CUTMIN]+" .. "+cut[Context.CUTMAX]+"]");
          }
       }
 
       // S'il me manque toujours le pixelCut, je vais tenter de les récupérer par le fichier des properties
-      missingCut   = cut==null || cut[0]==0 && cut[1]==0;
+      missingCut   = !Context.hasCut(cut);
       if( missingCut ) updateCutByProperties(cut);
 
       context.setCut(cut);
 
       double bz=context.bzero;
       double bs=context.bscale;
-      if( cut==null || cut[0]==0 && cut[1]==0 ) throw new Exception("Argument \"pixelCut\" required");
-      if( !( cut[0] < cut[1] ) ) throw new Exception("pixelCut error ["+ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs)+"]");
-      context.info("pixel cut ["+ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs)+"]");
+      if( !context.cutByRegion ) {
+         if( cut==null || cut[Context.CUTMIN]==0 && cut[Context.CUTMAX]==0 ) throw new Exception("Argument \"pixelCut\" required");
+         if( !( cut[Context.CUTMIN] < cut[Context.CUTMAX] ) ) 
+            throw new Exception("pixelCut error ["+ip(cut[Context.CUTMIN],bz,bs)+" .. "+ip(cut[Context.CUTMAX],bz,bs)+"]");
+         context.info("pixel cut ["+ip(cut[Context.CUTMIN],bz,bs)+" .. "+ip(cut[Context.CUTMAX],bz,bs)+"]");
+      } else {
+         context.info("pixel cut by regions");
+      }
       context.setValidateCut(true);
    }
 
@@ -442,7 +448,7 @@ public abstract class Builder {
             try {
 //               setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
                setBzeroBscaleFromPreviousAllsky( context.findOneNpixFile(context.getOutputPath(), "fits") );
-               if( cut==null ) cut = new double[5];
+               if( cut==null ) cut = new double[7];
                for( int i=0; i<4; i++ ) {
                   if( Double.isNaN(pixelRangeCut[i]) ) continue;
                   cut[i] = (pixelRangeCut[i] - context.bzero)/context.bscale;

@@ -69,25 +69,28 @@ public class BuilderJpg extends BuilderRunner {
 
    // Valide la cohérence des paramètres pour la création des tuiles JPEG
    public void validateContext() throws Exception {
-      validateOutput();
-      if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
-      validateOrder(context.getOutputPath());
-      validateDepth();
-      if( !context.isColor() ) validateCut();
-      
-      modeHierarchy = context.getModeTree();
-      context.info("Hierarchy mode (tree): "+ModeTree.getExplanation(modeHierarchy));
+      if( context.cutByImage ) super.validateContext();
+      else {
+         validateOutput();
+         if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
+         validateOrder(context.getOutputPath());
+         validateDepth();
+         if( !context.isColor() ) validateCut();
+         if( context.cutByRegion ) doCutIfRequired();
 
-      // Chargement du MOC réel à la place de celui de l'index (moins précis)
-      try { context.loadMoc(); } catch( Exception e ) {
-         context.warning("Tile MOC not found => use index MOC");
+         modeHierarchy = context.getModeTree();
+         context.info("Hierarchy mode (tree): "+ModeTree.getExplanation(modeHierarchy));
+
+         // Chargement du MOC réel à la place de celui de l'index (moins précis)
+         try { context.loadMoc(); } catch( Exception e ) {
+            context.warning("Tile MOC not found => use index MOC");
+         }
+
+         // reprise du frame si nécessaire depuis le fichier de propriété
+         if( !context.hasFrame() ) context.setFrameName( getFrame() );
+
+         context.initRegion();
       }
-
-      // reprise du frame si nécessaire depuis le fichier de propriété
-      if( !context.hasFrame() ) context.setFrameName( getFrame() );
-
-      context.initRegion();
-      //      context.initParameters();
    }
 
    protected String getTileExt() { return ext; }
@@ -96,24 +99,24 @@ public class BuilderJpg extends BuilderRunner {
 
    public void run() throws Exception {
       context.resetCheckCode(fmt);
-      ColorModel cm = context.getFct()==null ? null : CanvasColorMap.getCM(0, 128, 255,false,
-            0/*PlanImage.CMGRAY*/, context.getFct().code());
-      tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
-      cut = context.getCut();
-      double bz = context.bzero;
-      double bs = context.bscale;
-      context.info("Map pixel cut ["+ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs)+"] to ["+getMinCM()+"..255] ("+context.getTransfertFct()+")");
-
       build();
-      if( !context.isTaskAborting() ) {
-         //         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64,0);
-         //         context.writePropertiesFile();
-
-         (new BuilderAllsky(context)).runJpegOrPngOnly(fmt);
-         if( context instanceof ContextGui && ((ContextGui) context).mainPanel.planPreview!=null ) {
-            if( fmt.equals("jpeg") ) ((ContextGui) context).mainPanel.planPreview.inJPEG = true;
-            else ((ContextGui) context).mainPanel.planPreview.inPNG = true;
-         }
+   }
+   
+   /**
+    * Génère les cuts par région si nécessaire
+    * @throws Exception
+    */
+   private void doCutIfRequired() throws Exception {
+      try {
+         String file = context.findOneNpixFile(context.getOutputPath(),"fits",true);
+         Fits fits = new Fits(file);
+         fits.headerFits.getDoubleFromHeader("CUTMIN");
+         
+      // si absence de CUTMIN dans une des tuiles d'ordre MAX, ça veut dire qu'il faut 
+      // générer les cuts par région
+      } catch( Exception e ) {
+         (b=new BuilderCut(context)).run();
+         b=null;
       }
    }
 
@@ -130,8 +133,11 @@ public class BuilderJpg extends BuilderRunner {
 
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
-      context.showJpgStat(statNbFile, totalTime, getNbThreads(), getNbThreadRunning() );
-      if( !(context instanceof ContextGui ) ) super.showStatistics();
+      if( context.cutByImage ) super.showStatistics();
+      else {
+         if( statNbFile>0 ) context.showJpgStat(statNbFile, totalTime, getNbThreads(), getNbThreadRunning() );
+         if( !(context instanceof ContextGui ) ) super.showStatistics();
+      }
    }
 
    public void build() throws Exception {
@@ -139,33 +145,77 @@ public class BuilderJpg extends BuilderRunner {
       super.build();
    }
    
+   protected void buildPre() throws Exception { 
+      if( context.cutByImage ) super.buildPre();
+      else {
+         ColorModel cm = context.getFct()==null ? null : CanvasColorMap.getCM(0, 128, 255,false,
+               0/*PlanImage.CMGRAY*/, context.getFct().code());
+         tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
+         cut = context.getCut();
+         double bz = context.bzero;
+         double bs = context.bscale;
+         if( !context.cutByImage ) context.info("Map pixel cut ["+(context.cutByRegion?"by region":ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs))
+               +"] to ["+getMinCM()+"..255] ("+context.getTransfertFct()+")");
+      }
+   }
+   
+   protected void buildPost(long duree) throws Exception { 
+      if( context.cutByImage ) super.buildPost(duree); 
+      else {
+         (new BuilderAllsky(context)).runJpegOrPngOnly(fmt);
+         if( context instanceof ContextGui && ((ContextGui) context).mainPanel.planPreview!=null ) {
+            if( fmt.equals("jpeg") ) ((ContextGui) context).mainPanel.planPreview.inJPEG = true;
+            else ((ContextGui) context).mainPanel.planPreview.inPNG = true;
+         }
+      }
+   }
+   
    protected void activateCache(long size,long sizeCache) { }
    
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
-      Fits out = createLeaveJpg(file);
+   protected Fits createLeafHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
+      Fits out = null;
+      if( context.cutByImage ) {
+         out = super.createLeafHpx(hpx, file, path, order, npix, z);
+         if( out!=null && first ) { first=false; setConstantes(out); }
+         
+      } else out = createLeafJpg(file);
+      
       if( out==null ) return null;
 
-      out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
+      double cutmin,cutmax;
+      if( context.cutByRegion || context.cutByImage ) { 
+         cutmin=1;
+         cutmax=255;
+      } else {
+         cutmin=cut[Context.CUTMIN];
+         cutmax=cut[Context.CUTMAX];
+      }
+      out.writeCompressed(file+ext,cutmin,cutmax,tcm,fmt);
       Aladin.trace(4, "Writing " + file+ext);
       updateStat();
       return out;
    }
-
-//   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
-//      return createLeaveHpx(null,file,path,order,npix,z);
-//   }
+   
+   protected void writeLeaf(Fits out,String file,int order,long npix) throws Exception { }
 
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
       Fits out = createNodePreview(fils, modeHierarchy );
       if( out==null ) return null;
-      out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
+      double cutmin,cutmax;
+      if( context.cutByRegion || context.cutByImage ) {
+         cutmin=1;
+         cutmax=255;
+      } else {
+         cutmin=cut[Context.CUTMIN];
+         cutmax=cut[Context.CUTMAX];
+      }
+      out.writeCompressed(file+ext,cutmin,cutmax,tcm,fmt);
       Aladin.trace(4, "Writing " + file+ext);
       return out;
    }
 
    /** Mise à jour de la barre de progression en mode GUI */
    protected void setProgressBar(int npix) { context.setProgress(npix); }
-
 
    private void initStat() {
       context.setProgressMax(768);
@@ -185,13 +235,28 @@ public class BuilderJpg extends BuilderRunner {
 
    /** Construction d'une tuile terminale. De fait, simple chargement
     * du fichier FITS correspondant. */
-   private Fits createLeaveJpg(String file) throws Exception {
+   private Fits createLeafJpg(String file) throws Exception {
       Fits out = null;
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       try {
          out = new Fits();
          out.loadFITS(file+".fits");
          if( first ) { first=false; setConstantes(out); }
+         if( context.cutByRegion ) {
+            Fits f8 = new Fits(out.width,out.height,8);
+            f8.setBlank(0);
+            try { 
+               double cutmin = out.headerFits.getDoubleFromHeader("CUTMIN");
+               double cutmax = out.headerFits.getDoubleFromHeader("CUTMAX");
+               byte [] buf = out.toPix8(cutmin, cutmax, null, Fits.PIX_TRUE);
+               Fits.invImageLine(f8.width, f8.height, buf);
+               f8.pixels = buf;
+               out=f8;
+            } catch( Exception e ) {
+               throw new Exception("Cut by region error [missing CUTMIN,CUTMAX FITS header values] => launch CUT action before");
+            }
+         }
+    
       } catch( Exception e ) { out=null; }
       return out;
    }
@@ -204,6 +269,17 @@ public class BuilderJpg extends BuilderRunner {
       bzero  = f.bzero;
       width  = f.width;
    }
+   
+   private void heriteCutValues(Fits out,Fits fils[]) {
+      for( Fits f : fils ) {
+         if( f==null ) continue;
+         try {
+            out.headerFits.setKeyValue("CUTMIN", f.headerFits.getStringFromHeader("CUTMIN"));
+            out.headerFits.setKeyValue("CUTMAX", f.headerFits.getStringFromHeader("CUTMAX"));
+            return;
+         } catch( Exception e) { }
+      }
+   }
 
    /** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
    private Fits createNodePreview(Fits fils[], ModeTree modeTree) throws Exception {
@@ -212,6 +288,7 @@ public class BuilderJpg extends BuilderRunner {
       out.setBlank(blank);
       out.setBscale(bscale);
       out.setBzero(bzero);
+      if( context.cutByRegion ) heriteCutValues(out,fils);
 
       Fits in;
       double pixd[] = new double[4];

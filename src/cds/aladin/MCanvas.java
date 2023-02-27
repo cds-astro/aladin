@@ -598,6 +598,10 @@ MouseWheelListener, Widget
       int widthw;	     // Taille du mot
       String text =  w.text;
       
+      if( text.equals("4.6263650339426563E-10") ) {
+         System.out.println("J'y suis");
+      }
+      
       // Prise en compte de la precision pour aligner le point décimal
       if( w.precision>=0 ) {
          int j = text.indexOf(' ');
@@ -607,15 +611,22 @@ MouseWheelListener, Widget
                text = Util.myRound(w.text,w.precision, false);
                int i = text.lastIndexOf('.');
                if( i>0 ) {
+                  
+                  // Notation scientifique ?
+                  int offsetE = text.indexOf('E');
+                  if( offsetE==-1 ) offsetE = text.indexOf('e');
+                  
                   int k;
                   int n = text.length();
-                  for( k=n-1; k>i && text.charAt(k)=='0'; k--);
+                  k=n-1;
+                  if( offsetE==-1) for( ; k>i && text.charAt(k)=='0'; k--);
                   if( k!=n-1) {
                      if( text.charAt(k)=='.') k--;
                      StringBuilder trail = new StringBuilder(16);
                      for( j=k;j<n-1;j++) trail.append(' ');
                      text = text.substring(0,k+1)+trail.toString();
                   }
+                  
                } else {
                   for( j=0; j<w.precision+1; j++ ) text+=' ';
                }

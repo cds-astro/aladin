@@ -69,7 +69,7 @@ public class ServerMocQuery extends Server  {
       title1      = "Choose a MOC";
       title2      = "Catalog to query";
       aladinLabel = "MOC";
-      baseUrl      = "http://cdsxmatch.cds.unistra.fr/QueryCat/QueryCat";
+      baseUrl      = "http://cdsxmatch.u-strasbg.fr/QueryCat/QueryCat";
    }
 
    protected void createChaine() {
@@ -267,6 +267,7 @@ public class ServerMocQuery extends Server  {
            addUpload(out,localPlan);
            out.close();
            aladin.trace(4,"Local data file sent");
+//           aladin.calque.newPlanDebug(urlConn);
            aladin.calque.newPlanCatalog( urlConn, getPlanName());
 
        } catch(Exception e) {

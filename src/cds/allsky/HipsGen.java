@@ -170,7 +170,7 @@ public class HipsGen {
         
         String info=null;
         try {
-           Param pa = Param.valueOf(opt);
+           Param pa = Param.get(opt);
            listParam.add(pa);
            opt=pa.toString();
            info=pa.info();
@@ -792,7 +792,7 @@ public class HipsGen {
 
         // Alertes sur les paramètres inutiles
         for( Param p : listParam ) {
-           if( !p.checkActions(actions) ) context.warning(p+" not use for these actions => param ignored");
+           if( !p.checkActions(actions) ) context.warning(p+" not use for these actions");
         }
 
         // Positionnement du frame par défaut

@@ -352,8 +352,8 @@ public class BuilderMapTiles extends Builder {
          // En cas de changement de bitpix sans valeur de cut indiquées
          // on procéde en deux tours, l'un pour mesurer la dynamique,
          // l'autre pour HiPSizer
-         boolean missingCut = pixelRangeCut == null || Double.isNaN(pixelRangeCut[0]);
-         boolean missingRange = pixelRangeCut == null || Double.isNaN(pixelRangeCut[2]);
+         boolean missingCut = !Context.hasCut(pixelRangeCut);
+         boolean missingRange = !Context.hasRange(pixelRangeCut);
          int nbStep = missingCut || missingRange ? 2 : 1;
          int gapSample = 1;
 
@@ -383,15 +383,15 @@ public class BuilderMapTiles extends Builder {
 
                if( sample != null ) context.initCut(sample);
                cutOrig = context.getCutOrig();
-               if( pixelRangeCut != null && !Double.isNaN(pixelRangeCut[0]) ) {
-                  if( cutOrig == null ) cutOrig = new double[5];
-                  cutOrig[0] = pixelRangeCut[0];
-                  cutOrig[1] = pixelRangeCut[1];
+               if( Context.hasCut(pixelRangeCut) ) {
+                  if( cutOrig == null ) cutOrig = new double[7];
+                  cutOrig[0] = pixelRangeCut[Context.CUTMIN];
+                  cutOrig[1] = pixelRangeCut[Context.CUTMAX];
                }
-               if( pixelRangeCut != null && !Double.isNaN(pixelRangeCut[2]) ) {
-                  if( cutOrig == null ) cut = new double[5];
-                  cutOrig[2] = pixelRangeCut[2];
-                  cutOrig[3] = pixelRangeCut[3];
+               if( Context.hasRange(pixelRangeCut) ) {
+                  if( cutOrig == null ) cut = new double[7];
+                  cutOrig[2] = pixelRangeCut[Context.RANGEMIN];
+                  cutOrig[3] = pixelRangeCut[Context.RANGEMAX];
                }
                context.setCutOrig(cutOrig);
                context.initParameters();
@@ -403,8 +403,11 @@ public class BuilderMapTiles extends Builder {
                }
                if( sample != null ) sample.free();
                context.setValidateCut(true);
-               context.info("Pixel dynamic range=[" + ip(cut[2], bzero, bscale) + " .. " + ip(cut[3], bzero, bscale) + "] cut=["
-                     + ip(cut[0], bzero, bscale) + " .. " + ip(cut[1], bzero, bscale) + "]");
+               context.info("Pixel dynamic range=[" 
+                     + ip(cut[Context.RANGEMIN], bzero, bscale) + " .. " 
+                     + ip(cut[Context.RANGEMAX], bzero, bscale) + "] cut=["
+                     + ip(cut[Context.CUTMIN], bzero, bscale) + " .. " 
+                     + ip(cut[Context.CUTMAX], bzero, bscale) + "]");
                context.setTileOrder(tileOrder);
             }
 
@@ -416,7 +419,6 @@ public class BuilderMapTiles extends Builder {
             for( long n = 0; n < nbRecord; n++, cRecordInBuf++ ) {
 
                if( cRecordInBuf == nbRecordInBuf ) {
-//                  f.readFully(buf);
                   int nbytes = f.read(buf);
                   if( nbytes==-1 ) throw new EOFException();
                   nbRecordInBuf = nbytes/sizeRecord;

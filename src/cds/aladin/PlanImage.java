@@ -1891,7 +1891,7 @@ public class PlanImage extends Plan {
     */
    private int[] getMinMaxBean(int [] bean) {
       double minLimit=0.003; 	// On laisse 3 pour mille du fond
-      double maxLimit=0.9995;    // On laisse 1 pour mille des etoiles
+      double maxLimit=0.9995;    // On laisse 0.5 pour mille des etoiles
       int totInfo;			// Volume de l'information
       int curInfo;			// Volume courant en cours d'analyse
       int [] mmBean = new int[2];	// indice du bean min et du bean max

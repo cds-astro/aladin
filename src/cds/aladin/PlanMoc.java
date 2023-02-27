@@ -69,6 +69,11 @@ public class PlanMoc extends PlanBGCat {
    protected int getTimeStackIndex() { return 0; }
 
    /** Création d'un Plan MOC à partir d'un MOC pré-éxistant */
+   protected PlanMoc(Aladin aladin, SMoc moc, String label) {
+      this(aladin,null,moc,label,null,-1,null);
+   }
+   
+   /** Création d'un Plan MOC à partir d'un MOC pré-éxistant */
    protected PlanMoc(Aladin aladin, SMoc moc, String label, Coord c, double radius,String url) {
       this(aladin,null,moc,label,c,radius,url);
    }
