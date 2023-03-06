@@ -333,9 +333,9 @@ public class CacheFits {
    protected boolean isOver() {
       if( map.size()>maxFile ) return true;
       if( maxMem<0 ) {
-         //         System.out.println("Cachemem="+Util.getUnitDisk(mem)+" freeMem="+Util.getUnitDisk(getFreeMem())
-         //               +" maxMem="+Util.getUnitDisk(-maxMem)
-         //               +" isOver="+(mem>getFreeMem()+maxMem));
+//                  System.out.println("Cachemem="+Util.getUnitDisk(mem)+" freeMem="+Util.getUnitDisk(getFreeMem())
+//                        +" maxMem="+Util.getUnitDisk(-maxMem)
+//                        +" isOver="+(mem>getFreeMem()+maxMem));
          //         return mem>getFreeMem()+maxMem;
          return getFreeMem()<-maxMem;
       }
@@ -346,16 +346,7 @@ public class CacheFits {
    public long getMem() {
       long mem=0L;
       if( map==null ) return mem;
-      
-//      Enumeration<String> e = map.keys();
-//      while( e.hasMoreElements() ) {
-//         String key = e.nextElement();
-//         FitsFile f = map.get(key);
-//         mem += f.fits.getMem();
-//      }
-      
       try { for( FitsFile f: map.values() ) mem += f.fits.getMem(); } catch( Exception e ) { };
-
       return mem;
    }
 

@@ -2029,7 +2029,7 @@ public class MyInputStream extends FilterInputStream {
    public boolean hasCommentCalib() { return commentCalib!=null || avm!=null; }
 
    public boolean hasCommentAVM() { return avm!=null; }
-
+   
    /** Recherche dans un flux JPEG le segment commentaire qui peut contenir une
     * calibration. La mémorise (voir getJpegCabib() )
     * Etend automatique le cache pour se faire.

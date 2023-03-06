@@ -52,7 +52,7 @@ public class Astrodate {
       int i = date.indexOf('-');
       if( i<0 ) throw new Exception("Not ISO date");
       
-      Tok tok = new Tok(date,"-T");
+      Tok tok = new Tok(date,"-T:");
       double A = Double.parseDouble( tok.nextToken() );
       double M = Double.parseDouble( tok.nextToken() );
       double J = Double.parseDouble( tok.nextToken() );

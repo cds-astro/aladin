@@ -405,7 +405,7 @@ public class BuilderIndex extends Builder {
                if( flagAllHDU && (code & Fits.HDU0SKIP) != 0 ) continue;
 
                // S'agit-il d'une image calibrée ?
-               if( fitsfile.calib==null ) {
+               if( fitsfile.getCalib()==null ) {
                   if( flagDefaultHDU ) break;
                   else continue;
                }

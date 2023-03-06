@@ -54,6 +54,7 @@ import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.moc.Healpix;
 import cds.moc.SMoc;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.tools.hpxwcs.Tile2HPX;
 import cds.tools.hpxwcs.Tile2HPX.WCSFrame;
@@ -743,6 +744,7 @@ public class Context {
          if( !setModeOverlay && !setModeMerge && !setModeTree ) throw new Exception("Unmatching mode ["+mode1+"]");
       }
    }
+   
    public void setModeMerge(ModeMerge modeMerge) { this.modeMerge=modeMerge;  }
    public void setModeOverlay(ModeOverlay modeOverlay) { this.modeOverlay = modeOverlay;  }
    public void setTarget(String target) { this.target = target; }
@@ -900,11 +902,16 @@ public class Context {
     * @see Context#overlayMean
     */
    public void setModeTree() { setModeTree((ModeTree)null); }
-   public void setModeTree(ModeTree mode) { this.modeTree = mode; }
+   public void setModeTree(ModeTree mode) { 
+      this.modeTree = mode; 
+   }
    public ModeTree getModeTree() { 
       if( modeTree==null ) return ModeTree.getDefault(bitpix);
       return modeTree;
    }
+   // Le modeTree a été positionné manuellement ?
+   public boolean isSetModeTree() { return modeTree!=null; }
+
 
    public void setDataRange(String scut) throws Exception {
       StringTokenizer st = new StringTokenizer(scut," ");
@@ -987,15 +994,15 @@ public class Context {
 
       // Positionnement initiale du HiPS par défaut
       if( target==null ) {
-         Coord c = fitsfile.calib.getImgCenter();
-         double r = Math.max( fitsfile.calib.getImgHeight(),fitsfile.calib.getImgWidth());
+         Coord c = fitsfile.getCalib().getImgCenter();
+         double r = Math.max( fitsfile.getCalib().getImgHeight(),fitsfile.getCalib().getImgWidth());
          String s = Util.round(c.al,5)+" "+(c.del>=0?"+":"")+Util.round(c.del,5) +" "+Util.round(r,5);
          setTarget(s);
          info("Set default target => "+s);
       }
 
       // Mémorisation de la résolution initiale
-      double [] res = fitsfile.calib.GetResol();
+      double [] res = fitsfile.getCalib().GetResol();
       resolution = Util.myRound(Math.min(res[0],res[1]));
       
       lastImgEtalon = imgEtalon;
@@ -2267,7 +2274,7 @@ public class Context {
          out.write(res.getBytes());
       } finally {  if( out!=null ) out.close(); }
    }
-
+   
    /** Création d'un fichier metadata.txt associé au HiPS */
    protected void writeMetadataFits() throws Exception {
       writeMetadataFits(getOutputPath(),header);
@@ -2306,18 +2313,54 @@ public class Context {
    protected void createPropForVisu() {
       try {
          File f = new File( outputPath+Util.FS+Constante.FILE_PROPERTIES );
-         if( !f.exists() ) writePropertiesFile();
+         if( !f.exists() ) writePropertiesFile(true);
       } catch( Exception e ) {}
    }
-
-   /** Création, ou mise à jour des fichiers meta associées au survey
+   
+   /** Retourne la date de la dernière release du HiPS en la lisant directement dans le
+    * fichier properties existant. Converti en date Unix (secondes depuis 1970), 0 si aucune
     */
+   private long getLastModifiedFromProp() {
+      try {
+         MyProperties prop = new MyProperties();
+         loadProperties(prop,outputPath);
+         String date = prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
+         return Astrodate.JDToUnix( Astrodate.dateToJD(date));
+      } catch( Exception e ) { }
+      return 0L;
+   }
+   
+   /** Création, ou mise à jour des fichiers meta associées au survey */
    protected void writeMetaFile() throws Exception {
-      info("properties & index.html files created or updated");
-      writePropertiesFile();
       
-      // On en profite pour écrire le fichier index.html
-      writeIndexHtml();
+      // Récupération des dates respectives du fichier index.html, du fichier
+      // properties et de la dernière release (hips_release_date dans fichier properties)
+      File fprop = new File( getOutputPath()+Util.FS+Constante.FILE_PROPERTIES);
+      long dateProp = fprop.exists() ? fprop.lastModified()/1000L : 0;
+      long dateLastRelease = getLastModifiedFromProp();
+      File find = new File( getOutputPath()+Util.FS+"index.html");
+      long dateIndex = find.exists() ? find.lastModified()/1000L : 0;
+      
+      info("properties file "+(dateLastRelease==0 ? "created":"updated"));
+      writePropertiesFile();
+
+      // On compare la date de la dernière release hips à la date de modif
+      // du fichier index.html. Si elles sont trop différentes (>2s), on estimera qu'il y 
+      // a eu mise à jour manuelle du fichier index.html, et il sera conservé tel que.
+      
+      // La date prise en compte pour le fichier properties sera celle de la hips_release_date
+      // pour prendre en compte une modif manuelle possible du fichier properties.
+      // Mais comme cette date n'est précise qu'à la minute près, on utilisera la date
+      // du fichier properties si la différence avec la date du fichier index.html est
+      // inférieure à 2mn (car les arrondis à la minute ne permettraient pas une comparaison correcte)
+      long dateP = Math.abs(dateIndex-dateLastRelease)<120 ? dateProp : dateLastRelease;
+      
+//      System.out.println("Index="+dateIndex+" properties="+dateProp
+//            +" properties.release="+dateLastRelease+" => dateP="+dateP+" delta="+(dateIndex-dateP));
+               
+      boolean flagManual = dateIndex!=0 && dateP!=0 && Math.abs(dateIndex-dateP)>2;
+      info("index.html file "+(dateIndex==0 ? "created": flagManual ? "kept as is (probably modified manually)": "updated"));
+      if( !flagManual ) writeIndexHtml();
 
       // Et metadata.fits
       writeMetadataFits();
@@ -2327,8 +2370,11 @@ public class Context {
    /** Création, ou mise à jour du fichier des Properties associées au survey
     * @param stream null pour l'écrire à l'emplacement prévu par défaut
     */
-   protected void writePropertiesFile() throws Exception { writePropertiesFile(null); }
-   protected void writePropertiesFile(OutputStreamWriter stream) throws Exception {
+   protected void writePropertiesFile() throws Exception { writePropertiesFile(null,notouch); }
+   protected void writePropertiesFile(boolean notouch) throws Exception { writePropertiesFile(null,notouch); }
+   protected void writePropertiesFile(OutputStreamWriter stream) throws Exception { writePropertiesFile(stream,notouch); }
+      
+   protected void writePropertiesFile(OutputStreamWriter stream,boolean notouch) throws Exception {
 
 
       // Ajout de l'IVORN si besoin
@@ -2388,7 +2434,11 @@ public class Context {
 
       setPropriete(Constante.KEY_HIPS_BUILDER,"Aladin/HipsGen "+Aladin.VERSION);
       setPropriete(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
-      if( !notouch ) setPropriete(Constante.KEY_HIPS_RELEASE_DATE,getNow());
+      if( !notouch ) {
+         String date = getNow();
+         setPropriete(Constante.KEY_HIPS_RELEASE_DATE,date);
+//         System.err.println("date="+date+" =>"+Astrodate.JDToUnix(Astrodate.dateToJD(date)));
+      }
 
       setPropriete(Constante.KEY_HIPS_FRAME, getFrameName());
       setPropriete(Constante.KEY_HIPS_ORDER,minMaxOrder[1]+"");
@@ -3057,10 +3107,13 @@ public class Context {
    /** Lecture des propriétés */
    protected void loadProperties() throws Exception { loadProperties(getOutputPath()); }
    protected void loadProperties(String path) throws Exception {
+      prop = new MyProperties();
+      loadProperties(prop,path);
+   }
+   private void loadProperties(MyProperties prop,String path) throws Exception {
       waitingPropertieFile();
       try {
          String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
-         prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
             if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");

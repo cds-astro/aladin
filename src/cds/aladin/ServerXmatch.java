@@ -38,14 +38,13 @@ import cds.tools.MultiPartPostOutputStream;
 public class ServerXmatch extends ServerMocQuery  {
 
 
-   protected void init() {
+   protected void init(Aladin aladin) {
       type        = CATALOG;
       title       = "X-match query";
       aladinLabel = "X-match";
       title1      = "Choose a local table";
       title2      = "Catalog to x-match";
       baseUrl     = "http://cdsxmatch.cds.unistra.fr/xmatch/api/v1/sync";
-//      baseUrl      = "http://axel.u-strasbg.fr/cgi-bin/qat2s.cgi.bash";
    }
 
    protected void createChaine() {

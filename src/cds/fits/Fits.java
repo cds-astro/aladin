@@ -133,7 +133,7 @@ final public class Fits {
    
    private int [] hdu=null;   // Liste des HDU à prendre en compte (en cas de décompression requise)
 
-   public Calib calib; // Calibration astrométrique
+   private Calib calib; // Calibration astrométrique
 
    /** Donne une approximation de l'occupation mémoire (en bytes) */
    public long getMem() {
@@ -143,7 +143,7 @@ final public class Fits {
       if( headerFits0 != null ) mem += headerFits0.getMem();
       if( pixels != null ) mem += pixels.length;
       // if( pix8!=null ) mem+=pix8.length;
-      if( rgb != null ) mem += 4*rgb.length;
+      if( rgb != null ) mem += 4L*rgb.length;
       return mem;
    }
    
@@ -265,20 +265,21 @@ final public class Fits {
       try {
          is = new MyInputStream(new FileInputStream(filename));
          if( scanCommentCalib ) {
-            is.getType(); // Pour être sûr de lire le commentaire éventuel
+            
+            long type = is.getType(); // Pour être sûr de lire le commentaire éventuel
+            if( !is.hasCommentCalib() ) is.fastExploreCommentOrAvmCalib(filename);
             if( is.hasCommentCalib() ) {
-               Dimension dim = new Dimension(0,0);;
+               Dimension dim = new Dimension(0,0);
                if( is.hasCommentAVM() )  dim = getSizeJPEGPNG(filename);  // il me faut les dimensions a priori
                headerFits = is.createHeaderFitsFromCommentCalib(dim.width,dim.height);
                bidouilleJPEGPNG(headerFits,filename);
+            }
 
-               try {
-                  setCalib(new Calib(headerFits));
-               } catch( Exception e ) {
-                  System.err.println("loadJpeg("+filename+") : no calib found !");
-                  calib = null;
-               }
-
+            try {
+               setCalib(new Calib(headerFits));
+            } catch( Exception e ) {
+               System.err.println("loadPreview("+filename+") : no calib found !");
+               setCalib(null);
             }
          }
          loadPreview(is, xCell, yCell, widthCell, heightCell, color, format);
@@ -868,7 +869,7 @@ final public class Fits {
          try {
             setCalib(new Calib(headerFits));
          } catch( Exception e ) {
-            calib = null;
+            setCalib(null);
          }
       }
    }
@@ -886,7 +887,7 @@ final public class Fits {
       try {
          setCalib(new Calib(headerFits));
       } catch( Exception e ) {
-         calib = null;
+         setCalib(null);
       }
    }
 
@@ -926,7 +927,7 @@ final public class Fits {
       try {
          setCalib(new Calib(headerFits));
       } catch( Exception e ) {
-         calib = null;
+         setCalib(null);
       }
    }
    
@@ -984,7 +985,7 @@ final public class Fits {
             // calib
          } else if( is.hasCommentCalib() ) {
             Dimension dim = new Dimension(0,0);
-            if( is.hasCommentAVM() )  dim = getSizeJPEGPNG(filename);  // il me faut les dimensions a priori
+            if( is.hasCommentAVM() ) dim = getSizeJPEGPNG(filename);  // il me faut les dimensions a priori
             headerFits = is.createHeaderFitsFromCommentCalib(dim.width,dim.height);
             bidouilleJPEGPNG(headerFits,filename);
             
@@ -1093,7 +1094,7 @@ final public class Fits {
             
          } catch( Exception e ) {
             if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-            calib = null;
+            setCalib(null);
          }
          this.setFilename(filename);
       } finally {
@@ -2287,7 +2288,7 @@ final public class Fits {
    public void free() {
       pixels = null;
       rgb = null;
-      calib = null;
+      setCalib(null);
       headerFits = headerFits0 = null;
       width = height = bitpix = 0;
       widthCell = heightCell = depthCell = xCell = yCell = zCell = ext = depth = 0;

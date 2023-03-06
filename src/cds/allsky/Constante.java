@@ -218,7 +218,7 @@ public class Constante {
       sdf.setTimeZone(utc);
    }
 
-   /** Retourne le temps passé en paramètre au format ISO8601 */
+   /** Retourne le temps passé en paramètre au format ISO8601 (sera arrondi à la minute près */
    static public String getDate() { return getDate( System.currentTimeMillis() ); }
    static public String getDate(long time) { return sdf.format(new Date(time))+"Z"; }
 

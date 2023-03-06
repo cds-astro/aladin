@@ -750,7 +750,7 @@ public class HipsGen {
 
         // Ajustement de la méthode par défaut (moyenne pour les FITS, médiane first pour les couleurs)
         // à moins qu'elle n'ait été spécifiquement indiquée
-        if( context.isColor() && !flagModeTree ) {
+        if( context.isColor() && !context.isSetModeTree() ) {
             context.setModeTree( ModeTree.treeMedian );
         }
 

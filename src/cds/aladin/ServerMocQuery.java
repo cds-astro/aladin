@@ -63,13 +63,15 @@ public class ServerMocQuery extends Server  {
     private JComboBox  comboMaxNbRows;
 
   /** Initialisation des variables propres à MocQuery */
-   protected void init() {
+   protected void init(Aladin aladin) {
       type        = CATALOG;
       title       = "MOC query";
       title1      = "Choose a MOC";
       title2      = "Catalog to query";
       aladinLabel = "MOC";
       baseUrl      = "http://cdsxmatch.u-strasbg.fr/QueryCat/QueryCat";
+//      baseUrl      = "http://cdsxmatch.cds.unistra.fr/QueryCat/QueryCat";
+//      baseUrl = aladin.glu.getURL("queryByMoc")+"";
    }
 
    protected void createChaine() {
@@ -83,7 +85,7 @@ public class ServerMocQuery extends Server  {
    protected ServerMocQuery(Aladin aladin) {
       this.aladin = aladin;
       createChaine();
-      init();
+      init(aladin);
 
       setBackground(Aladin.BLUE);
       setLayout(null);

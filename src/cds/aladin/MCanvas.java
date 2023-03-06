@@ -598,10 +598,6 @@ MouseWheelListener, Widget
       int widthw;	     // Taille du mot
       String text =  w.text;
       
-      if( text.equals("4.6263650339426563E-10") ) {
-         System.out.println("J'y suis");
-      }
-      
       // Prise en compte de la precision pour aligner le point décimal
       if( w.precision>=0 ) {
          int j = text.indexOf(' ');

@@ -513,12 +513,12 @@ final public class ThreadBuilderTile {
 
                      // Détermination du pixel dans l'image à traiter
                      try {
-                        file.fitsfile.calib.GetXY(coo,false);
+                        file.fitsfile.getCalib().GetXY(coo,false);
                         
                      // gasp !
                      } catch( Exception e ) {
-                        System.err.println("Problem on calib: "+file.name+" => exception "+e.getMessage());
-//                        e.printStackTrace();
+                        System.err.println("Problem on calib: "+file.name+" => exception "+e.getMessage()+" tile="+order+"/"+npix_file);
+                        if( context.getVerbose()>=3 ) e.printStackTrace();
 //                        System.exit(1);
                         continue;
                      }

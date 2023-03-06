@@ -1221,7 +1221,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    protected void loadAssoc( String cone ) { 
       if( cone==null ) { loadAssoc(); return; }
       String ident = "\"AD "+internalId+"\"";
-     exec( ident+" = "+getAssocCmd()+" "+cone+"; select "+ident );
+      exec( ident+" = "+getAssocCmd()+" "+cone+"; select "+ident );
    }
    protected String getAssocCmd() {
       String cat = Directory.getCatParent( internalId.substring(internalId.indexOf('/')+1) );

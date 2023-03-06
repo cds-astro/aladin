@@ -171,7 +171,7 @@ public class MocGen {
             if( flagAllHDU && (code & Fits.HDU0SKIP) != 0 ) continue;
             
            // S'agit-il d'une image calibrée ?
-            if( f.calib==null ) continue;
+            if( f.getCalib()==null ) continue;
             
             if( firstDepth==0 ) firstDepth=f.depth;
             else if( f.depth!=firstDepth ) continue;
