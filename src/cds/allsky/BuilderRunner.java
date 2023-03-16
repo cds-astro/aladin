@@ -223,7 +223,7 @@ public abstract class BuilderRunner extends Builder {
             context.setCutOrig(cutOrig);
          }
          
-         if( cutOrig[0]==cutOrig[1] ) {
+         if( cutOrig!=null && cutOrig[0]==cutOrig[1] ) {
             context.warning("Suspicious pixel cut: ["+ip(cutOrig[Context.CUTMIN],bz,bs)
             +" .. "+ip(cutOrig[Context.CUTMAX],bz,bs)+"] => YOU WILL PROBABLY HAVE TO CHANGE/EDIT THE properties FILE VALUES");
          }
@@ -237,10 +237,12 @@ public abstract class BuilderRunner extends Builder {
          if( this instanceof BuilderJpg ) {
             context.info("Generating 8-bit tiles (PNG or JPEG) directly from the original images...");
          } else {
-            context.info("Data range ["+ip(cutOrig[Context.RANGEMIN],bz,bs)
-            +" .. "+ip(cutOrig[Context.RANGEMAX],bz,bs)+"], pixel cut ["
-            +ip(cutOrig[Context.CUTMIN],bz,bs)+" .. "
-            +ip(cutOrig[Context.CUTMAX],bz,bs)+"]");
+            if( cutOrig!=null ) {
+               context.info("Data range ["+ip(cutOrig[Context.RANGEMIN],bz,bs)
+               +" .. "+ip(cutOrig[Context.RANGEMAX],bz,bs)+"], pixel cut ["
+               +ip(cutOrig[Context.CUTMIN],bz,bs)+" .. "
+               +ip(cutOrig[Context.CUTMAX],bz,bs)+"]");
+            }
          }
 
       } else context.initParameters();
