@@ -158,7 +158,6 @@ public class BuilderCut extends Builder {
             
          } catch( Exception e ) { i--; continue; }
       }
-      test.writeFITS("/data/Test.fits");
       double cutMinPourcent = -1;
       double cutMaxPourcent = -1;
       if( Context.hasPourcentCut( context.pixelRangeCut) ) {

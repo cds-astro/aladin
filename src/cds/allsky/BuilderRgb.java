@@ -594,14 +594,15 @@ public class BuilderRgb extends BuilderRunner {
                   tot += pix[c];
                }
             }
-            if( missing!=-1 ) pix[missing] = tot/2;
+//            if( missing!=-1 ) pix[missing] = tot/2;
             
             int pixel;
             double[] pix8 = new double[3];
             if( tot==0 ) pixel=0x00;
             else {
-               pixel = 0xFF;
+               tot=0;
                for( int c=0; c<3; c++ ) { 
+                  if( c==missing ) continue;
                   int itcm =  (int)Math.floor( pix[c] );
                   if( tcm[c]==null ) pix8[c] = itcm;
                   else if( itcm>=255 ) pix8[c] = tcm[c][255];
@@ -616,6 +617,12 @@ public class BuilderRgb extends BuilderRunner {
                         pix8[c] = (int)Math.round( v1*d2  + v2*d1 );
                      }
                   }
+                  tot += pix8[c];
+               }
+               
+               if( missing!=-1 ) pix8[missing]=tot/2.;
+               pixel = 0xFF;
+               for( int c=0; c<3; c++ ) { 
                   pixel = (pixel<<8) | ((int)pix8[c] & 0xFF);
                }
             }

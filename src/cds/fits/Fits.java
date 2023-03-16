@@ -831,36 +831,40 @@ final public class Fits {
       }
       
       // Untrim ?
-      if( flagTrim && headerFits.hasKey("XOFFSET") ) {
-         if( w!=-1 ) throw new Exception("Trimed FITS cannot be opened by cells");
-         int owidth=width;
-         int oheight=height;
-         int xoffset = headerFits.getIntFromHeader("XOFFSET");
-         int yoffset = headerFits.getIntFromHeader("YOFFSET");
-         width  = widthCell = headerFits.getIntFromHeader("ZNAXIS1");
-         height = heightCell = headerFits.getIntFromHeader("ZNAXIS2");
+      try {
+         if( flagTrim && headerFits.hasKey("XOFFSET") ) {
+            if( w!=-1 ) throw new Exception("Trimed FITS cannot be opened by cells");
+            int owidth=width;
+            int oheight=height;
+            int xoffset = headerFits.getIntFromHeader("XOFFSET");
+            int yoffset = headerFits.getIntFromHeader("YOFFSET");
+            width  = widthCell = headerFits.getIntFromHeader("ZNAXIS1");
+            height = heightCell = headerFits.getIntFromHeader("ZNAXIS2");
 
-         byte [] opixels = pixels;
-         pixels = new byte[width*height*n];
+            byte [] opixels = pixels;
+            pixels = new byte[width*height*n];
 
-         headerFits.setKeyValue("NAXIS1",width+"");
-         headerFits.setKeyValue("NAXIS2",height+"");
-         headerFits.setKeyValue("XOFFSET",null);
-         headerFits.setKeyValue("YOFFSET",null);
-         headerFits.setKeyValue("ZNAXIS1",null);
-         headerFits.setKeyValue("ZNAXIS2",null);
+            headerFits.setKeyValue("NAXIS1",width+"");
+            headerFits.setKeyValue("NAXIS2",height+"");
+            headerFits.setKeyValue("XOFFSET",null);
+            headerFits.setKeyValue("YOFFSET",null);
+            headerFits.setKeyValue("ZNAXIS1",null);
+            headerFits.setKeyValue("ZNAXIS2",null);
 
-         keyAddValue("CRPIX1",-xoffset);
-         keyAddValue("CRPIX2",-yoffset);
+            keyAddValue("CRPIX1",-xoffset);
+            keyAddValue("CRPIX2",-yoffset);
 
-         initBlank();
-         int y1=yoffset;
-         int length = owidth * n;
-         for( y=0; y<oheight; y++, y1++ ) {
-            int srcPos = ( y*owidth ) * n;
-            int destPos= ( y1*width + xoffset ) * n;
-            System.arraycopy(opixels, srcPos, pixels, destPos, length);
+            initBlank();
+            int y1=yoffset;
+            int length = owidth * n;
+            for( y=0; y<oheight; y++, y1++ ) {
+               int srcPos = ( y*owidth ) * n;
+               int destPos= ( y1*width + xoffset ) * n;
+               System.arraycopy(opixels, srcPos, pixels, destPos, length);
+            }
          }
+      } catch( Exception e1 ) { 
+//         System.err.println("Probably not a trimed FITS !");
       }
 
       // l'extraction de la calib depuis l'entête FITS ne sera pas faite
@@ -1379,7 +1383,7 @@ final public class Fits {
          if( zip ) os = new GZIPOutputStream(os);
          writeFITS(os);
       } finally {
-         os.close();
+         if( os!=null ) os.close();
       }
       this.setFilename(filename);
    }
@@ -3006,10 +3010,18 @@ final public class Fits {
     */
    public Fits untrimFactory() throws Exception {
       if( !headerFits.hasKey("XOFFSET") ) return null;
-      int xoffset = headerFits.getIntFromHeader("XOFFSET");
-      int yoffset = headerFits.getIntFromHeader("YOFFSET");
-      int nwidth  = headerFits.getIntFromHeader("ZNAXIS1");
-      int nheight = headerFits.getIntFromHeader("ZNAXIS2");
+      int xoffset;
+      int yoffset;
+      int nwidth;
+      int nheight;
+      try {
+         xoffset = headerFits.getIntFromHeader("XOFFSET");
+         yoffset = headerFits.getIntFromHeader("YOFFSET");
+         nwidth = headerFits.getIntFromHeader("ZNAXIS1");
+         nheight = headerFits.getIntFromHeader("ZNAXIS2");
+      } catch( NullPointerException e ) {
+         return null;
+      }
 
       int n = Math.abs(bitpix)/8;
       
