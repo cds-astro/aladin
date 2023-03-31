@@ -33,6 +33,7 @@ import cds.tools.Util;
 
 /**
  * Utilitaires FITS dont notamment la décompression RICE,GZIP,etc...
+ * @version 1.1 - Mars 2023 - Support des quantifications RICE SUBTRACTIVE_DITHER...
  * @version 1.0 - Janvier 2020 - suite à une réorganisation du code (PlanImageFits, MyInputStreamCached)
  * @author Pierre Fernique
  *
@@ -58,6 +59,13 @@ public class UtilFits {
    // Liste des mots clés supplémentaires à ignorer dans le cas d'une compression Lupton (Pan-STARRs)
    static private String [] KEYIGNORELUPTON = { "BZERO","BSCALE","BLANK","BOFFSET","BSOFTEN" };
    
+   
+   static final int NO_DITHER=0;
+   static final int SUBTRACTIVE_DITHER_1=1;
+   static final int SUBTRACTIVE_DITHER_2=2;
+   static final int DITHER_BLANK = -2147483647;
+   static final int DITHER_BLANK_BIS = -2147483646;              // Trouvé dans des données récentes !!!!
+   
    /** Décompression d'une image dans un "flux" FITS. ne traite que le HDU courant
     * @param outHeader entête FITS de sortie correspondant à la matrice de pixels retournée (ou à la table s'il ne s'agit pas d'une image)
     * @param inHeader entête FITS , éventuellement déjà créée et/ou lue
@@ -74,6 +82,7 @@ public class UtilFits {
        int taille;       // nombre d'octets a lire
        int n;            // nombre d'octets pour un pixel
        int bitpix, naxis1,naxis2,npix;
+       double zblank=Double.NaN;
 
        // Creation et/ou Lecture de l'entete Fits si pas déjà fait
        if( inHeader==null ) inHeader=new HeaderFits(dis);
@@ -91,8 +100,10 @@ public class UtilFits {
           dis.skip( theap+pcount );
           return new byte [0];
        }
+       
 
-       // Proriétés de l'image finale
+
+       // Propriétés de l'image finale
        try { bitpix = inHeader.getIntFromHeader("ZBITPIX"); }
        catch( Exception e ) {
 //          throw new Exception("Not a FITS image compressed HDU (missing ZBITPIX)");
@@ -106,6 +117,9 @@ public class UtilFits {
        naxis2 = inHeader.getIntFromHeader("ZNAXIS2");
        npix = n = Math.abs(bitpix)/8;    // Nombre d'octets par pixel
        taille = naxis1*naxis2*n;            // Taille de la matrice final en octets
+       
+       // Un ZBLANK ?
+       try { zblank = inHeader.getDoubleFromHeader("ZBLANK"); } catch( Exception e ) {}
        
        // Détermination de la méthode de compression
        String sCmp = inHeader.getStringFromHeader("ZCMPTYPE");
@@ -126,14 +140,24 @@ public class UtilFits {
        int val2=4;    // bsize pour RICE
        try { val2 = inHeader.getIntFromHeader("ZVAL2"); } catch( Exception e ) {}
 
+       
        // Paramètre de quantification ?
-       try {
-          String quantiz  = inHeader.getStringFromHeader("ZQUANTIZ");
-//          String zdither0 = inHeader.getStringFromHeader("ZDITHER0");
-//          if( quantiz!=null && !quantiz.equals("NO_DITHER") ) {
-//             System.err.println(sCmp+" FITS image problem (unsupported ZQUANTIZ ["+quantiz+"] => assuming NO_DITHER)");
-//          }
-       } catch( Exception e ) {}
+       int zdither0 = 0;
+       int zquantiz = NO_DITHER;
+       
+       String quantiz  = inHeader.getStringFromHeader("ZQUANTIZ");
+       if( quantiz!=null ) {
+          if( "SUBTRACTIVE_DITHER_1".equals(quantiz) ) zquantiz=SUBTRACTIVE_DITHER_1;
+          else if( "SUBTRACTIVE_DITHER_2".equals(quantiz) ) zquantiz=SUBTRACTIVE_DITHER_2;
+          else if( "NO_DITHER".equals(quantiz) ) zquantiz=NO_DITHER;
+          else {
+             System.err.println(sCmp+" FITS image problem (unsupported ZQUANTIZ ["+quantiz+"] => assuming NO_DITHER)");
+          }
+          if( zquantiz!=NO_DITHER ) {
+             try { zdither0 = inHeader.getIntFromHeader("ZDITHER0"); } catch( Exception e ) { }
+             randomGenerator();
+          }
+       }
 
        int posCompress=0;            // Position du champ du segment compressé
        int posgzipCompress=-1;       // Position du champ du segment s'il est directement GZIPé
@@ -221,17 +245,23 @@ public class UtilFits {
                 // RICE
                 if( nCmp==RICE1 || nCmp==RICEONE)  {
                 
-                   // Ligne par ligne ? => on peut écrire directement dans la matrice de pixels
-                   if( tile1==naxis1 && tile2==1 ) {
-                      decompRice(heap,pos,pixelsOrigin,pixPos,tile1*tile2,val1,val2,bitpix,bzero,bscale);
-                      
-                   // Sinon il faut passer par un tableau intermédiaire puis, dans un deuxième
-                   // temps, placer la tuile au bon endroit
-                   } else {
-                      byte [] tile = new byte [ tile1*tile2*npix ];
-                      decompRice( heap,pos,tile,0,tile1*tile2,val1,val2,bitpix,0,1);
-                      copyTile( tile,tile1,tile2, pixelsOrigin,pixPos,naxis1,naxis2, bitpix,bzero,bscale);
-                   }
+//                   // Ligne par ligne ? => on peut écrire directement dans la matrice de pixels
+//                   if( tile1==naxis1 && tile2==1 ) {
+//                      decompRice(heap,pos,pixelsOrigin,pixPos,tile1*tile2,val1,val2,bitpix,bzero,bscale);
+//                      
+//                   // Sinon il faut passer par un tableau intermédiaire puis, dans un deuxième
+//                   // temps, placer la tuile au bon endroit
+//                   } else {
+//                      byte [] tile = new byte [ tile1*tile2*npix ];
+//                      decompRice( heap,pos,tile,0,tile1*tile2,val1,val2,bitpix,0,1);
+//                      copyTile( tile,tile1,tile2, pixelsOrigin,pixPos,naxis1,naxis2, bitpix,bzero,bscale);
+//                   }
+                   
+                 int tileBitpix=32;
+                 byte [] tile = new byte [ tile1*tile2*Math.abs(tileBitpix)/8 ];
+                 decompRice( heap,pos,tile,0,tile1*tile2,val1,val2,tileBitpix);
+                 unQuantiz( tile,tileBitpix,tile1,tile2, pixelsOrigin,pixPos,naxis1,naxis2, bitpix,zblank,bzero,bscale,zquantiz,zdither0,numTile);
+
                    
                 // GZIP1
                 } else if( nCmp==GZIP1 ) {
@@ -372,10 +402,9 @@ public class UtilFits {
       return byteout.toByteArray();
    }
 
-   // Décompression d'une tuile codée RICE et recodage immédiat dans la matrice de pixel (array)
+   // Décompression d'une tuile codée RICE et recodage dans la matrice de pixel (array)
    // Code courageusement traduit de CFITSIO
-   public static void decompRice(byte buf[],int pos,byte array[], int offset, int tileSize,int nblock,int bsize,
-         int bitpix,double bzero,double bscale) throws Exception {
+   public static void decompRice(byte buf[],int pos,byte array[], int offset, int tileSize,int nblock,int bsize, int bitpix) throws Exception {
       int i, k, imax;
       int nbits, nzero, fs;
       int b, diff;
@@ -424,7 +453,7 @@ public class UtilFits {
          if (imax > tileSize) imax = tileSize;
          if (fs<0) {
             /* low-entropy case, all zero differences */
-            for ( ; i<imax; i++) setPixVal(array,bitpix,i+offset,lastpix*bscale+bzero);
+            for ( ; i<imax; i++) setPixVal(array,bitpix,i+offset,lastpix);
          } else if (fs==fsmax) {
             /* high-entropy case, directly coded pixel values */
             for ( ; i<imax; i++) {
@@ -453,7 +482,7 @@ public class UtilFits {
                   diff = ~(diff>>>1);
                }
                lastpix = diff+lastpix;
-               setPixVal(array,bitpix,i+offset,lastpix*bscale+bzero);
+               setPixVal(array,bitpix,i+offset,lastpix);
             }
          } else {
             /* normal case, Rice coding */
@@ -482,12 +511,12 @@ public class UtilFits {
                   diff = ~(diff>>>1);
                }
                lastpix = diff+lastpix;
-               setPixVal(array,bitpix,i+offset,lastpix*bscale+bzero);
+               setPixVal(array,bitpix,i+offset,lastpix);
             }
          }
       }
    }
-
+   
    private final static long MASK = 0xFFFFFFFFL;
 
    private static final int[] nonzero_count = {
@@ -509,10 +538,63 @@ public class UtilFits {
          8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
    };
 
+   
+   static private double DITHEROFF = 500.;
+   
+   // "Dequantifiation" RICE de la tuile au bon endroit de la matrice des pixels
+   // Cf Algorithme section 10.2 https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
+   // + annexe I pour la fonction aléatoire
+   private static void unQuantiz(byte [] tile, int tileBitpix, int tileWidth, int tileHeight, 
+         byte [] out,  int outPos,  int outWidth,    int outHeight,
+         int bitpixOut, double zblank, double bzero, double bscale,
+         int zquantiz, int zdither0, int numTile) throws Exception {
 
-    // Copie des pixels de la tuile au bon endroit de la matrice des pixels
-    private static void copyTile(byte [] tile, int tileWidth, int tileHeight, 
-                         byte [] pix,  int pixPos,  int width,    int height,
+      int i0=0;
+      int i1=0;
+      if( zquantiz!=NO_DITHER ) {
+         i0 = ( numTile-1+zdither0) % N_RANDOM;
+         i1 = (int)( RN[i0]*DITHEROFF );
+      }
+      double pix;
+      
+
+      for( int y=0; y<tileHeight; y++ ) {
+         for( int x=0; x<tileWidth; x++ ) {
+            
+//            if( outPos + y*outWidth +x==outWidth-1 ) {
+//               int i = (y*tileWidth +x)*4;
+//               for( int j=0;j<4; j++,i++ ) {
+//                  System.out.println(String.format("%s = %x","t["+i+"]", tile[ i ]));
+//               }
+//               System.out.println("val="+getPixValAsInt(tile, tileBitpix, y*tileWidth +x ));
+//            }
+
+            int val = getPixValAsInt(tile, tileBitpix, y*tileWidth +x );
+
+            if( zquantiz!=NO_DITHER ) {
+               double r = RN[i1++];
+               r=0;
+               if( i1>=DITHEROFF ) {
+                  i0++;
+                  if( i0==N_RANDOM ) i0=0;
+                  i1 = (int)( RN[i0]*DITHEROFF );
+               }
+
+               if( zquantiz==SUBTRACTIVE_DITHER_2 && (val==DITHER_BLANK /* || val==DITHER_BLANK_BIS */) ) pix=0.;
+               else if( val==zblank ) pix=Double.NaN;
+               else pix = (val - r +0.5)*bscale+bzero;
+
+            } else {
+               pix = val*bscale+bzero;
+            }
+            setPixVal( out, bitpixOut, outPos + y*outWidth +x, pix);
+         }
+      }
+   }
+
+   // Copie des pixels de la tuile au bon endroit de la matrice des pixels
+   private static void copyTile(byte [] tile, int tileWidth, int tileHeight, 
+         byte [] pix,  int pixPos,  int width,    int height,
                          int bitpix, double bzero, double bscale ) throws Exception {
 
        // Si pas de facteur d'échelle, on va recopier d'ou coup les bytes
@@ -547,6 +629,29 @@ public class UtilFits {
        }
     }
     
+    static final int N_RANDOM = 10000;
+    static double RN[] = null;
+    
+    /** Génération d'un tableau de 10000 valeurs random entre 0 et 1 suivant la méthode recommandée 
+     * par le standard Fits, annexe I
+     */
+    static private void randomGenerator() {
+       if( RN!=null ) return;   // Déjà initialisé
+       RN = new double[N_RANDOM];
+       int ii;
+       double a = 16807.0;
+       double m = 2147483647.0;
+       double temp, seed;
+
+       /* initialize the random numbers */
+       seed = 1;
+       for (ii = 0; ii < N_RANDOM; ii++) {
+          temp = a * seed;
+          seed = temp -m * ((int) (temp / m) );
+          /* divide by m for value between 0 and 1 */
+          RN[ii] = seed / m;
+       }
+    }
     
     // ----------------------- Utilitaires de manipulation des types primitifs en bytes --------------------
     
@@ -592,6 +697,18 @@ public class UtilFits {
           }
           return Double.NaN;
        } catch( Exception e ) { return Double.NaN; }
+
+    }
+
+    static final public int getPixValAsInt(byte[] t,int bitpix,int i) {
+       try {
+          switch(bitpix) {
+             case   8: return getByte(t,i);
+             case  16: return getShort(t,i*2);
+             case  32: return getInt(t,i*4);
+          }
+          return 0;
+       } catch( Exception e ) { return 0; }
 
     }
 

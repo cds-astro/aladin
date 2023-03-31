@@ -86,6 +86,9 @@ public class PlanImageFitsCmp extends PlanImage {
       headerFits.setKeyword("NAXIS1",width+"");
       headerFits.setKeyword("NAXIS2",height+"");
       headerFits.setKeyword("NAXIS","2");
+      
+      // Les paramètres FITS facultatifs
+      loadFitsHeaderParam(headerFits);
 
       d1=new Date(); temps = (int)(d1.getTime()-d.getTime()); d=d1;
       Aladin.trace(3," => Reading, uncompressing "+(cut?"and autocutting ":"")+"in "+Util.round(temps/1000.,3)+" s => "+Util.round(((double)offsetLoad/temps)/(1024*1.024),2)+" Mbyte/s");

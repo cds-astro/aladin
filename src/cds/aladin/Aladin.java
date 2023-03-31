@@ -165,6 +165,7 @@ import cds.xml.XMLParser;
  * @beta <UL>
  * @beta    <LI> New "Deprecated" branch in the resource tree
  * @beta    <LI> Support to "no XMP" AVM tags 
+ * @beta    <LI> FITS RICE dithering method 1 and 2 supports
  * @beta    <LI> Hipsgen improvements:
  * @beta      <UL>
  * @beta         <LI>Cut estimation by regions (pixelCut=byRegion)
@@ -179,6 +180,7 @@ import cds.xml.XMLParser;
  * @beta </UL>
  * @beta <B>Fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Fixed the bug that blocked the access to local images in case of network failure.
  * @beta    <LI> Correction of the bug of displaying measurements in scientific notation in powers of 10 (ex: x.xxE100).
  * @beta    <LI> Correction of the bug that in some situations blocked the display of galactic MOCs on small fields
  * @beta    <LI> Fixed conesearch "redo" function for previous queries without results.
@@ -206,7 +208,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v12.048";
+   static public final    String VERSION = "v12.050";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

@@ -3191,13 +3191,12 @@ public class PlanImage extends Plan {
       // Y a-t-il un BZERO
       try {
          bZero  =  headerFits.getDoubleFromHeader("BZERO");
-         Aladin.trace(3," => BZERO = "+bZero);
       } catch( Exception ebzero ) { bZero=0.;}
 
       // Y a-t-il un BSCALE
       try {
          bScale =  headerFits.getDoubleFromHeader("BSCALE");
-         Aladin.trace(3," => BZERO = "+bZero+" BSCALE = "+bScale);
+         Aladin.trace(4," => BZERO = "+bZero+" BSCALE = "+bScale);
       } catch( Exception ebscale ) { bScale=1.; }
       
       // Y a-t-il un beam (BMAJ, BMIN et BPA)
@@ -3206,7 +3205,7 @@ public class PlanImage extends Plan {
          double bmin = headerFits.getDoubleFromHeader("BMIN");
          double bpa  = headerFits.getDoubleFromHeader("BPA");
          beam = new Beam(bmaj,bmin,bpa);
-         Aladin.trace(3," => BMAJ = "+bmaj+" BMIN = "+bmin+" BPA = "+bpa+" => beam parameters");
+         Aladin.trace(4," => BMAJ = "+bmaj+" BMIN = "+bmin+" BPA = "+bpa+" => beam parameters");
       } catch( Exception ebeam ) { beam=null; }
       
        

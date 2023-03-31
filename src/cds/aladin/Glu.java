@@ -238,7 +238,7 @@ public final class Glu implements Runnable {
                if( !testCurrentAlaSite() && !testAlaSites(true, false) ) {
                   Aladin.info(aladin.chaine.getString("NONET"));
                   // Aladin.NETWORK=false; JE PREFERE NE PAS CACHER LES
-                  // RESSOURCES DISTANTESS (POUR DEMO)
+                  // RESSOURCES DISTANTES (POUR DEMO)
                } else flagNoGlu=true;
             } catch( Exception e) {
                Aladin.info(aladin.chaine.getString("No full network access !"));

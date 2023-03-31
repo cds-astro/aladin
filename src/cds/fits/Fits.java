@@ -76,6 +76,11 @@ import cds.tools.Util;
  */
 final public class Fits {
    
+   public static final String XTRIM   = "XTRIM";
+   public static final String YTRIM   = "YTRIM";
+   public static final String ZNAXIS1 = "ZNAXIS1";
+   public static final String ZNAXIS2 = "ZNAXIS2";
+   
    static public final double POURCENT_MIN = 0.003;
 //   static public final double POURCENT_MAX = 0.985;
    static public final double POURCENT_MAX = 0.9995;
@@ -687,7 +692,7 @@ final public class Fits {
    }
 
    private boolean skipHDU0 = true;
-
+   
    /** Dans le cas d'un MEF, indique qu'il faut, ou ne faut pas passer la première entête si elle est vide */
    public void setSkipHDU0(boolean flag) { skipHDU0 = flag; }
 
@@ -832,24 +837,24 @@ final public class Fits {
       
       // Untrim ?
       try {
-         if( flagTrim && headerFits.hasKey("XOFFSET") ) {
+         if( flagTrim && headerFits.hasKey(XTRIM) ) {
             if( w!=-1 ) throw new Exception("Trimed FITS cannot be opened by cells");
             int owidth=width;
             int oheight=height;
-            int xoffset = headerFits.getIntFromHeader("XOFFSET");
-            int yoffset = headerFits.getIntFromHeader("YOFFSET");
-            width  = widthCell = headerFits.getIntFromHeader("ZNAXIS1");
-            height = heightCell = headerFits.getIntFromHeader("ZNAXIS2");
+            int xoffset = headerFits.getIntFromHeader(XTRIM);
+            int yoffset = headerFits.getIntFromHeader(YTRIM);
+            width  = widthCell = headerFits.getIntFromHeader(ZNAXIS1);
+            height = heightCell = headerFits.getIntFromHeader(ZNAXIS2);
 
             byte [] opixels = pixels;
             pixels = new byte[width*height*n];
 
             headerFits.setKeyValue("NAXIS1",width+"");
             headerFits.setKeyValue("NAXIS2",height+"");
-            headerFits.setKeyValue("XOFFSET",null);
-            headerFits.setKeyValue("YOFFSET",null);
-            headerFits.setKeyValue("ZNAXIS1",null);
-            headerFits.setKeyValue("ZNAXIS2",null);
+            headerFits.setKeyValue(XTRIM,null);
+            headerFits.setKeyValue(YTRIM,null);
+            headerFits.setKeyValue(ZNAXIS1,null);
+            headerFits.setKeyValue(ZNAXIS2,null);
 
             keyAddValue("CRPIX1",-xoffset);
             keyAddValue("CRPIX2",-yoffset);
@@ -1023,8 +1028,8 @@ final public class Fits {
             if( headerFits.getStringFromHeader("ZBITPIX")!=null ) {
                // Nécessaire pour que la création de la Calib ne se plante pas
                headerFits.setKeyword("BITPIX", headerFits.getStringFromHeader("ZBITPIX") );
-               headerFits.setKeyword("NAXIS1", headerFits.getStringFromHeader("ZNAXIS1") );
-               headerFits.setKeyword("NAXIS2", headerFits.getStringFromHeader("ZNAXIS2") );
+               headerFits.setKeyword("NAXIS1", headerFits.getStringFromHeader(ZNAXIS1) );
+               headerFits.setKeyword("NAXIS2", headerFits.getStringFromHeader(ZNAXIS2) );
                headerFits.setKeyword("NAXIS","2");
                code |= RICE;
             }
@@ -2987,10 +2992,10 @@ final public class Fits {
       
       f.headerFits.setKeyValue("NAXIS1",nwidth+"");
       f.headerFits.setKeyValue("NAXIS2",nheight+"");
-      f.headerFits.setKeyValue("XOFFSET",b[0]+"");
-      f.headerFits.setKeyValue("YOFFSET",b[2]+"");
-      f.headerFits.setKeyValue("ZNAXIS1",width+"");
-      f.headerFits.setKeyValue("ZNAXIS2",height+"");
+      f.headerFits.setKeyValue(XTRIM,b[0]+"");
+      f.headerFits.setKeyValue(YTRIM,b[2]+"");
+      f.headerFits.setKeyValue(ZNAXIS1,width+"");
+      f.headerFits.setKeyValue(ZNAXIS2,height+"");
       
       f.keyAddValue("CRPIX1",-b[0]);
       f.keyAddValue("CRPIX2",-b[2]);
@@ -3009,16 +3014,16 @@ final public class Fits {
     * Retourne un Fits untrimé, ou null si pas possible
     */
    public Fits untrimFactory() throws Exception {
-      if( !headerFits.hasKey("XOFFSET") ) return null;
+      if( !headerFits.hasKey(XTRIM) ) return null;
       int xoffset;
       int yoffset;
       int nwidth;
       int nheight;
       try {
-         xoffset = headerFits.getIntFromHeader("XOFFSET");
-         yoffset = headerFits.getIntFromHeader("YOFFSET");
-         nwidth = headerFits.getIntFromHeader("ZNAXIS1");
-         nheight = headerFits.getIntFromHeader("ZNAXIS2");
+         xoffset = headerFits.getIntFromHeader(XTRIM);
+         yoffset = headerFits.getIntFromHeader(YTRIM);
+         nwidth = headerFits.getIntFromHeader(ZNAXIS1);
+         nheight = headerFits.getIntFromHeader(ZNAXIS2);
       } catch( NullPointerException e ) {
          return null;
       }
@@ -3031,10 +3036,10 @@ final public class Fits {
 
       f.headerFits.setKeyValue("NAXIS1",width+"");
       f.headerFits.setKeyValue("NAXIS2",height+"");
-      f.headerFits.setKeyValue("XOFFSET",null);
-      f.headerFits.setKeyValue("YOFFSET",null);
-      f.headerFits.setKeyValue("ZNAXIS1",null);
-      f.headerFits.setKeyValue("ZNAXIS2",null);
+      f.headerFits.setKeyValue(XTRIM,null);
+      f.headerFits.setKeyValue(YTRIM,null);
+      f.headerFits.setKeyValue(ZNAXIS1,null);
+      f.headerFits.setKeyValue(ZNAXIS2,null);
 
       f.keyAddValue("CRPIX1",-xoffset);
       f.keyAddValue("CRPIX2",-yoffset);

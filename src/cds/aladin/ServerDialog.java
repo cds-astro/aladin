@@ -602,7 +602,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       if( lastLeft!=null )  lastLeft.setLastInColumn();
 
       sv = null;
-      buttons[bcurrent].push();
+      try { buttons[bcurrent].push(); } catch( Exception e1 ) { }
       setFont(Aladin.PLAIN);
 
       // Construction des panels associees a chaque serveur ou Popup
