@@ -734,7 +734,7 @@ public class HipsGen {
         
         if( !flagMirror && !flagLint && !flagZip && !flagCrc && !flagValidator ) {
            String id = context.getHipsId();
-           if( id==null || id.startsWith("ivo://UNK.AUT") ) {
+           if( id==null || (!flagUpdate && id.startsWith("ivo://UNK.AUT")) ) {
                context.warning("Missing HiPS IVOID identifier (see "+Param.id+" parameter)"
                        +(id==null?"":" => in the meantime, assuming "+id));
 

@@ -149,7 +149,7 @@ public class BuilderJpg extends BuilderRunner {
       if( context.cutByImage ) super.buildPre();
       else {
          ColorModel cm = context.getFct()==null ? null : CanvasColorMap.getCM(0, 128, 255,false,
-               0/*PlanImage.CMGRAY*/, context.getFct().code());
+               0/*PlanImage.CMGRAY*/, context.getFct().code(), getMinCM()==1 );
          tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
          cut = context.getCut();
          double bz = context.bzero;

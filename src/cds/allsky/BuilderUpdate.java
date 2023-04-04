@@ -116,7 +116,9 @@ public class BuilderUpdate extends Builder {
    
    private void builderDataSum() throws Exception {
       Fits f = new Fits();
-      f.loadFITS( context.findOneNpixFile( context.getOutputPath()) );
+      try {
+         f.loadFITS( context.findOneNpixFile( context.getOutputPath()) );
+      } catch( Exception e ) { return; }
       if( f.headerFits.hasKey("DATASUM" ) ) {
          context.info("DATASUM seems to be already present in tiles (to update them use \"UPDATEDATASUM\" action)");
          return;

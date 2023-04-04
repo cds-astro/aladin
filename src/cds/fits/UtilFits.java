@@ -63,8 +63,7 @@ public class UtilFits {
    static final int NO_DITHER=0;
    static final int SUBTRACTIVE_DITHER_1=1;
    static final int SUBTRACTIVE_DITHER_2=2;
-   static final int DITHER_BLANK = -2147483647;
-   static final int DITHER_BLANK_BIS = -2147483646;              // Trouvé dans des données récentes !!!!
+   static final int DITHER_BLANK = -2147483646;  // En fait la valeur réservé dans le code de CFITSIO (Standard FITS 4.0 => -2147483647)
    
    /** Décompression d'une image dans un "flux" FITS. ne traite que le HDU courant
     * @param outHeader entête FITS de sortie correspondant à la matrice de pixels retournée (ou à la table s'il ne s'agit pas d'une image)
@@ -142,7 +141,7 @@ public class UtilFits {
 
        
        // Paramètre de quantification ?
-       int zdither0 = 0;
+       int zdither0 = 1;
        int zquantiz = NO_DITHER;
        
        String quantiz  = inHeader.getStringFromHeader("ZQUANTIZ");
@@ -547,12 +546,12 @@ public class UtilFits {
    private static void unQuantiz(byte [] tile, int tileBitpix, int tileWidth, int tileHeight, 
          byte [] out,  int outPos,  int outWidth,    int outHeight,
          int bitpixOut, double zblank, double bzero, double bscale,
-         int zquantiz, int zdither0, int numTile) throws Exception {
+         int zquantiz, int zdither0, int row) throws Exception {
 
       int i0=0;
       int i1=0;
       if( zquantiz!=NO_DITHER ) {
-         i0 = ( numTile-1+zdither0) % N_RANDOM;
+         i0 = ( row-1+zdither0) % N_RANDOM;
          i1 = (int)( RN[i0]*DITHEROFF );
       }
       double pix;
@@ -580,7 +579,7 @@ public class UtilFits {
                   i1 = (int)( RN[i0]*DITHEROFF );
                }
 
-               if( zquantiz==SUBTRACTIVE_DITHER_2 && (val==DITHER_BLANK /* || val==DITHER_BLANK_BIS */) ) pix=0.;
+               if( zquantiz==SUBTRACTIVE_DITHER_2 && val==DITHER_BLANK ) pix=0.;
                else if( val==zblank ) pix=Double.NaN;
                else pix = (val - r +0.5)*bscale+bzero;
 
@@ -630,14 +629,14 @@ public class UtilFits {
     }
     
     static final int N_RANDOM = 10000;
-    static double RN[] = null;
+    static float RN[] = null;
     
     /** Génération d'un tableau de 10000 valeurs random entre 0 et 1 suivant la méthode recommandée 
      * par le standard Fits, annexe I
      */
     static private void randomGenerator() {
        if( RN!=null ) return;   // Déjà initialisé
-       RN = new double[N_RANDOM];
+       RN = new float[N_RANDOM];
        int ii;
        double a = 16807.0;
        double m = 2147483647.0;
@@ -649,7 +648,7 @@ public class UtilFits {
           temp = a * seed;
           seed = temp -m * ((int) (temp / m) );
           /* divide by m for value between 0 and 1 */
-          RN[ii] = seed / m;
+          RN[ii] = (float) ( seed / m );
        }
     }
     

@@ -446,15 +446,13 @@ MouseMotionListener, MouseListener, KeyListener
    static void interpolPalette(int[] Sr, int[] Sg, int[] Sb, boolean inverse, boolean transp,
          int tr0, int tr1, int tr2,int fct) {
 
-      double range = 256;
-      int gap=0;
-      if( transp ) { range=255; gap=1; }
+      int gap= transp ? 1 : 0;
+      double range = 256-gap;
       
       double mid = range/2;
       double pas1 = mid/(tr1-tr0);
       double pas2 = mid/(tr2-tr1);
 
-//      int max = Sr.length-1;
       int max = (int)range-1;
 
       int [] fctGap = computeTransfertFct(fct,transp);
@@ -544,7 +542,7 @@ MouseMotionListener, MouseListener, KeyListener
       return getCM(tr0,tr1,tr2,inverse,typeCM,fct,false);
    }
    public static IndexColorModel getCM(int tr0,int tr1,int tr2, boolean inverse,int typeCM,int fct,boolean transp) {
-      int i,n;
+      int i;
 
       int [] rd = new int[256];
       int [] gn = new int[256];
@@ -589,10 +587,9 @@ MouseMotionListener, MouseListener, KeyListener
          MyColorMap myCM = (MyColorMap)customCM.elementAt(idx);
          interpolPalette(myCM.getRed(),myCM.getGreen(),myCM.getBlue(),!(inverse),transp,tr0,tr1,tr2,fct);
 
-         // Sinon table de niveaux de gris, en cas de trasnparence, on décale de 1
+         // Sinon table de niveaux de gris
       } else {
-         int gap = transp ? 1 : 0;
-         for( i=gap; i<256; i++ ) rd[i]=gn[i]=bl[i]=i-gap;
+         for( i=0; i<256; i++ ) rd[i]=gn[i]=bl[i]=i;
          interpolPalette(rd,gn,bl,inverse,transp,tr0,tr1,tr2,fct);
       }
 
@@ -635,6 +632,7 @@ MouseMotionListener, MouseListener, KeyListener
          if( v>=range ) v=range-1;
          else if( v<0 ) v=0;
          r[i] = (int)v;
+         if( transp && r[i]==0 ) r[i]=1;            // Valeur 0 réservée pour transparence
       }
 
       return r;

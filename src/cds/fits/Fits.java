@@ -1902,13 +1902,8 @@ final public class Fits {
     * byte[] tcm plutot que sur ColorModel directement, c'est trop lent
     */
    public byte[] toPix8(double min, double max, byte[] tcm, int pixMode) {
-      int range = 256;
-      int gap = 0;
-      if( isTransparent(pixMode) ) {
-         range = 254;
-         gap = 2;
-      }
-
+      int gap = isTransparent(pixMode) ?  1 : 0;
+      int range = 256-gap;
       byte[] pix8 = new byte[widthCell * heightCell];
       double r = range / (max - min);
       range--;
@@ -1919,8 +1914,8 @@ final public class Fits {
             double pixIn = getPixelDouble(x + xCell, y + yCell);
             if( isBlankPixel(pixIn) )  pixOut = 0;
             else {
-               int pix = ((gap + (pixIn <= min ? 0x00 : pixIn >= max ? range
-                     : (int) (((pixIn - min) * r)))) & 0xff);
+               int pix = pixIn<=min ? 0 : pixIn>=max ? range : (int) ((pixIn - min) * r) & 0xff;
+               pix += gap;
                pixOut = tcm == null ? (byte) pix : tcm[pix];
             }
             // setPix8(x+xCell,y+yCell,pixOut);
