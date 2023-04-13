@@ -78,7 +78,7 @@ public class BuilderMoc extends Builder {
       
       if( !flagICRS ) {
          mocOrder = fileOrder;
-         context.warning("Non-equatorial HiPS ("+context.getFrameName()+") => generating SMoc.fits (Moc.fits non-standard)");
+         context.warning("Non-equatorial HiPS ("+context.getFrameName()+") => generating non standard galactic Moc.fits");
          
       } else {
          // mocOrder explicitement fourni par l'utilisateur ?
@@ -130,7 +130,7 @@ public class BuilderMoc extends Builder {
       moc.write(outputFile);
       
       // Hips non equatorial => Génération du Moc Equatorial dans SMoc.fits 
-      if( !flagICRS ) {
+      if( !flagICRS && !context.isMap() ) {
          context.info("SMoc.fits generation (equatorial standard MOC) ...");
          Task.factoryRunner(context,Action.SMOC);
       }

@@ -571,8 +571,14 @@ public class UtilFits {
             int val = getPixValAsInt(tile, tileBitpix, y*tileWidth +x );
 
             if( zquantiz!=NO_DITHER ) {
-               double r = RN[i1++];
-               r=0;
+               double r = RN[i1];
+               if( i1>=DITHEROFF ) {
+                  i0++;
+                  if( i0==N_RANDOM ) i0=0;
+                  i1 = (int)( RN[i0]*DITHEROFF );
+               }
+               
+               i1++;
                if( i1>=DITHEROFF ) {
                   i0++;
                   if( i0==N_RANDOM ) i0=0;
