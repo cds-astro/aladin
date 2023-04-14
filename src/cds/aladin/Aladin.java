@@ -165,21 +165,22 @@ import cds.xml.XMLParser;
  * @beta <UL>
  * @beta    <LI> New "Deprecated" branch in the resource tree
  * @beta    <LI> Support to "no XMP" AVM tags 
- * @beta    <LI> FITS RICE dithering method 1 and 2 supports
+ * @beta    <LI> FITS RICE dithering method 1 and 2 supports compatible with CFITSIO 4.2.0
  * @beta    <LI> Hipsgen improvements:
  * @beta      <UL>
  * @beta         <LI>Cut estimation by regions (pixelCut=byRegion)
  * @beta         <LI>In line documentation
+ * @beta         <LI>hhh support for FITS files
  * @beta      </UL>
  * @beta    <LI> Splitting MOC facility
  * @beta    <LI> MOC inline in VOTable (xtype=*moc)
  * @beta    <LI> Planet in dev. mode (without projection compatibility test)
- * @beta    <LI> Hipsgen improvements: hhh support for FITS files
  * @beta    <LI> SAMP MOC coverage message support
  * @beta    <LI> HEALPix map build from HiPS at any NSIDE
  * @beta </UL>
  * @beta <B>Fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Correction on the display synchronization of large MOCs.
  * @beta    <LI> Fixed Hipsgen 8bit coding for PNG tile with Asinh log function.
  * @beta    <LI> Fixed the bug that blocked the access to local images in case of network failure.
  * @beta    <LI> Correction of the bug of displaying measurements in scientific notation in powers of 10 (ex: x.xxE100).
@@ -209,7 +210,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v12.053";
+   static public final    String VERSION = "v12.054";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

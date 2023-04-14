@@ -2638,7 +2638,7 @@ public final class Command implements Runnable {
          if( mode==2 ) {
             // Space Time MOC sur catalogues ?
             if( type==Plan.CATALOG || type==Plan.ALLSKYCAT ) {
-               a.calque.newPlanSTMoc(label, p, firstOrder, secondOrder, duration, radius, fov);
+               a.calque.newPlanSTMoc(label, p,  firstOrder, secondOrder, duration, radius, fov);
                a.calque.repaintAll();
                return "";
                

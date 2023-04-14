@@ -796,7 +796,7 @@ public class PlanMoc extends PlanBGCat {
             if( drawingOrder==-1 ) return;
 //            System.out.println("Récupération Hpix drawingOrder="+drawingOrder+" myOrder="+myOrder+" gapOrder="+gapOrder
 //                  +" lowMoc.getMocOrder="+((SMoc)lowMoc).getMocOrder());
-            //            long drawingNside = CDSHealpix.pow2(drawingOrder);
+//            long drawingNside = CDSHealpix.pow2(drawingOrder);
 
             Moc x = v.getMoc();
             if( !(x instanceof SMoc) ) {
@@ -818,6 +818,12 @@ public class PlanMoc extends PlanBGCat {
             
             
             Iterator<MocCell> it = lowMoc.iterator();
+            
+            // Si vide, on le fera au prochain affichage
+            if( !it.hasNext() ) {
+//               System.err.println("lowMoc empty");
+               return;
+            }
             while( it.hasNext() ) {
                MocCell c = it.next();
                if( viewMoc!=null && !viewMoc.isIntersecting(c.order, c.start)) continue;
