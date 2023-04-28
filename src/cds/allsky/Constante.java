@@ -197,6 +197,7 @@ public class Constante {
    static public final int DEFAULTMOCORDER = 7;    // MOC ORDER minimal
    static public final int DIFFMOCORDER    = 4;    // Différence entre l'ordre nominal du survey et son MOC dans le cas d'un MOC à haute résolution
    static public final int PIXELMAXRATIO   = 3;    // Rapport max par défaut entre la largeur et la longueur d'une image acceptable, pas testé si <0
+   static public final int BYREGIONWIDTH = 1024;  // Largeur du buffeur pour l'estimation du cut 8 bits par region (paramètre "byRegion" )
 
    // Zone d'observation dans les images originales lors de lHipselisation (tout, ellipsoïde, ou rectangulaire)
    static final public int SHAPE_UNKNOWN     = 0;

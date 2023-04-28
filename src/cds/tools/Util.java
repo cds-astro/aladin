@@ -2304,6 +2304,33 @@ public final class Util {
    //    }
 
    
+   /** Retourne le nombre de bytes d'un volume indiqué (ou non) avec une unité 
+    * (petite bidouille si l'unité est donnée sans le 'B' final, ou avec un 'pix' final )*/
+   static final public long getUnitDiskByte(String val) throws Exception {
+      int i=0;
+      int unit;
+      long size;
+      for( i=0; i<val.length() && Character.isDigit(val.charAt(i)); i++);
+      if( i==val.length() ) {
+         size = (long)Double.parseDouble(val.trim());
+         unit=0;
+      } else {
+         String s = val.substring(i).trim();
+         if( s.endsWith("pix") ) s=s.substring(0, s.length()-3); 
+         if( !s.endsWith("B") ) s=s+'B';
+         unit = Util.indexInArrayOf(s, unites, false);
+         if( unit==-1 ) throw new Exception("unit unknown! ["+s+"]");
+         size = (long)Double.parseDouble( val.substring(0,i));
+      }
+      // size =size << (10*unit);
+      for( i=0; i<unit; i++ ) {
+         if( size>Long.MAX_VALUE/1024L ) throw new Exception("getUnitDisk overflow");
+         size*=1024L;
+      }
+      return size;
+ 
+   }
+   
    /** Affiche dans une unité cohérente le chiffre peut être suivi d'une autre unité
     * par défaut il s'agit de BYTES. ex; 1024m => 1g */
    static final public String getUnitDisk(String val) throws Exception {
@@ -2316,6 +2343,7 @@ public final class Util {
          unit=0;
       } else {
          String s = val.substring(i).trim();
+         if( !s.endsWith("B") ) s=s+'B';
          unit = Util.indexInArrayOf(s, unites, false);
 //         if( unit==-1 ) throw new Exception("Unit unknown !");
          if( unit==-1 ) return val;

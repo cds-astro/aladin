@@ -67,9 +67,12 @@ public class BuilderCut extends Builder {
          pourcentMin=context.pixelRangeCut[Context.POURCMIN];
          pourcentMax=context.pixelRangeCut[Context.POURCMAX];
       }
+      
+      String u = cds.tools.Util.getUnitDisk( getByRegionWidth() * getByRegionWidth());
+      u = u.substring(0,u.length()-1)+"pix";
       context.info("Adjusting cuts from "+cds.tools.Util.getPourcent(pourcentMin)
       +" to "+cds.tools.Util.getPourcent(pourcentMax)+" "
-      + "of the pixel distribution for each region...");
+      + "of the pixel distribution for each region (based on "+u+")");
 
       for( SMoc m: mocs ) setCut(path,order,m);
    }
@@ -119,6 +122,15 @@ public class BuilderCut extends Builder {
       }
    }
    
+   /** Retourne la largeur du buffer Fits d'évaluation du Cut (=width). Celui-ci est par défaut 1024,
+    * mais peut être modifié via un suffixe du paramètre (ex: byRegion/1Mpix)
+    */
+   private int getByRegionWidth() {
+      int w = (int) Math.sqrt( context.byRegionSize );
+      if( w<64 ) w= Constante.BYREGIONWIDTH;
+      return w;
+   }
+   
    /**
     * Evaluation des cutmin..cutmax pour les tuiles se trouvant dans le MOC
     * passé en paramètre. Effectue son évaluation sur les 4 première tuiles
@@ -134,7 +146,7 @@ public class BuilderCut extends Builder {
       Iterator<Long> it = moc.valIterator();
       Fits test=null;
       int offset=0;
-      final int testW=1024;
+      final int testW=getByRegionWidth();
       while( it.hasNext()  ) {
          long npix = it.next();
          String file = Util.getFilePath(path,order,npix)+".fits";

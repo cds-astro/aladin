@@ -78,7 +78,7 @@ public enum Param {
          + "the source images (see img parameter). The specified values are to be considered as "
          + "physical pixel values (i.e. taking into account a possible linear bzero/bscale operation "
          + "on the encoded pixel values)",A.TILES),
-   pixelCut   ("[min[%] max[%]] [byRegion] [fct]",    "8 bits pixel mapping method",
+   pixelCut   ("[min[%] max[%]] [byRegion[/size]] [fct]",    "8 bits pixel mapping method",
          "Specifies the range of pixel values and how these pixels will be rendered in the "
          + "HiPS preview 8 bits tiles (PNG or JPG). "
          + "The pixel values between min and max (or min% and max% of the pixel histogram) "
@@ -91,7 +91,8 @@ public enum Param {
          + "based on the reference image (see img parameter). "
          + "In the case of pointed observation survey, the alternative `byRegion` "
          + "indicates to Hipsgen to automatically evaluate the min% and max% thresholds "
-         + "of the pixel distribution according to each observed region and no longer globally. "
+         + "of the pixel distribution according to each observed region and no longer globally "
+         + "(based on 'size' pixels of each region - default '1Mpix'). " 
          + "This evaluation by regions will be done if required by the CUT action, before "
          + "generating the PNG, JPEG or RGB tiles)",A.PNG|A.JPEG|A.RGB),
    img              ("filename",            "Reference image for default initializations",

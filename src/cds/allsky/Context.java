@@ -140,6 +140,7 @@ public class Context {
    protected double[] cut;   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
    protected boolean cutByRegion;            // true si le cut 8 bits sera appliqué région par région
+   protected int byRegionSize= Constante.BYREGIONWIDTH * Constante.BYREGIONWIDTH; // taille du buffer d'évaluation du cut 8 bits par région
    public boolean cutByImage;            // true si le cut 8 bits sera appliqué image par image
    private ModeTree modeTree = null;
    protected ModeOverlay modeOverlay=ModeOverlay.getDefault();   // Methode de traitement par défaut des images 
@@ -797,7 +798,18 @@ public class Context {
             ind++; i++;
          } catch( Exception e) {
             if( s.equalsIgnoreCase("byImage") ) cutByImage=true;
-            else if( s.equalsIgnoreCase("byRegion") ) cutByRegion=true;
+            else if( s.toLowerCase().indexOf("byregion")>=0 ) {
+               cutByRegion=true;
+               int j = s.indexOf('/');
+               if( j>0 ) {
+                  try {
+                     long x = Util.getUnitDiskByte( s.substring(j+1));
+                     byRegionSize = (int)x;
+                  } catch( Exception e1 ) {
+                     warning("byRegion evaluation size error ("+e1.getMessage()+") => assuming default value");
+                  }
+               }
+            }
             else setTransfertFct(s);
          }
 
@@ -2534,6 +2546,14 @@ public class Context {
          if( greenInfo!=null ) setPropriete(Constante.KEY_HIPS_RGB_GREEN,greenInfo);
          if( blueInfo!=null )  setPropriete(Constante.KEY_HIPS_RGB_BLUE,blueInfo);
       }
+
+      // Sky fraction à partir du MOC réel (attention, ne pas prendre la région courante de calcul
+      // qui peut être plus petite)
+      SMoc m = new SMoc();
+      m.read( getOutputPath()+Util.FS+Constante.FILE_MOC);
+      double skyFraction = m.getCoverage();
+      String s = skyFraction>0 ? Util.myRound( skyFraction ): null;
+      setPropriete(Constante.KEY_MOC_SKY_FRACTION, s );
       
       // Check Code ?
       if( hipsCheckCode!=null ) setPropriete(Constante.KEY_HIPS_CHECK_CODE,hipsCheckCode);
