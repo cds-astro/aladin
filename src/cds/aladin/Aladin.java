@@ -163,6 +163,8 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Support for resolver of solar system bodies (IMCCE resolver)
+ * @beta    <LI> Support for Data origin INFO tags in VOTable (IVOA R&D)
  * @beta    <LI> New "Deprecated" branch in the resource tree
  * @beta    <LI> Support to "no XMP" AVM tags 
  * @beta    <LI> FITS RICE dithering method 1 and 2 supports compatible with CFITSIO 4.2.0
@@ -210,7 +212,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v12.055";
+   static public final    String VERSION = "v12.060";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

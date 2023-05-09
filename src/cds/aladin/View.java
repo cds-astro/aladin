@@ -4169,9 +4169,13 @@ System.out.println("n="+n);
          return oco;
       }
       oco=null;
+      boolean flagCache=true;
+      boolean isPlanet = aladin.configuration.isPlanet();
 
       try {
-         url = aladin.glu.getURL("openSesame",URLEncoder.encode(objet),true);
+//         url = aladin.glu.getURL("openSesame",URLEncoder.encode(objet),true);
+         String options = isPlanet ? "SVNI" : "SVN";
+         url = aladin.glu.getURL("openSesame","'"+objet+"' "+options,false);
          
 //         if( first1 ) { first1=false; throw new Exception(); }
 
@@ -4181,13 +4185,17 @@ System.out.println("n="+n);
          while( st.hasMoreTokens() ) {
             s = st.nextToken();
             //            System.out.println("Sesame read :["+s+"]");
+            
+            if( isPlanet && s.startsWith("#=I") ) flagCache=false;
             if( s.startsWith("%J ") ) {
                StringTokenizer st1 = new StringTokenizer(s);
                st1.nextToken();
                oco = new Coord(st1.nextToken()+" "+st1.nextToken());
-               oobjet=objet;
                Aladin.trace(2,"Sesame: "+objet+" -> "+oco.getSexa());
-               miniCache.put( objet, oco.getSexa()+" ICRS" );
+               if( flagCache ) {
+                  oobjet=objet;
+                  miniCache.put( objet, oco.getSexa()+" ICRS" );
+               }
                return oco;
             }
          }
