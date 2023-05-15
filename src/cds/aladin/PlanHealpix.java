@@ -1038,12 +1038,13 @@ public class PlanHealpix extends PlanBG {
          inrowSkip = ((int)lowHealpixIdx % lenHpx[(int)idxTForm]) * Util.binSizeOf(typeHpx[(int)idxTForm], 1);
       }
 
-      int nbRowsToSkip = (int) lowHealpixIdx / lenHpx[(int)idxTForm];
+      long nbRowsToSkip = (long) lowHealpixIdx / lenHpx[(int)idxTForm];
       // on se place à l'endroit qui nous intéresse et on lit
       try {
 
          // System.out.println("NB ROWS TO SKIP: "+ nbRowsToSkip);
-         raf.seek(initialOffset + nbRowsToSkip * sizeRecord + inrowSkip);
+         long skipLength = initialOffset + nbRowsToSkip * sizeRecord + inrowSkip;
+         raf.seek(skipLength);
          try {
             raf.readFully(buf);
          } catch (EOFException e) {

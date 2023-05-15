@@ -777,7 +777,9 @@ final public class Fits {
       int n = (Math.abs(bitpix) / 8);
       bitmapOffset = dis.getPos();
 
-      int size = widthCell * heightCell * depthCell * n;
+      long sizeL = widthCell * heightCell * depthCell * n;
+      boolean flagOverFlow = sizeL>Integer.MAX_VALUE;
+      int size = (int) sizeL;
 
       // Pas le choix, il faut d'abord tout lire, puis ne garder que la cellule
       // si nécessaire
@@ -785,6 +787,7 @@ final public class Fits {
          byte[] buf = Hdecomp.decomp(dis);
          if( w == -1 ) pixels = buf;
          else {
+            if( flagOverFlow ) throw new Exception("Too big Hcompressed Fits");
             pixels = new byte[size];
             for( int frame=0; frame<depthCell; frame++ ) {
                for( int lig = 0; lig < heightCell; lig++ )
@@ -794,7 +797,7 @@ final public class Fits {
          }
 
       } else {
-         if( flagLoad || bitpix == 8 ) {
+         if( (flagLoad || bitpix == 8) && !flagOverFlow ) {
             pixels = new byte[size];
 
             // Lecture d'un coup

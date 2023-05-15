@@ -178,6 +178,7 @@ final public class TableParser implements XMLConsumer {
    private Field timeField;           // Le field associé à la colonne de temps la plus probable;
    private boolean first=true;        // Pour n'afficher qu'une fois un message d'alerte sur TCB/BARYCENTER
    private boolean flagInterrupt=false; // true s'il y a demande d'interruption de parsing   
+   private boolean firstResourceInfo=true;    // Pour n'afficher qu'une fois le titre de section sur les INFOS associées à la table courante
       
    class TimeFrame {
       String id=null;                  // Identifier
@@ -1362,6 +1363,13 @@ final public class TableParser implements XMLConsumer {
                   inError=true;
                   consumer.tableParserWarning("!!! Result error (server ERROR)");
                }
+            } else {
+               String infoID=(String)atts.get("ID");
+               String value=(String)atts.get("value");
+               if( infoID!=null && value!=null ) {
+                  if( firstResourceInfo ) { firstResourceInfo=false; consumer.tableParserInfo("\n.Resource information:"); }
+                  consumer.tableParserInfo("   ."+infoID+": "+value);
+               }
             }
          } else if( name.equalsIgnoreCase("COOSYS") ) {
             id=(String)atts.get("ID");
@@ -1429,6 +1437,7 @@ final public class TableParser implements XMLConsumer {
             } else if( name.equalsIgnoreCase("RESOURCE") /* xmlparser.in("RESOURCE")*/ ) {
                if( (att=(String)atts.get("ID"))!=null ) consumer.startResource(att);
                else consumer.startResource((String)atts.get("name"));
+               firstResourceInfo=true;
             }
             break;
          case 3:

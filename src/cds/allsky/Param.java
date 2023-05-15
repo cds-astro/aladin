@@ -94,7 +94,7 @@ public enum Param {
          + "of the pixel distribution according to each observed region and no longer globally "
          + "(based on 'size' pixels of each region - default '1Mpix'). " 
          + "This evaluation by regions will be done if required by the CUT action, before "
-         + "generating the PNG, JPEG or RGB tiles)",A.PNG|A.JPEG|A.RGB),
+         + "generating the PNG, JPEG or RGB tiles)",A.CUT|A.PNG|A.JPEG|A.RGB),
    img              ("filename",            "Reference image for default initializations",
          "Indicates the file name of the source image used as a reference. This image determines "
          + "the parameters of the final HiPS: order, pixel encoding, value ranges, etc. By default, "
@@ -344,6 +344,7 @@ public enum Param {
       static final int MIRROR  =2048;      // Dédié à l'action MIRROR
       static final int MAP     =4096;      // Dédié à une action MAP
       static final int DETAILS =8192;      // Dédié à une action DETAILS
+      static final int CUT    =16384;      // Dédié à une action CUT
       
       static final int MAX    =65536;      // Borne MAX
    }
