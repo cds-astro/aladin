@@ -7,6 +7,7 @@
  * Rev2   : Oct 2021
  * Rev3   : Nov 2021
  * Rev4   : Jul 2022
+ * Rev5   : May 2023
 -->
 
 <project name="Aladin" default="main" basedir="."> 
@@ -20,7 +21,7 @@
      <mkdir dir="${bin}"/>
 
      <javac srcdir="${basedir}" destdir="${bin}"
-	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" includeantruntime="false" >
+	    encoding="Cp1252" source="1.8" target="1.8" deprecation="off" includeantruntime="false" >
        <src path="${src}"/>
        <classpath>
           <pathelement path="${java.class.path}/"/>
