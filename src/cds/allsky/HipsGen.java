@@ -66,6 +66,7 @@ public class HipsGen {
     private boolean flagRGB=false;
     private boolean flagGunzip=false;
     private boolean flagMapFits=false;
+    private boolean flagHealpixMap=false;
     private boolean flagCrc=false;
     private boolean flagAbort=false,flagPause=false,flagResume=false;
     private boolean flagValidator=false;
@@ -592,6 +593,7 @@ public class HipsGen {
                     if( a==Action.ZIP )    flagZip=true;
                     if( a==Action.UPDATE ) flagUpdate=true;
                     if( a==Action.GUNZIP ) flagGunzip=true;
+                    if( a==Action.MAP )    flagHealpixMap=true;
                     if( a==Action.CHECKCODE )    flagCrc=true;
                     if( a==Action.CHECK )        flagCrc=true;
                     if( a==Action.CHECKFAST )    flagCrc=true;
@@ -709,7 +711,7 @@ public class HipsGen {
                 } catch( Exception e ) { }
             }
 
-            if( !flagConcat && !flagMirror   && !flagZip  && !flagUpdate && !flagLint && !flagGunzip && !flagCrc
+            if( !flagConcat && !flagMirror   && !flagZip  && !flagUpdate && !flagLint && !flagHealpixMap && !flagGunzip && !flagCrc
                             && !flagMocError && !flagProp && !flagTMoc   && !flagTIndex && !flagValidator && !flagConcat) {
                 String s = context.checkHipsId(context.hipsId, true); 
                 context.setHipsId(s);
@@ -732,7 +734,7 @@ public class HipsGen {
             return;
         }
         
-        if( !flagMirror && !flagLint && !flagZip && !flagCrc && !flagValidator ) {
+        if( !flagMirror && !flagLint && !flagZip && !flagCrc && !flagValidator && !flagHealpixMap ) {
            String id = context.getHipsId();
            if( id==null || (!flagUpdate && id.startsWith("ivo://UNK.AUT")) ) {
                context.warning("Missing HiPS IVOID identifier (see "+Param.id+" parameter)"

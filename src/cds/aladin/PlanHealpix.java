@@ -1038,7 +1038,7 @@ public class PlanHealpix extends PlanBG {
          inrowSkip = ((int)lowHealpixIdx % lenHpx[(int)idxTForm]) * Util.binSizeOf(typeHpx[(int)idxTForm], 1);
       }
 
-      long nbRowsToSkip = (long) lowHealpixIdx / lenHpx[(int)idxTForm];
+      long nbRowsToSkip = lowHealpixIdx / lenHpx[(int)idxTForm];
       // on se place à l'endroit qui nous intéresse et on lit
       try {
 
@@ -1942,7 +1942,7 @@ public class PlanHealpix extends PlanBG {
       int nbOutLosangeHeight = (int)((double)n/nbOutLosangeWidth);
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
-      Aladin.trace(3, "Création Allsky "+(isARGB?"ARB ":"")+"order="+order+": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
+      Aladin.trace(3, "Creation Allsky "+(isARGB?"ARB ":"")+"order="+order+": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
             +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
 
       Fits out=null;

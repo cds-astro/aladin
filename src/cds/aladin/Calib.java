@@ -31,7 +31,7 @@ import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.fits.HeaderFits;
 //import cds.healpix.Projection ;
-import  cds.healpix.Healpix ;
+import  cds.healpix.Healpix;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 

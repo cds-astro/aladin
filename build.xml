@@ -28,7 +28,7 @@
           <pathelement path="${lib}/adql1.3.jar"/>
           <pathelement path="${lib}/jsamp-1.3.7.jar"/>
           <pathelement path="${lib}/kxml2-2.3.0.jar"/>
-          <pathelement path="${lib}/cdshealpix.jar"/>
+          <pathelement path="${lib}/cdshealpix.0.28_1.jar"/>
           <pathelement path="${lib}/Moc.jar"/>
       </classpath>
      </javac>
@@ -40,7 +40,7 @@
 	    <zipfileset src="${lib}/adql1.3.jar"/>
 	    <zipfileset src="${lib}/jsamp-1.3.7.jar"/>
 	    <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
-	    <zipfileset src="${lib}/cdshealpix.jar"/>
+	    <zipfileset src="${lib}/cdshealpix.0.28_1.jar"/>
 	    <zipfileset src="${lib}/Moc.jar"/>
 	    <fileset dir="${src}" includes="*.gif,*.jpg,*.png,Ala*.*,Constellation.txt,viewConfiguration.properties,StandardForms.dic" excludes="Aladin.jar"/>
         <manifest>
