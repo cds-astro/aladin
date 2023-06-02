@@ -2,7 +2,7 @@
 
 **The Desktop application of the CDS Aladin Sky Atlas project**  
 
-<img src="bin/Logo.png" alt="Aladin logo" width="220">
+<img src="src/Logo.png" alt="Aladin logo" width="220">
 
 Aladin is an interactive sky atlas allowing the user to visualize digitized astronomical images or full surveys, superimpose entries from astronomical catalogues or databases, and interactively access related data and information from the Simbad database, the VizieR service and other archives for all known astronomical objects in the field. 
 
