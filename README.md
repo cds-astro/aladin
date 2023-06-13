@@ -23,4 +23,4 @@ For classic software installation, please see the [official Aladin Desktop distr
 
 # Compilation
 
-Use the `build.xml` ant file to generate the jar file.
+Use the `build.xml` ant file to generate the jar file . 
