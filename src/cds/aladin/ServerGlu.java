@@ -107,8 +107,8 @@ public class ServerGlu extends Server implements Runnable {
    int fmt;		// Format de retour (PlanImage.fmt)
    String info1, /* info2, */filter, PARSEMJDFIELDHINT, GENERICERROR, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP, SYNCASYNCSELECTIONCHANGE,
 			SHOWASYNCTOOLTIP, ASYNCTOOLTIP;
-   String system;       // appel système dans le cas d'un enregistrement concernant une application locale, null sinon
-   String dir;          // Répertoire d'exécution du system, null sinon
+   String system;       // appel systï¿½me dans le cas d'un enregistrement concernant une application locale, null sinon
+   String dir;          // Rï¿½pertoire d'exï¿½cution du system, null sinon
    StringBuffer record;
    Vector vc;		    // Liste des componenents associes aux parametres du tagGlu d'interrogation
    String planeLabel;	// Format pour le label du plan ou null sinon
@@ -117,7 +117,7 @@ public class ServerGlu extends Server implements Runnable {
                         // correspond a l'indice du champ. le tableau est null
                         // si aucune valeur sinon seulement les elements sans
                         // valeur par defaut sont null.
-   int baseUrlIndex;    // Indice du paramètre dont le type est BaseUrl(URL|MOCID)
+   int baseUrlIndex;    // Indice du paramï¿½tre dont le type est BaseUrl(URL|MOCID)
    Thread thread;       // pour interrogation asynchrone des serveurs SIA/SSA
 
    protected int lastY;
@@ -195,8 +195,8 @@ public class ServerGlu extends Server implements Runnable {
       JScrollPane sc=null;
 //      try { this.aladinMenuNumber=Double.parseDouble(aladinMenuNumber); } catch( Exception e) { }
 
-      // Dans le cas où le Popup associé est IVOA..., le serveur sera
-      // considéré comme caché (accessible uniquement en Discovery mode)
+      // Dans le cas oï¿½ le Popup associï¿½ est IVOA..., le serveur sera
+      // considï¿½rï¿½ comme cachï¿½ (accessible uniquement en Discovery mode)
       if( aladinMenu!=null && aladinMenu.equals("IVOA...") ) HIDDEN=true;
 
       type=IMAGE;
@@ -395,7 +395,7 @@ public class ServerGlu extends Server implements Runnable {
             if( paramDataType!=null && paramDataType[i]!=null ) {
                co=setDedicatedFields(i, paramDataType[i], co, gluAdqlTemplate);
 
-               // Certain component ne doivent pas être affiché (tel le target)
+               // Certain component ne doivent pas ï¿½tre affichï¿½ (tel le target)
                flagShow = isShownField(paramDataType[i]);
              }
           }
@@ -531,7 +531,7 @@ public class ServerGlu extends Server implements Runnable {
 		}
 	}
 
-      // Gestion des filtres prédéfinis s'il y a lieu
+      // Gestion des filtres prï¿½dï¿½finis s'il y a lieu
       if( aladinFilter!=null ) {
          filters=aladinFilter;
 //         y=addFilterComment(10,y+10);
@@ -775,10 +775,10 @@ public class ServerGlu extends Server implements Runnable {
    private boolean checkIfMultiSelect(String paramDataType) { return isParamSpecified(paramDataType,"MultiSelect"); }
    private int getBaseUrlParam(String PK[]) { return getKeyWordRequiredIndex(PK,"BaseUrl"); }
 
-   /** Retourne vrai si dans la liste des types de données PK[] ont a au-moins une
-    * fois un type donné en paramètre
-    * @param PK[] liste des types de données
-    * @param keyWord le type de données recherché
+   /** Retourne vrai si dans la liste des types de donnï¿½es PK[] ont a au-moins une
+    * fois un type donnï¿½ en paramï¿½tre
+    * @param PK[] liste des types de donnï¿½es
+    * @param keyWord le type de donnï¿½es recherchï¿½
     */
     private boolean keyWordRequired(String PK[],String keyWord) {
        return getKeyWordRequiredIndex(PK,keyWord)>=0;
@@ -792,10 +792,10 @@ public class ServerGlu extends Server implements Runnable {
 //       return false;
     }
     
-    /** Retourne le premier indice dans la liste des types de données PK[] qui a le type
-     * de paramèter indiqué
-     * @param PK[] liste des types de données
-     * @param keyWord le type de données recherché
+    /** Retourne le premier indice dans la liste des types de donnï¿½es PK[] qui a le type
+     * de paramï¿½ter indiquï¿½
+     * @param PK[] liste des types de donnï¿½es
+     * @param keyWord le type de donnï¿½es recherchï¿½
      */
     private int getKeyWordRequiredIndex(String PK[],String keyWord) {
        for( int i=0; i<PK.length; i++ ) {
@@ -856,7 +856,7 @@ public class ServerGlu extends Server implements Runnable {
        return i;
    }
 
-   /** Repérage des champs à afficher dans le formualire
+   /** Repï¿½rage des champs ï¿½ afficher dans le formualire
     * @param PK type de donnees a la GLU du genre Target(SIMBAD|COO)
     * @return true s'il s'agit d'un champ qui doit etre affiche dans le formulaire, cad qui ne
     *              concerne pas le target
@@ -1059,7 +1059,7 @@ public class ServerGlu extends Server implements Runnable {
             }
          }
 
-         // input 1 plan => Choice à la place de TextField
+         // input 1 plan => Choice ï¿½ la place de TextField
          if( (modeInput[nbInput] & (ALLIMG|IMG|CAT))!=0 ) {
             JComboBox c = new JComboBox();
             c.addItem(NOINPUTITEM);
@@ -1095,7 +1095,7 @@ public class ServerGlu extends Server implements Runnable {
         } else if( flagTAPV2) {
         	setGluAdqlForAllTapTables(prefixe, i, a, gluIndex+1, sourceGluAdqlTemplate, f);
         	
-        // Cas spécial pour repérer le champ qui devra recevoir le suffixe de l'URL HiPS
+        // Cas spï¿½cial pour repï¿½rer le champ qui devra recevoir le suffixe de l'URL HiPS
         } else if( prefixe.equalsIgnoreCase("HiPS") ) {
            f = new JHiPS();
            flagHiPS=true;
@@ -1144,21 +1144,21 @@ public class ServerGlu extends Server implements Runnable {
 		return demiliter;
 	}
 
-   /** Pour un serveur GLU on teste en premier si le nom du serveur passé
-    * en paramètre dans la commande script ne serait pas directement
+   /** Pour un serveur GLU on teste en premier si le nom du serveur passï¿½
+    * en paramï¿½tre dans la commande script ne serait pas directement
     * l'identificateur de l'enregistrement GLU. Sinon on va regarder
-    * en détail les chaines de descriptions
+    * en dï¿½tail les chaines de descriptions
     */
    protected boolean is(String s) {
       return s.equalsIgnoreCase(gluTag) || super.is(s);
    }
    
 
-   /** Retourne l'Item d'une JcomboBox qui contient la chaine "cr" (ou egalité stricte
-    * dans le cas d'un numérique)
-    * RA: "cr" est supposé être en majuscules
-    * Rq: traite le cas particulier "nn - chaine", où le retour sera "nn" au lieu de "chaine"
-    * Retourn null si non trouvé */
+   /** Retourne l'Item d'une JcomboBox qui contient la chaine "cr" (ou egalitï¿½ stricte
+    * dans le cas d'un numï¿½rique)
+    * RA: "cr" est supposï¿½ ï¿½tre en majuscules
+    * Rq: traite le cas particulier "nn - chaine", oï¿½ le retour sera "nn" au lieu de "chaine"
+    * Retourn null si non trouvï¿½ */
    private String getComboItem(JComboBox c, String cr) {
       String s,s1;
       int m;
@@ -1209,28 +1209,28 @@ public class ServerGlu extends Server implements Runnable {
          // Pre-remplissage des champs concernant le radius
          if( radius!=null && radius.length()>0 ) resolveRadius(radius,true);
 
-         // Pré-remplissage du champ concernant la date
+         // Prï¿½-remplissage du champ concernant la date
          if( date!=null && date.getText().trim().length()==0 ) resolveDate(getDefaultDate());
 
-         // Découpage des critères dans un tableau
+         // Dï¿½coupage des critï¿½res dans un tableau
          Tok st = new Tok(criteria.trim(),",");
          String crit[] = new String[st.countTokens()];
          for( i=0; st.hasMoreTokens(); i++ ) {
             crit[i] = st.nextToken();
             
-            //System.out.println("Critère "+(i+1)+" ["+crit[i]+"]");
+            //System.out.println("Critï¿½re "+(i+1)+" ["+crit[i]+"]");
          }
 
-         Vector v = new Vector(10);    // Liste des critères finaux
+         Vector v = new Vector(10);    // Liste des critï¿½res finaux
          Vector vbis = new Vector(10);	// Juste pour etablir le label du plan
 
-         // Initialisation à null;
+         // Initialisation ï¿½ null;
          for( e = vc.elements(); e.hasMoreElements(); e.nextElement() ) {
             v.addElement(null);
             vbis.addElement(null);
          }
 
-         // Placement des critères labelés (ex: Survey=DSS1)
+         // Placement des critï¿½res labelï¿½s (ex: Survey=DSS1)
          for( i=0; i<crit.length; i++ ) {
             String cr=crit[i];
             int posEgal=cr.indexOf('=');
@@ -1241,7 +1241,7 @@ public class ServerGlu extends Server implements Runnable {
 
                //System.out.print(".Recherche initiale pour "+cName+"="+s);
 
-               // Recherche du paramètre correspondant
+               // Recherche du paramï¿½tre correspondant
                e = vc.elements();
                for( j=0; e.hasMoreElements(); j++ ) {
                   JComponent c = (JComponent)e.nextElement();
@@ -1265,8 +1265,8 @@ public class ServerGlu extends Server implements Runnable {
             }
          }
 
-         // Placement des critères non labelés, mais dont la valeur va être
-         // trouvée dans la liste de la JComboBox
+         // Placement des critï¿½res non labelï¿½s, mais dont la valeur va ï¿½tre
+         // trouvï¿½e dans la liste de la JComboBox
          e = vc.elements();
          for( j=0; e.hasMoreElements(); j++ ) {
             JComponent c = (JComponent)e.nextElement();
@@ -1295,22 +1295,22 @@ public class ServerGlu extends Server implements Runnable {
          }
 
 
-         // Passage en revue des critères input non encore utilisés et je les place
-         // postionnellement dans les critères output en sautant les cases déjà renseignés
+         // Passage en revue des critï¿½res input non encore utilisï¿½s et je les place
+         // postionnellement dans les critï¿½res output en sautant les cases dï¿½jï¿½ renseignï¿½s
          e = vc.elements();
          JComponent c=(JComponent)e.nextElement();
          for( j=i=0; i<crit.length; i++ ) {
-            if( crit[i]==null ) continue;		// déjà utilisé
+            if( crit[i]==null ) continue;		// dï¿½jï¿½ utilisï¿½
 
             try {
                for(;v.elementAt(j)!=null || isFieldTargetOrRadius(c); j++ ) c=(JComponent)e.nextElement();
             }
             catch(NoSuchElementException nsee) {continue;}
 
-            // Si le component est tagué en INPUT, on va remplacer le nom du plan saisie
+            // Si le component est taguï¿½ en INPUT, on va remplacer le nom du plan saisie
             // par son URL (si possible)
             if( isFieldInput(c) ) {
-               setSelectedItem(c,crit[i]);		// Je positionne le Choice à la main sinon
+               setSelectedItem(c,crit[i]);		// Je positionne le Choice ï¿½ la main sinon
                crit[i]=getInputUrl(c);         // le getInputUrl merdouille
                if( crit[i]==null ) {
                   //                  setSync(true);
@@ -1323,14 +1323,14 @@ public class ServerGlu extends Server implements Runnable {
             vbis.setElementAt(crit[i],j);
          }
 
-         // Passage en revue des critères manquants en output et positionnement de la valeur
-         // par défaut correspondante si elle peut être déterminée, sinon ""
+         // Passage en revue des critï¿½res manquants en output et positionnement de la valeur
+         // par dï¿½faut correspondante si elle peut ï¿½tre dï¿½terminï¿½e, sinon ""
          e = vc.elements();
          for( j=0; e.hasMoreElements(); j++ ) {
             c = (JComponent)e.nextElement();
-            if( v.elementAt(j)!=null ) continue; // déjà renseigné
+            if( v.elementAt(j)!=null ) continue; // dï¿½jï¿½ renseignï¿½
             //System.out.print(".Default pour "+c.getName()+" :");
-            s=""; // le défaut
+            s=""; // le dï¿½faut
 
             if( (c instanceof JTextField) ){
                s = ((JTextField)c).getText();
@@ -1350,26 +1350,26 @@ public class ServerGlu extends Server implements Runnable {
             //System.out.println();
          }
 
-         // Résolution d'un paramètre de type BaseUrl(URL|MOCID)
-         // Si effectivement il s'agit d'un ID et que celui-ci retourne une ou plusieurs URLs séparées par des TAB,
-         // on bouclera sur chaque URL en la remplaçant successivement dans le vecteur des paramètres qui va bien.
-         // En revanche, s'il n'y a qu'une URL retournée, ou directement passée en paramètre, la boucle se limitera
-         // à un seul tour.
+         // Rï¿½solution d'un paramï¿½tre de type BaseUrl(URL|MOCID)
+         // Si effectivement il s'agit d'un ID et que celui-ci retourne une ou plusieurs URLs sï¿½parï¿½es par des TAB,
+         // on bouclera sur chaque URL en la remplaï¿½ant successivement dans le vecteur des paramï¿½tres qui va bien.
+         // En revanche, s'il n'y a qu'une URL retournï¿½e, ou directement passï¿½e en paramï¿½tre, la boucle se limitera
+         // ï¿½ un seul tour.
          Tok tokUrlList=null;
          if( baseUrlIndex>=0 ) {
             s = (String) v.get( baseUrlIndex );
             if( !s.startsWith("http://") && !s.startsWith("https://") ) {
                String urlList = aladin.directory.resolveServiceUrl(gluTag,s);
                if( urlList!=null ) {
-                  resourceId = s;   // mémorisation au cas de redo (cf. PlanCatalog.redo..)
+                  resourceId = s;   // mï¿½morisation au cas de redo (cf. PlanCatalog.redo..)
                   tokUrlList = new Tok(urlList,"\t");
                   v.setElementAt( tokUrlList.nextToken(), baseUrlIndex);
                }
             }
          }
 
-         boolean encore=true;  // Détermine la sortie de la boucle
-         int n=-1;             // Numéro du dernier plan créé dans la pile, sinon -1
+         boolean encore=true;  // Dï¿½termine la sortie de la boucle
+         int n=-1;             // Numï¿½ro du dernier plan crï¿½ï¿½ dans la pile, sinon -1
 
          do { 
 
@@ -1463,7 +1463,7 @@ public class ServerGlu extends Server implements Runnable {
                   try { in = Util.openStream(u); }
                   catch( Exception e1 ) {
 
-                     // Peut être un miroir ?
+                     // Peut ï¿½tre un miroir ?
                      if( aladin.glu.checkIndirection(gluTag, null) ) {
                         u=aladin.glu.getURL(gluTag,p.toString());
                         in = Util.openStream(u);
@@ -1482,8 +1482,8 @@ public class ServerGlu extends Server implements Runnable {
                   return -1;
                }
                
-               // IL est possible que l'url soit en fait une collection d'urls séparées par un TAB
-               // notamment lorsque la résolution de l'URL a été faite via MocServer
+               // IL est possible que l'url soit en fait une collection d'urls sï¿½parï¿½es par un TAB
+               // notamment lorsque la rï¿½solution de l'URL a ï¿½tï¿½ faite via MocServer
                try {
                   Tok tok = new Tok( u.toString(),"\t");
                   while( tok.hasMoreTokens() ) {
@@ -1496,7 +1496,7 @@ public class ServerGlu extends Server implements Runnable {
                }
             }
 
-            // On modifie dynamiquement l'URL à utiliser en vérifiant que ce n'est pas la fin de la liste
+            // On modifie dynamiquement l'URL ï¿½ utiliser en vï¿½rifiant que ce n'est pas la fin de la liste
             if( baseUrlIndex>=0 && tokUrlList!=null ) {
                encore=tokUrlList.hasMoreTokens();
                if( encore ) v.setElementAt( tokUrlList.nextToken(), baseUrlIndex);
@@ -1523,7 +1523,7 @@ public class ServerGlu extends Server implements Runnable {
       String s,objet="";
       Enumeration e;
       String code=null;
-      boolean flagScriptEquiv=true;	// Par défaut, il existe tjs une commande script équivalent
+      boolean flagScriptEquiv=true;	// Par dï¿½faut, il existe tjs une commande script ï¿½quivalent
       List<Coord> rectVertices = new ArrayList<>();//code for poly addition --in progress 1 line
       
       // Resolution par Simbad necessaire ?
@@ -1531,7 +1531,7 @@ public class ServerGlu extends Server implements Runnable {
          try {
             objet=resolveQueryField();
             if( objet==null ) throw new Exception(UNKNOWNOBJ);
-            
+            System.out.println("STCS "+this.boundaryAreaStcs );
             if (this.boundaryAreaStcs != null && !this.boundaryAreaStcs.isEmpty()) { //current config to check target limits
             	if (this.posBounds == null) {
             		STCStringParser parser = new STCStringParser();
@@ -1635,7 +1635,7 @@ public class ServerGlu extends Server implements Runnable {
             int j;
             String t=null;
             crit=s = (String)((JComboBox)c).getSelectedItem();
-            // Si la valeur est précédée d'un "XXX - valeur", c'est XXX qui sera utilisé
+            // Si la valeur est prï¿½cï¿½dï¿½e d'un "XXX - valeur", c'est XXX qui sera utilisï¿½
             // en tant que valeur.
             if( (j=s.indexOf(" - "))>0 ) vbis.addElement(crit=s.substring(j+3));
             if( (j=s.trim().indexOf("- "))==0 ) vbis.addElement(crit=s.substring(j+2));
@@ -1662,7 +1662,7 @@ public class ServerGlu extends Server implements Runnable {
             limitViolation = isValueWithinGivenOptions(listString.toString(), rangeValues.get(index), null);
          }
 
-         // Mise à jour des critères de la commande script équivalente
+         // Mise ï¿½ jour des critï¿½res de la commande script ï¿½quivalente
          if( crit!=null && crit.length()>0 ) {
             if( criteres.length()>0 ) criteres.append(",");
 
@@ -1738,10 +1738,10 @@ public class ServerGlu extends Server implements Runnable {
     	  setInTap(u);
       }
       
-      // Il s'agit d'un appel système ?
+      // Il s'agit d'un appel systï¿½me ?
       if( system!=null ) { exec(label, p==null?"" : p.toString() ); return; }
       
-      // Génération de la commande script équivalent
+      // Gï¿½nï¿½ration de la commande script ï¿½quivalent
       if( flagScriptEquiv && !flagTAPV2 ) {
          String r = getRadius(false);
          if( r==null ) r="";
@@ -1765,7 +1765,7 @@ public class ServerGlu extends Server implements Runnable {
                    }
                } else Aladin.error(this,WNEEDCHECK);
 
-			   // Chargement des descriptions des images disponibles dans thread séparé
+			   // Chargement des descriptions des images disponibles dans thread sï¿½parï¿½
 			   } else {
 				   waitCursor();
 				   uT = u;
@@ -1810,8 +1810,8 @@ public class ServerGlu extends Server implements Runnable {
       if( code!=null && lastPlan!=null ) lastPlan.setBookmarkCode(code+" $TARGET $RADIUS");
    }
    
-   /** Appel effectif pour la création du plan.
-    * Cette méthode est surchargé dans le cas d'un service utilisant un POST multipart => ex: ServerSextractor */
+   /** Appel effectif pour la crï¿½ation du plan.
+    * Cette mï¿½thode est surchargï¿½ dans le cas d'un service utilisant un POST multipart => ex: ServerSextractor */
    protected Plan callCreatePlan(String u,String label, String orig, Server server) {
       return aladin.calque.createPlan(u, label, orig, server);
    }
@@ -1916,7 +1916,7 @@ public class ServerGlu extends Server implements Runnable {
       tap.setText(s);
    }
    
-   /** Lance l'éxécution de l'application system */
+   /** Lance l'ï¿½xï¿½cution de l'application system */
    private boolean exec(final String label,String params) {
       aladin.log("exec",gluTag);
       final String dir = this.dir;
@@ -1955,10 +1955,10 @@ public class ServerGlu extends Server implements Runnable {
       return template.substring(0,i)+d+template.substring(i+6);
    }
 
-   protected Plan lastPlan=null; 	// Dernier plan créé
+   protected Plan lastPlan=null; 	// Dernier plan crï¿½ï¿½
 
-	URL uT; // url à passer au thread
-	String posT; // position à passer au thread
+	URL uT; // url ï¿½ passer au thread
+	String posT; // position ï¿½ passer au thread
 	// appel aux serveurs SIA/SSA/IDHA en asynchrone
 	public void run() {
 		URL u = uT;
@@ -1987,12 +1987,12 @@ public class ServerGlu extends Server implements Runnable {
       String s;
       Enumeration e;
 
-      // Positionnement des nécessaires au target et radius pour le formulaire
+      // Positionnement des nï¿½cessaires au target et radius pour le formulaire
       if( resolveTarget(target)==null ) return null;
       resolveRadius(radius,true);
 //      setRadius(radius);
 
-      // Mise en place des paramètres
+      // Mise en place des paramï¿½tres
       Vector<String> v = new Vector<>(10);
       e = vc.elements();
       while( e.hasMoreElements() ) {
@@ -2026,7 +2026,7 @@ public class ServerGlu extends Server implements Runnable {
 
    private boolean majChoiceSize = true;
    private int maxChoiceWidth = XWIDTH-100;
-   /** met à jour la taille des Choice
+   /** met ï¿½ jour la taille des Choice
     *  pour qu'ils ne soient pas trop longs
     *
     */
@@ -2065,7 +2065,7 @@ public class ServerGlu extends Server implements Runnable {
             else ((JTextField)c[i]).setText("");
             j++;
 
-         // On prend la première valeur au cas où
+         // On prend la premiï¿½re valeur au cas oï¿½
          } else if( c[i] instanceof JComboBox ) {
             ((JComboBox)c[i]).setSelectedIndex(0) ;
             j++;
@@ -2128,7 +2128,7 @@ public class ServerGlu extends Server implements Runnable {
 	
    protected boolean updateWidgets() {
       if( flagTAP ) {
-//         System.out.println("Je dois rééditer la chaine ADQL");
+//         System.out.println("Je dois rï¿½ï¿½diter la chaine ADQL");
          submit1(false, false);
       }
       return super.updateWidgets();

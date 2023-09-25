@@ -104,6 +104,7 @@ public static final String SERVICE_DEF = "service_def";
 public static final String DESCRIPTION = "description";
 public static final String SEMANTICS = "semantics";
 public static final String CONTENTTYPE = "content_type";
+public static final String CONTENTQUAL = "content_qualifier";
 public static final String CONTENTLENGTH = "content_length";
 public static final String CONTENTLENGTH_DISPLAY = "content_length_display";
 public static final String DEFAULT_CONTENTLENGTH_UNITS = "bytes";
@@ -239,7 +240,7 @@ public static final String EDITUPLOADTABLENAMEACTION = "EDITUPLOADTABLENAMEACTIO
 public static final String STANDARD_TAPRESULTFORMAT = "votable";// "application/x-votable+xml";//TODO:: either
 public static final String TABLEGUINAME = "table";
 
-/** Liste des caractère définissant une chaine de carac @author Mallory Marcot*/
+/** Liste des caractï¿½re dï¿½finissant une chaine de carac @author Mallory Marcot*/
 public static final String LISTE_CARACTERE_STRING = "AZRTYUIOPQSDFGHJKLMWXCVBN%_[]^";
 
 	static {

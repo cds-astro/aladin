@@ -96,6 +96,7 @@ public final class Calib  implements Cloneable {
    String type2;
    double [][] CD = new double[2][2];
    double [][] ID = new double[2][2];
+   double lonpole ;
 
    public static int FK4 = 1;
    public static int GALACTIC = 2;
@@ -915,7 +916,7 @@ public final class Calib  implements Cloneable {
       String plate = hf.getStringFromHeader("PLATE") ; 
       if (plate != null) aladin = 3 ; 
       else   aladin = 0 ;
-    //  System.out.println("aladin "+aladin);
+      System.out.println("aladin "+aladin);
       
       try {
          alpha = hf.getDoubleFromHeader("PLTRAS  ");
@@ -1097,6 +1098,7 @@ public final class Calib  implements Cloneable {
                         if (CD[1][1] >0 ) CD[1][1] = - CD[1][1] ;
                      }
                   } // Fin de e3
+		
                } // Fin de e22
             } // Fin de e2
          } // Fin de e1
@@ -1164,6 +1166,9 @@ public final class Calib  implements Cloneable {
          if (Syst.indexOf("FK4")>=0) system = FK4 ;
          //        System.out.println("system "+system);
       } catch(Exception e10) {}
+      try { lonpole = hf.getDoubleFromHeader("LONPOLE ") ;}
+      catch(Exception e47) {lonpole = 180.0 ; }
+	      
       if (type1.startsWith("ELON"))
       {
          //                       System.out.println("ELON");
@@ -1523,6 +1528,18 @@ public final class Calib  implements Cloneable {
  //      System.out.println("COCO "+xyapoly[5]+" "+xydpoly[5]);
 
   //    System.out.println("proj "+proj) ;
+    
+     /* proj = 18 ;
+
+      Coord Ctest = new Coord() ;
+      Ctest.al = 190.0 ;
+      Ctest.del = 25.0 ;
+try {      GetXY(Ctest) ; }  catch (Exception e36) {System.out.println("aaaaaaaaaaaaaaaaa") ; }
+      System.out.println("Ctest "+Ctest.x+" "+Ctest.y) ;
+ try {     GetCoord(Ctest) ; } catch (Exception e36) {System.out.println("bbbbaaaaaaaaaaaa") ; }
+      
+      System.out.println("Ctest1 "+Ctest.al+" "+Ctest.del) ;  
+     */
    }
 
    public Calib (int order,  long npix, int frame, int width) {
@@ -2227,6 +2244,8 @@ public final class Calib  implements Cloneable {
    double posx ;
    double posy ;
 
+   //  System.out.println("-45 % 37.2 "+(-45%37.2)) ;
+   //  System.out.println("45 % 37.2 "+(-45%37.2)) ;
    // System.out.println("GetCoord "+c.x+" "+c.y+" "+aladin);
    // PFOPT: PROBABLEMENT LE CAS LE PLUS RARE => METTRE EN CLAUSE ELSE
    if((aladin == 1) || (aladin ==2))
@@ -2550,32 +2569,56 @@ public final class Calib  implements Cloneable {
              //   System.out.println("pos "+posx+" " +posy);
             }
  
-           // System.out.println("cdel"+cdelz+" "+sdelz);
+            System.out.println("cdel"+cdelz+" "+sdelz);
+            
+            System.out.println("lonpole "+lonpole);
             //                       double deno = FastMath.cos(deltai*Math.PI/180.)
             double deno = cdelz
                   //                                     -yy*FastMath.sin(deltai*Math.PI/180.);
                   -yy*sdelz;
-            double d_al = Math.atan(x_objr/deno) ;
-            c.del = (180./Math.PI)*Math.atan(FastMath.cos(d_al)
+            // double d_al = Math.atan(x_objr/deno) ;
+            double d_al = Math.atan2(x_objr, deno) ;
+            
+             c.del = (180./Math.PI)*Math.atan(FastMath.cos(d_al)
+         //   c.del = (180./Math.PI)*Math.atan2(FastMath.cos(d_al)
+                    //                                *(FastMath.sin(deltai*Math.PI/180.)
+                *(sdelz +yy*cdelz) / deno ) ;
+            //        *(sdelz +yy*cdelz) ,  deno ) ;
 
-                  //                                *(FastMath.sin(deltai*Math.PI/180.)
-                  *(sdelz +yy*cdelz) / deno ) ;
+
+        	
             //                System.out.println("d_al "+x_objr+" "+c.del) ;
             //                                +y_objr*FastMath.cos(deltai*Math.PI/180.))
             //                        c.al = alphai + d_al*180./Math.PI;
             c.al = alphai + d_al*rad_to_deg;
+            System.out.println("deno "+deno+" "+x_objr+" "+yy);
+            System.out.println("c al del  "+c.al+" "+c.del);
+            
             // Pourquoi ï¿½ï¿½ ?
             //                        if((c.del * deltai< 0)&&(Math.abs(deltai) > 87.))
             //                           {
             //                             c.al += 180.;
             //                             c.del = -c.del;
             //                            }
-            if (deno < 0.0) 
+           // if ((deno < 0.0)&& deltai != 90.0  )
+           // {
+             //  c.al += 180;
+             //  c.del = -c.del ;
+            // }
+            if ((lonpole == 0.0)&& deltai == 90.0  )
             {
-               c.al += 180.;
-               c.del = -c.del ;
+               c.al += 180.0; 
+              // c.del = -c.del ;
             }
-            //                          System.out.println("c al del  "+c.al+" "+c.del);
+           // if ((deno > 0.0)&& deltai == 90.0  )
+           // {
+            //   c.al += 180;
+             //  c.del = c.del ;
+            // }
+            
+           
+	    
+                                      // System.out.println("c al del  "+c.al+" "+c.del);
             if (c.al > 360.0) c.al -= 360.0 ;
             if (c.al < 0.0) c.al += 360.0    ;     
             break ;
@@ -2847,11 +2890,24 @@ public final class Calib  implements Cloneable {
             
          case HPX:
         	double [] unproject1 ;
-    //    	  System.out.println("HPX "+x_objr+" "+y_objr);
+        	  System.out.println("HPX "+x_objr+" "+y_objr);
+        	// if (x_objr > Math.PI) {x_objr -= Math.PI ;}
+        	// if (y_objr > Math.PI) {y_objr -= Math.PI ;}
+        	// if (x_objr < -Math.PI) {x_objr += Math.PI ;}
+        	// if (y_objr < -Math.PI) {y_objr += Math.PI ;}
+        	  x_objr %= 2*Math.PI ;
+        	  y_objr %= 2*Math.PI ;
+        	  if ((x_objr > -2*Math.PI ) && (x_objr < -Math.PI)) x_objr += 2*Math.PI ;
+        	  if ((x_objr < 2*Math.PI ) && (x_objr > Math.PI)) x_objr -= 2*Math.PI ;
+        	  if ((y_objr > -2*Math.PI ) && (y_objr < -Math.PI)) y_objr += 2*Math.PI ;
+        	  if ((y_objr < 2*Math.PI ) && (y_objr > Math.PI)) y_objr -= 2*Math.PI ;
+        	  System.out.println("HPX 1 "+x_objr+" "+y_objr);
         	  unproject1 = Healpix.UI.unproject(x_objr,y_objr) ;
+        	  
         	 c.al = unproject1[0]*rad_to_deg ;
         	 c.del = unproject1[1]*rad_to_deg ;
-      //  	 System.out.println("HPX "+unproject1[0]+" "+unproject1[1]);
+    //  System.out.println("HPX 2 "+unproject1[0]+" "+unproject1[1]);
+      System.out.println("HPX 3 "+c.al+" "+c.del);
         	 break ;
          default:
             break ;
@@ -3162,6 +3218,12 @@ public final class Calib  implements Cloneable {
                double den  = sin_del * sdelz + cos_del * cdelz *cos_dalpha;
                x_stand =  x_tet_phi / den ;
                y_stand =  y_tet_phi / den ;
+               if( (lonpole==0.0 )&&(deltai == 90.0)) {
+            	   x_stand = -x_stand ;
+            	   y_stand = -y_stand;
+            	   }
+               
+               
                //             System.out.println("alphai "+alphai+" "+deltai);
                //             System.out.println("xystand"+x_stand+" "+y_stand);
                //                        x_stand *= 180./Math.PI ;
@@ -3766,9 +3828,14 @@ public final class Calib  implements Cloneable {
                break ;
             case HPX :
             	double [] project ;
+            System.out.println("XPH "+al+" "+del) ;
             	project = Healpix.UI.project(al*deg_to_rad,del*deg_to_rad) ;
+            System.out.println("XPH 1 "+project[0]+" "+project[1]) ;
             	x_stand = project[0] *rad_to_deg ;
             	y_stand = project[1]*rad_to_deg ;
+               // if (x_stand > 180.) x_stand -= 360.0 ;
+            //	if (y_stand > 180.) y_stand -= 360.0 ;
+            //	System.out.println("XPH 2 "+x_stand+" "+y_stand) ;
             default:
                //                       System.out.println("proj default\n");
                break ;
@@ -3787,6 +3854,7 @@ public final class Calib  implements Cloneable {
                        
          c.x = (ID[0][0]*x_stand +ID[0][1]*y_stand)+ Xcen;
          c.y =  -(ID[1][0]*x_stand +ID[1][1]* y_stand) + ynpix - Ycen;
+     //    System.out.println("XPH 3 "+c.x+" "+c.y) ;
        //  if ((Math.abs(c.x) > 20000) || (Math.abs(c.y )> 10000))   System.out.println("on est l� c.y c.x x_stand y_stand"+c.y+" "+c.x+" "+x_stand+" "+y_stand+" "+c.al+" "+c.del);
          if ((xyapoly[1] != 0)&&(xyapoly[1] != 1)&&((proj==TAN)||(proj==SIP)) && (aladin == 3)  && (xydpoly[2]*ID[1][1] <0 )) 
          {    

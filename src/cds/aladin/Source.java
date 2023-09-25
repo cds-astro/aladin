@@ -38,11 +38,13 @@ import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.HashMap;
 
 import cds.image.EPSGraphics;
 import cds.tools.Util;
 import cds.xml.Field;
 
+import cds.savot.model.SavotResource;
 
 /**
  * Objet graphique correspondant a une source d'un catalogue
@@ -66,13 +68,13 @@ public class Source extends Position implements Comparator {
    static final String [] TYPENAME= { "oval","square","circle","rhomb","cross","triangle","plus","small circle","dot","microdot",
       "solid oval","solid square","solid circle","solid rhomb","solid triangle" };
 
-   protected byte sourceType=SQUARE;    //Type de representation de la source par défaut (CARRE, ...)
+   protected byte sourceType=SQUARE;    //Type de representation de la source par dï¿½faut (CARRE, ...)
    protected String info;       // Information supplementaire associee a la source (en plus de id)
    private Legende leg;       // La legende associee a la source
    private String oid=null;     // L'OID de la source s'il a ete defini
 
-   /**** variables liés aux filtres ****/
-   // TODO : à remplacer par un objet, ce qui éviterait d'avoir 4 double pour chaque Source si on en utilise que 2 par exemple
+   /**** variables liï¿½s aux filtres ****/
+   // TODO : ï¿½ remplacer par un objet, ce qui ï¿½viterait d'avoir 4 double pour chaque Source si on en utilise que 2 par exemple
    // stockage de valeurs pour les filtres (Thomas)
    // values[i][j][k] est la keme valeur pour la jeme action du filtre numero i
    protected double[][][] values;
@@ -83,9 +85,11 @@ public class Source extends Position implements Comparator {
    // action[i][j] = j_eme action pour le PlanFilter numero i
    protected Action[][] actions;
 
-   /**** objet wrappant les infos relatives au footprint associé à la source ****/
+   /**** objet wrappant les infos relatives au footprint associï¿½ ï¿½ la source ****/
    protected SourceFootprint sourceFootprint;
    
+   /**** objet wrappant les infos relatives au serviceDescriptor associï¿½ ï¿½ la source ****/
+   protected SimpleData sourceServiceDescriptor ;
    /** For plugin */
    protected Source() {}
    
@@ -114,7 +118,7 @@ public class Source extends Position implements Comparator {
    /** Creation d'un objet source
     * @param plan plan d'appartenance de la ligne
     * @param raj,dej  coordonnees de l'objet
-    * @param jdtime   date associée à l'objet
+    * @param jdtime   date associï¿½e ï¿½ l'objet
     * @param id       identificateur de l'objet
     * @param info     information supplementaire
     */
@@ -159,10 +163,10 @@ public class Source extends Position implements Comparator {
 
    }
    
-   /** Retourne la légende associée à la source */
+   /** Retourne la lï¿½gende associï¿½e ï¿½ la source */
    public Legende getLeg() {
       
-      // Dans le cas d'un plan HiPs catalogue, la légende peut être générique
+      // Dans le cas d'un plan HiPs catalogue, la lï¿½gende peut ï¿½tre gï¿½nï¿½rique
       if( plan!=null && plan instanceof PlanBGCat ) {
          Legende l = plan.getFirstLegende();
          if( l!=null ) return l;
@@ -171,10 +175,10 @@ public class Source extends Position implements Comparator {
       return leg;
    }
 
-   /** Positionne la légende associée à la source */
+   /** Positionne la lï¿½gende associï¿½e ï¿½ la source */
    protected void setLeg(Legende leg) { this.leg = leg; }
 
-   /** Accroit ou décroit la taille du type de source */
+   /** Accroit ou dï¿½croit la taille du type de source */
    void increaseSourceSize(int sens) { 
       sourceType+=sens;
       if( sourceType>=TYPENAME.length ) sourceType=(byte)(TYPENAME.length-1);
@@ -205,19 +209,19 @@ public class Source extends Position implements Comparator {
       else flags &= ~TAG;
    }
 
-   /** Retourne true si la source est taguée */
+   /** Retourne true si la source est taguï¿½e */
    final protected boolean isTagged() { return (flags & TAG) !=0; /* == TAG;*/ }
 
-   /** Positionne le flag de mise en évidence temporaire */
+   /** Positionne le flag de mise en ï¿½vidence temporaire */
    final protected void setHighlight(boolean fl) {
       if( fl ) flags |= HIGHLIGHT;
       else flags &= ~HIGHLIGHT;
    }
 
-   /** Retourne true si la source est mise en évidence temporairement */
+   /** Retourne true si la source est mise en ï¿½vidence temporairement */
    final protected boolean isHighlighted() { return (flags & HIGHLIGHT) !=0; /* == HIGHLIGHT;*/ }
 
-   /** Retourne true si l'objet contient des informations de photométrie  */
+   /** Retourne true si l'objet contient des informations de photomï¿½trie  */
    public boolean hasPhot() { return getLeg().hasGroup(); }
 
    /** Retourne le nom de la forme en fonction de l'indice */
@@ -351,7 +355,7 @@ public class Source extends Position implements Comparator {
    static private Rectangle box = new Rectangle();      // Box qui contient le label + la source
 
    // Calcul le decalage du label en fct de la font
-   // et de la taille de la source. On utilise une variable statique pour éviter
+   // et de la taille de la source. On utilise une variable statique pour ï¿½viter
    // les allocations inutiles
    private Rectangle setBox() { return setBox(null); }
    private Rectangle setBox(Graphics g) {
@@ -410,7 +414,7 @@ public class Source extends Position implements Comparator {
       if( p==null ) return clip;
 
       if (sourceFootprint != null) {
-          // TODO : étendre le clip
+          // TODO : ï¿½tendre le clip
       }
 
       if( !isWithLabel() ) {
@@ -423,7 +427,7 @@ public class Source extends Position implements Comparator {
       }
    }
 
-   /** Teste l'intersection même partielle avec le clip */
+   /** Teste l'intersection mï¿½me partielle avec le clip */
    protected boolean inClip(ViewSimple v,Rectangle clip) {
       if( !isVisible() ) return false;
       int L =getL();
@@ -558,7 +562,7 @@ public class Source extends Position implements Comparator {
       }
    }
 
-   // Tracage d'un réticule (ne sert que pour SourcePhot)
+   // Tracage d'un rï¿½ticule (ne sert que pour SourcePhot)
    void drawReticule(Graphics g,Point p) {
       int L = getL();
       int m=4;
@@ -683,7 +687,7 @@ public class Source extends Position implements Comparator {
       o.write((plan.label+"\t"+(id!=null?id:"-")+"\t"+p.x+"\t"+p.y+"\t"+getFirstLink()+"\n").getBytes());
    }
 
-   /** Retourne le premier link associée à la source si il existe, sinon retourne "-" */
+   /** Retourne le premier link associï¿½e ï¿½ la source si il existe, sinon retourne "-" */
    protected String getFirstLink() {
       if( getLeg()==null ) return "-";
       int i = getLeg().getFirstLink();
@@ -707,7 +711,7 @@ public class Source extends Position implements Comparator {
 
   /** Dessine la source
    * @param g        le contexte graphique
-   * @param v reference à la vue où on dessine
+   * @param v reference ï¿½ la vue oï¿½ on dessine
    */
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
       if( !inTime( v )  ) return false;
@@ -783,7 +787,7 @@ public class Source extends Position implements Comparator {
     }
 
     private void drawAssociatedFootprint(Graphics g, ViewSimple v, int dx, int dy) {
-        // dessin du FoV éventuellement associé à la source
+        // dessin du FoV ï¿½ventuellement associï¿½ ï¿½ la source
         if (sourceFootprint != null) {
             sourceFootprint.draw(v.getProj(), g, v, dx, dy, getColor());
         }
@@ -867,7 +871,7 @@ public class Source extends Position implements Comparator {
 
    /** Dessine la source en inversant sa couleur (ne concerne que les surcharges dues aux filtres)
     * @param g        le contexte graphique
-    * @param v        référence à la vue sur laquelle on doit dessiner
+    * @param v        rï¿½fï¿½rence ï¿½ la vue sur laquelle on doit dessiner
     */
    /*
     protected void drawReverse(Graphics g,ViewSimple v,int dx,int dy) {
@@ -1052,7 +1056,7 @@ public class Source extends Position implements Comparator {
 
         if( getLeg()==null ) return -1;
 
-        // replace ajouté pour la démo AVO
+        // replace ajoutï¿½ pour la dï¿½mo AVO
         name = MetaDataTree.replace(name, " ", "", -1);
 
     	Field[] fields = getLeg().field;
@@ -1063,7 +1067,7 @@ public class Source extends Position implements Comparator {
 		name = MetaDataTree.replace(name, "\\*", "*", -1);
 
     	for(curPos=0; curPos<fields.length; curPos++) {
-            // replace ajouté pour la démo
+            // replace ajoutï¿½ pour la dï¿½mo
     	    curName = MetaDataTree.replace(fields[curPos].name.trim(), " ", "", -1);
     	    if(curName == null) continue;
 			if( match(name, curName, wildcard) ) return curPos;
@@ -1071,9 +1075,9 @@ public class Source extends Position implements Comparator {
     	return -1;
    }
 
-   /** Retourne true si s contient '?' ou ('*' non précédé de '\')
+   /** Retourne true si s contient '?' ou ('*' non prï¿½cï¿½dï¿½ de '\')
     *
-    * @param s la chaine testée
+    * @param s la chaine testï¿½e
     * @return boolean
     */
    static protected boolean useWildcard(String s) {
@@ -1111,11 +1115,11 @@ public class Source extends Position implements Comparator {
         else return null;
     }
 
-    /** Retourne la valeur du champ à la position index (avec un éventuel
+    /** Retourne la valeur du champ ï¿½ la position index (avec un ï¿½ventuel
      * tag GLU pour les liens
      */
     protected String getCodedValue(int index) throws NoSuchElementException {
-       index++;   // skip du triangle  (il y a toujours une première valeur)
+       index++;   // skip du triangle  (il y a toujours une premiï¿½re valeur)
        int deb= -1;
        int n=info.length();
        int i=0;
@@ -1172,8 +1176,8 @@ public class Source extends Position implements Comparator {
     public String [] getValues() {
        StringTokenizer st = new StringTokenizer(info,"\t");
 
-       // Si on connait le nombre de champ, on alloue immédiatement le tableau
-       // sinon on passe par un Vector temporaire et on recopie à la fin
+       // Si on connait le nombre de champ, on alloue immï¿½diatement le tableau
+       // sinon on passe par un Vector temporaire et on recopie ï¿½ la fin
        String [] v = null;
        Vector tmp=null;
        if( getLeg().field.length>0 ) v = new String[ getLeg().field.length ];
@@ -1195,7 +1199,7 @@ public class Source extends Position implements Comparator {
           else tmp.add(ret);
        }
 
-       // Recopie nécessaire ?
+       // Recopie nï¿½cessaire ?
        if( v==null ) {
           v = new String[ tmp.size() ];
           Enumeration e=tmp.elements();
@@ -1302,7 +1306,7 @@ public class Source extends Position implements Comparator {
     /** Retourne la liste des noms de chaque valeur */
     public String [] getNames() { return getMeta(0); }
 
-    /** Retourne la liste des unités de chaque valeur */
+    /** Retourne la liste des unitï¿½s de chaque valeur */
     public String [] getUnits() { return getMeta(1); }
 
     /** Retourne la liste des UCDs pour chaque valeur */
@@ -1326,7 +1330,7 @@ public class Source extends Position implements Comparator {
     /** Retourne la liste des descriptions pour chaque valeur */
     public String [] getDescriptions() { return getMeta(8); }
 
-    /** Retourne la liste d'une metadata particulière associée aux valeurs
+    /** Retourne la liste d'une metadata particuliï¿½re associï¿½e aux valeurs
      *  @param m 0:label, 1:unit,  2:ucd
      */
     private String [] getMeta(int m) {
@@ -1359,7 +1363,7 @@ public class Source extends Position implements Comparator {
    protected String getUnit(int pos) {
     	if(pos<0) return "";
     	String u = getLeg().field[pos].unit;
-    	if( u!=null ) u = u.replace("year","yr");   // pour faire plaisir à l'ESAC pour Gaia qui utilise des unités non conformes ni à l'IVOA, ni à l'UAI
+    	if( u!=null ) u = u.replace("year","yr");   // pour faire plaisir ï¿½ l'ESAC pour Gaia qui utilise des unitï¿½s non conformes ni ï¿½ l'IVOA, ni ï¿½ l'UAI
     	return u;
    }
 
@@ -1405,7 +1409,7 @@ public class Source extends Position implements Comparator {
          scaleW *= width;
          scaleH *= height;
          
-         // Détermination de l'angle par la matrice CD ?
+         // Dï¿½termination de l'angle par la matrice CD ?
          double angle=0;
          if( iCD>=0 ) {
             try {
@@ -1429,7 +1433,7 @@ public class Source extends Position implements Comparator {
    }
 
   /**
-    * Crée l'objet sourceFootprint s'il n'a pas déja été créé
+    * Crï¿½e l'objet sourceFootprint s'il n'a pas dï¿½ja ï¿½tï¿½ crï¿½ï¿½
     *
     */
    private void createSourceFootprint() {
@@ -1438,17 +1442,28 @@ public class Source extends Position implements Comparator {
       }
    }
 
-   /** Retourne le footprint attaché à la source (peut être <i>null</i>) */
+   /** Retourne le footprint attachï¿½ ï¿½ la source (peut ï¿½tre <i>null</i>) */
    protected SourceFootprint getFootprint() {
       return sourceFootprint;
    }
+   
+   /** Retourne le Service Descriptor attachï¿½ ï¿½ la source (peut ï¿½tre <i>null</i>) */
+   protected SimpleData getServiceDescriptor() {
+      return sourceServiceDescriptor;
+   }
 
-   /** Attache un footprint donné à la source */
+
+   /** Attache un footprint donnï¿½ ï¿½ la source */
    protected void setFootprint(PlanField footprint) {
    	  createSourceFootprint();
    	  sourceFootprint.setFootprint(footprint);
    }
 
+   /** Attache un footprint donnï¿½ ï¿½ la source */
+   protected void setServiceDescriptor(SimpleData ServiceDescriptor) {
+	  // System.out.println("value "+params.get("clef")) ;
+   	 sourceServiceDescriptor = ServiceDescriptor ;
+   }
    protected void setFootprint(String stcs) {
        createSourceFootprint();
        sourceFootprint.setStcs(this.raj, this.dej, stcs);
@@ -1505,24 +1520,24 @@ public class Source extends Position implements Comparator {
    }
 
    /**
-    * @return Retourne l'index du footprint associé (valeur par défaut : -1)
+    * @return Retourne l'index du footprint associï¿½ (valeur par dï¿½faut : -1)
     */
    protected int getIdxFootprint() {
       return sourceFootprint==null?-1:sourceFootprint.getIdxFootprint();
    }
 
    /**
-    * @param idxFootprint valeur à donner à l'index du footprint associé
+    * @param idxFootprint valeur ï¿½ donner ï¿½ l'index du footprint associï¿½
     */
    public void setIdxFootprint(int idxFootprint) {
       createSourceFootprint();
       sourceFootprint.setIdxFootprint(idxFootprint);
    }
 
-   // Variables mémorisant le mode de tri courant
-   static private Source sortSource;    // La source étalon utilisé pour les comparaisons
-   static private int sortNField;       // Le numéro du champ concerné
-   static private boolean sortNumeric;  // true si le tri est numérique, alphabétique sinon
+   // Variables mï¿½morisant le mode de tri courant
+   static private Source sortSource;    // La source ï¿½talon utilisï¿½ pour les comparaisons
+   static private int sortNField;       // Le numï¿½ro du champ concernï¿½
+   static private boolean sortNumeric;  // true si le tri est numï¿½rique, alphabï¿½tique sinon
    static private int sortSens;         // 1:ascendant, -1:descendant
 
    public int compare(Object a1, Object b1) {
@@ -1534,7 +1549,7 @@ public class Source extends Position implements Comparator {
          else return a.isTagged() ? -sortSens : sortSens;
       }
 
-      // Il s'agit d'une source non concernée, on met à la fin
+      // Il s'agit d'une source non concernï¿½e, on met ï¿½ la fin
       if( a.getLeg()!=sortSource.getLeg() ) return 1;
       if( b.getLeg()!=sortSource.getLeg() ) return -1;
 
@@ -1554,16 +1569,16 @@ public class Source extends Position implements Comparator {
       }
    }
 
-   /** Retourne la source utilisée pour effectuer les comparaisons */
+   /** Retourne la source utilisï¿½e pour effectuer les comparaisons */
    static protected Comparator getComparator() { return sortSource; }
 
    /**
-    * Positionne les paramètres pour un tri ultérieur.
-    * Tri sur le champ d'indice nField toutes les sources de même légende que
-    * celle passée en paramètre. On utilise un tri par très performant mais
-    * qui simplifie le traitement pour les enregistrements non concernés.
-    * @param s la source de référence
-    * @param nField l'indice du champ clé de tri
+    * Positionne les paramï¿½tres pour un tri ultï¿½rieur.
+    * Tri sur le champ d'indice nField toutes les sources de mï¿½me lï¿½gende que
+    * celle passï¿½e en paramï¿½tre. On utilise un tri par trï¿½s performant mais
+    * qui simplifie le traitement pour les enregistrements non concernï¿½s.
+    * @param s la source de rï¿½fï¿½rence
+    * @param nField l'indice du champ clï¿½ de tri
     * @param sens 1 - ascendant, -1 descendant
     */
    static protected void setSort(Source s, int nField, int sens) {
@@ -1577,8 +1592,8 @@ public class Source extends Position implements Comparator {
 
    }
 
-   /** Retourne vrai si l'objet doit être considéré comme une Source, et par conséquent repris
-    * dans la tables des mesures, dans les VOTables exportés, etc...
+   /** Retourne vrai si l'objet doit ï¿½tre considï¿½rï¿½ comme une Source, et par consï¿½quent repris
+    * dans la tables des mesures, dans les VOTables exportï¿½s, etc...
     */
    protected boolean asSource() { return true; }
 

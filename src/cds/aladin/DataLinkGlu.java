@@ -124,7 +124,12 @@ public final class DataLinkGlu {
 	 * @param selectedDatalink
 	 * @throws Exception
 	 */
+	protected void createDLGlu( SimpleData selectedDatalink) throws Exception {
+		Source activeDataLinkSource = new Source() ;
+		createDLGlu( activeDataLinkSource, selectedDatalink) ;
+	}
 	protected void createDLGlu(Source activeDataLinkSource, SimpleData selectedDatalink) throws Exception {
+	 
 		boolean isNonStandardService = true;
 		boolean isSODAASync = false;
 		
@@ -133,7 +138,6 @@ public final class DataLinkGlu {
 		Hashtable<String,String> paramValue = new Hashtable<String,String>();
 		HashMap<String, String[]> paramRange = new HashMap<String, String[]>();
 		StringBuilder urlString = null;
-		
 		SavotResource metaResource = selectedDatalink.getMetaResource();
 		ParamSet resourceParams = metaResource.getParams();
 		SavotParam resourceParam = null;
@@ -141,10 +145,10 @@ public final class DataLinkGlu {
 		String boundaryArea_stcs = null;
 		ByteArrayInputStream dicStream = null;
 		int syncAsyncMode = -1;
-		
 		try {
 			for (int i = 0; i < resourceParams.getItemCount(); i++) {
 				resourceParam = resourceParams.getItemAt(i);
+				System.out.println("resource param "+resourceParam.getName());
 				if (resourceParam.getName().equalsIgnoreCase("accessURL")
 						|| resourceParam.getName().equalsIgnoreCase("U")
 						|| resourceParam.getName().equalsIgnoreCase("Url")) {
@@ -156,24 +160,38 @@ public final class DataLinkGlu {
 					String sodaGluRecord = aladin.datalinkGlu.getStandardActionGlu(SODA_FORM);
 					
 					inputParams = DatalinkServiceUtil.getInputParams(metaResource.getGroups()).getParams();
+					for (int j = 0; j < inputParams.getItemCount(); j++) {
+						SavotParam inputParam = inputParams.getItemAt(j);
+						System.out.println("input param "+inputParam.getName());	
+					}
 					SavotParam idParam = DatalinkServiceUtil.getInputParams(inputParams, ID);
 					paramValue.put(String.valueOf(SODA_IDINDEX), getParamValue(idParam, selectedDatalink));
 					
 					boolean noParamSet = true;
 					if (resourceParam.getValue().equalsIgnoreCase(SODAASYNC_STANDARDID)) {
-						isSODAASync = true;
+						System.out.println("SODAASYNC param "+resourceParam.getName());
+						System.out.println("SODAASYNC param "+resourceParam.getValue());
+						isSODAASync = true; 
 					}
-					syncAsyncMode = setSyncAsyncMode(isSODAASync);
+					try  {
+					// to check if there is an alternative mode in the whole SimpleData List. 
+					// List to be created in the catalog display mode	
+					syncAsyncMode = setSyncAsyncMode(isSODAASync); }
+					catch (Exception esync) { System.out.println("no syncasync");}
 					sodaGluRecord = addSyncAsyncParam(sodaGluRecord, syncAsyncMode);
 					
 					if (sodaGluRecord != null) {
+						System.out.println("ici");
 						dicStream = new ByteArrayInputStream(sodaGluRecord.getBytes(StandardCharsets.UTF_8));
 						noParamSet = this.setSODAFormParams(activeDataLinkSource, paramDescription, paramDataType, paramValue, paramRange);
 					} else {
+						System.out.println("là");
 						paramDescription.put(String.valueOf(SODA_IDINDEX), ID);
 						paramDataType.put(String.valueOf(SODA_IDINDEX), resourceParam.getDataType());
 						noParamSet = this.setCompleteSODAForm(activeDataLinkSource,selectedDatalink , paramDescription, paramDataType, paramValue, paramRange);
+						
 					}
+					
 					
 					int sRegionIndex = activeDataLinkSource.findColumn(S_REGION);
 					if (sRegionIndex != -1) {
@@ -185,6 +203,7 @@ public final class DataLinkGlu {
 					
 					//Note: noParamSet: if we do not get any values from the original table to set in service client, then we use values from the datalink response.
 					if (noParamSet) {
+						System.out.println("there ?");
 						this.setSODAFormParams(selectedDatalink, paramDescription, paramDataType, paramValue, paramRange);
 						boundaryArea_stcs = getFovFromDatalinkResponse(inputParams);
 					}
@@ -335,18 +354,22 @@ public final class DataLinkGlu {
 		int syncAsyncMode = -1;
 		if (isSODAASync) {
 			String url = checkOtherOptionExistsAndGetUrl(SODA_STANDARDID);
+			System.out.println("async url "+url) ;
 			if (url != null) {
 				syncAsyncMode = 2;
 				url = url.concat(SODA_URL_PARAM);
+				System.out.println("async url "+url) ;
 				aladin.glu.aladinDic.put(DATALINK_FORM_SYNC, url);
 			} else {
 				syncAsyncMode = 0;
 			}
 		} else {
-			String url = checkOtherOptionExistsAndGetUrl(SODAASYNC_STANDARDID); 
+			String url = checkOtherOptionExistsAndGetUrl(SODAASYNC_STANDARDID);
+			System.out.println("sync url "+url) ;
 			if (url != null) {
 				syncAsyncMode = 1;
 				url = url.concat(SODA_URL_PARAM);
+				System.out.println("sync url "+url) ;
 				aladin.glu.aladinDic.put(DATALINK_FORM_ASYNC, url);
 			}
 			
@@ -457,6 +480,11 @@ public final class DataLinkGlu {
 			Hashtable<String, String> paramDescription, Hashtable<String, String> paramDataType,
 			Hashtable<String, String> paramValue, HashMap<String, String[]> paramRange) {
 
+		System.out.println("Source "+activeDatalinkSource.getSize());
+		String[] Names = activeDatalinkSource.getNames() ;
+		System.out.println("Source "+Names[0]);
+		System.out.println("Source "+Names[1]);
+		System.out.println("Source "+Names[2]);
 		// time
 		boolean noFieldSet = setSODAFormParam(activeDatalinkSource,
 				String.valueOf(SODA_TIMEINDEX), paramDescription, paramDataType, DateTimeMJD, paramValue, SETFORMVALUES,
@@ -602,6 +630,7 @@ public final class DataLinkGlu {
 					paramDataType.put(paramFormIndex, field[lowerLimitIndex].datatype);
 				}
 			}
+			else System.out.println("no active DataLink Source ");
 		} else {
 			paramDataType.put(paramFormIndex, paramDataTypeDefault);
 		}
@@ -763,6 +792,7 @@ public final class DataLinkGlu {
 		else {
 			value = param.getValue();
 		}
+		System.out.println("valval "+value);
 		return value;
 	}
 

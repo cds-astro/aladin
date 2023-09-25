@@ -91,7 +91,7 @@ import cds.tools.Util;
  * Interface pour les formulaires d'acces aux bases de donnees (images ou data).
  *
  * @author Pierre Fernique [CDS]
- * @version 1.2 : 19 sept 2005 - gestion homogène du radius
+ * @version 1.2 : 19 sept 2005 - gestion homogï¿½ne du radius
  * @version 1.1 : 18 aout 2005 - Maximisation d'un component pour le layout
  * @version 1.0 : (5 mai 99) Toilettage du code
  * @version 0.9 : (??) creation
@@ -107,7 +107,7 @@ public class Server extends JPanel
    static final int APPLIIMG  =16;
    static final int MOC       =32;
 
-   // Les différents status de la dernière interrogation ALLVO
+   // Les diffï¿½rents status de la derniï¿½re interrogation ALLVO
    static final int STATUS_OK       = 0;
    static final int STATUS_NORESULT = 1;
    static final int STATUS_ERROR    = 2;
@@ -117,8 +117,8 @@ public class Server extends JPanel
    // Les variables statiques
    static int WIDTH = /* Aladin.OUTREACH ? 430 : */ 500; 	// Largeur du Panel
    static int HEIGHT = /* Aladin.OUTREACH ? 300 : */ 400;	// Hauteur du Panel
-   static final int YOUTREACH = 60; // Ordonnée du premier label en mode OUTREACH
-   static final int MAXSELECTEDPLANE = 10; // Nombre max d'images à charger avant affichage un warning
+   static final int YOUTREACH = 60; // Ordonnï¿½e du premier label en mode OUTREACH
+   static final int MAXSELECTEDPLANE = 10; // Nombre max d'images ï¿½ charger avant affichage un warning
 
 	protected String TARGET, RAD, /* GRABIT = "", */ DEFAULT_METHODE, TARGET_EX, RADIUS_EX, WNEEDOBJ, WNEEDRAD, WNEEDDATE,
 			WNEEDCAT, WERROR, WTOOLARGE, WERRORDATE, WDEJA, HASFILTER1, HASFILTER2, NOINPUTITEM, WNEEDCHECK, UNKNOWNOBJ,
@@ -126,28 +126,28 @@ public class Server extends JPanel
 			CHECKQUERY_ISBLANK, INVALIDNUMBERINPUT;
 
    // Pour le positionnement des widgets en absolu
-   static final int XTAB1=10;		// Abscisse des labels des champs à saisir
+   static final int XTAB1=10;		// Abscisse des labels des champs ï¿½ saisir
    static final int XTAB2=160;		// Abscisse des champs de saisie
    static final int XWIDTH=WIDTH-XTAB1;		// Largeur max
 
 
    // Les elements communs aux formulaires
-   String ordre = "X";             // numéro d'ordre du formulaire
+   String ordre = "X";             // numï¿½ro d'ordre du formulaire
    MetaDataTree tree=null;	       // Le session tree si necessaire pour le formulaire
    JTextArea tap=null;             // Chaine de la requete ADQL pour un serveur TAP
    static boolean message=true;    // Indique qu'il faut afficher une fenetre pour OK
    JTextField target=null;         // Le target (methode unifiee)
    JTextField radius;              // la taille (si necessaire)
 
-   protected boolean DISCOVERY = false;  // true si le serveur doit être pris en compte en mode discovery
+   protected boolean DISCOVERY = false;  // true si le serveur doit ï¿½tre pris en compte en mode discovery
    protected boolean TESTSERVER = false; // true s'il y a l'alternative d'un serveur test
    protected boolean HIDDEN = false;  // true si le serveur n'a pas son propre formulaire
                                       // uniquement accessible via IVOA bouton
 
    static final protected int MAXINPUT = 10;	// Nombre max de champs input dans un formulaire
 
-   // Reperage des TextFields indiquants le centre,la taille la date du champ et les éventuels
-   // champs input (utilisés pour passer l'url associé à un plan déjà chargé)
+   // Reperage des TextFields indiquants le centre,la taille la date du champ et les ï¿½ventuels
+   // champs input (utilisï¿½s pour passer l'url associï¿½ ï¿½ un plan dï¿½jï¿½ chargï¿½)
    protected JTextField coo[];	 // Pointe les champs du target
    protected JTextField rad[];	 // Pointe les champs du field (radius...)
    protected JTextField date;	 // Pointe sur le champ de la date (s'il y a lieu)
@@ -161,11 +161,11 @@ public class Server extends JPanel
    protected int modeDate=0;
    protected int modeRad=0	;
    protected int modeCoo=0;
-   protected int modeInput[]; // Mémorise le modeInput de chaque champ input
+   protected int modeInput[]; // Mï¿½morise le modeInput de chaque champ input
    protected int modeBand=0;
    protected int modePos = 0; 
 
-   static final int NOMODE = 0;  // Aucun mode défini (pour target ou radius)
+   static final int NOMODE = 0;  // Aucun mode dï¿½fini (pour target ou radius)
    static final int COO    = 1;   // Coordonnees en J2000 sexa un champ
    static final int COOb   = 2;   // Coordonnees en J2000 sexa un champ (separateur ' ')
    static final int SIMBAD = 4;   // Id. Simbad (un champ)
@@ -181,15 +181,15 @@ public class Server extends JPanel
    static final int RADBOX = 4; // Field en box (arcmin), 2 champs
    static final int RADIUSd= 8; // Field en radius (degres)
    static final int RADIUSs=16; // Field en radius (secondes)
-   static final int RADSQRd=32; // Field en carre (degrés), 1 champ
-   static final int RADBOXd=64; // Field en box (degrés), 2 champs
+   static final int RADSQRd=32; // Field en carre (degrï¿½s), 1 champ
+   static final int RADBOXd=64; // Field en box (degrï¿½s), 2 champs
    static final int RADSQRs=128; // Field en carre (arcsec), 1 champ
    static final int RADBOXs=256; // Field en box (arcsec), 2 champs
    static final int STRINGd = 512; //user inputs- box or circle will be processed in degrees 1 field
 
    static final int JD    = 1;		// Date en Modified Julian Day
    static final int MJD   = 2;		// Date en Julian Day
-   static final int YEARd = 4;		// Date en années décimale
+   static final int YEARd = 4;		// Date en annï¿½es dï¿½cimale
    static final int ParseToMJD = 8; //Parse any date to MJD
    
    static final int BANDINMETERS = 1; //Parse to meters
@@ -204,32 +204,32 @@ public class Server extends JPanel
 
    // Les parametres propres
    int type;                      // Le type de serveur (IMAGE, CATALOG, SPECTRUM)
-   protected double aladinMenuNumber=0;      // Numéro d'ordre du serveur (ordre d'apparition dans le serveur selector)
-   protected String title;		  // Le titre de la fenêtre
-   protected String gluTag;          // Le Tag GLU (ActionName) associé au serveur (ou null si aucun)
-   protected String resourceId;    // L'identificateur de la ressource concernée dans le cas d'une requête générique genre get TAP(ID,...)
+   protected double aladinMenuNumber=0;      // Numï¿½ro d'ordre du serveur (ordre d'apparition dans le serveur selector)
+   protected String title;		  // Le titre de la fenï¿½tre
+   protected String gluTag;          // Le Tag GLU (ActionName) associï¿½ au serveur (ou null si aucun)
+   protected String resourceId;    // L'identificateur de la ressource concernï¿½e dans le cas d'une requï¿½te gï¿½nï¿½rique genre get TAP(ID,...)
    protected String aladinLabel="";       // le nom du serveur
    protected String description;         // les infos (une ligne) decrivant le serveur
-   protected String verboseDescr;         // Description détaillée du serveur
+   protected String verboseDescr;         // Description dï¿½taillï¿½e du serveur
    protected String institute;         // L'origine
-   protected String aladinLogo;         // Le logo attaché au serveur (null si aucun)
+   protected String aladinLogo;         // Le logo attachï¿½ au serveur (null si aucun)
    protected String docUser=null; // Tag GLU ou URL de la doc associee au serveur
    JToggleButton grab=null;		      // Bouton grab s'il y en a un dans l'interface
    String aladinMenu=null;		      // Label du popup ou null sinon
    boolean flagVerif=true;        // false si on ne verifie pas les redondances des plans
    boolean flagToFront=true;      // false si on ne passe pas la fenetre Aladin devant
-   protected String filters[];    // Liste des filtres prédéfinis selon la syntaxe suivate:
+   protected String filters[];    // Liste des filtres prï¿½dï¿½finis selon la syntaxe suivate:
                                   //    # Description une ligne\nfilter Nom.Filter { contrainte { action }.... }
-   JComboBox filtersChoice=null;     // La boite de choix du filtre prédéfini
-   private Component maxComp=null;// Le component du Server qui doit être maximisé
+   JComboBox filtersChoice=null;     // La boite de choix du filtre prï¿½dï¿½fini
+   private Component maxComp=null;// Le component du Server qui doit ï¿½tre maximisï¿½
 
    protected JCheckBox cbAllVO=null;   // Le checkbox de selection pour le Discovery mode
    protected boolean filterAllVO=true; // false si le serveur n'est pas pris en compte dans la liste AllVO (non retenu dans le filtre)
    protected JLabel statusAllVO;       // Le status pour le mode ALLVO
    protected JButton statusReport=null;// Le bouton qui permet d'afficher le detail du dernier status
-   protected String statusUrl=null;    // Dernière URL d'appel pour le mode ALLVO
-   protected String statusError=null;  // Dernière erreur
-   protected Ball ball;                // Voyant d'état
+   protected String statusUrl=null;    // Derniï¿½re URL d'appel pour le mode ALLVO
+   protected String statusError=null;  // Derniï¿½re erreur
+   protected Ball ball;                // Voyant d'ï¿½tat
 
    // Les references aux objets
    public Aladin aladin;
@@ -265,7 +265,7 @@ public class Server extends JPanel
 //   synchronized protected void setSync(boolean sync) { this.sync=sync; }
 
    protected void createChaine() {
-//      aladinMenuNumber = ORDRE++;      // On se sert du createChaine pour initialiser le numéro d'ordre d'apparition par défaut
+//      aladinMenuNumber = ORDRE++;      // On se sert du createChaine pour initialiser le numï¿½ro d'ordre d'apparition par dï¿½faut
 
       TARGET         =aladin.chaine.getString("TARGET");
       TARGET_EX      =aladin.chaine.getString("TARGET_EX");
@@ -321,7 +321,7 @@ public class Server extends JPanel
       return updateMetaData(is, server, target, requestedPos, false);
    }
 
-   /** Positionnement du status du serveur de la dernière requête AllVO */
+   /** Positionnement du status du serveur de la derniï¿½re requï¿½te AllVO */
    protected void setStatusAllVO(int status,String url) {
       if( statusAllVO==null ) return;
 
@@ -340,8 +340,8 @@ public class Server extends JPanel
       statusUrl = url;
    }
 
-   /** Methode TEMPORAIRE pour créer un SIA pour liste de catalogues qui en l'occurence
-    * ne comportera qu'une entrée décrivant le nombre d'objets retournés par l'URL */
+   /** Methode TEMPORAIRE pour crï¿½er un SIA pour liste de catalogues qui en l'occurence
+    * ne comportera qu'une entrï¿½e dï¿½crivant le nombre d'objets retournï¿½s par l'URL */
    protected MyInputStream getMetaDataForCat(URL u) {
       try {
          Plan plan = new Plan();
@@ -384,7 +384,7 @@ public class Server extends JPanel
    }
 
    
-   /** Interprête la coordonnées et exécute Sésame si nécessaire */
+   /** Interprï¿½te la coordonnï¿½es et exï¿½cute Sï¿½same si nï¿½cessaire */
    protected String sesameIfRequired(String s,String sep) throws Exception {
        Coord c;
        if( !Localisation.notCoord(s) ) c = new Coord(s);
@@ -394,7 +394,7 @@ public class Server extends JPanel
 
   /** Transformation du target en champs propres au serveur
    * avec eventuellement resolution Simbad si necessaire
-   * @param le target passé en paramètre
+   * @param le target passï¿½ en paramï¿½tre
    * @return le target (resolu ou non) sinon null
    */
    protected String resolveTarget(String t) throws Exception {
@@ -441,7 +441,7 @@ public class Server extends JPanel
 
    /** Transformation du radius en champs propres au serveur
     * @param le radius (ex 14'  ou  13" x 15")
-    * @param updateRadius true s'il faut aussi mettre à jour le champ radius
+    * @param updateRadius true s'il faut aussi mettre ï¿½ jour le champ radius
     */
    protected void resolveRadius(String s,boolean updateRadius) {
       double rm=getRM(s);
@@ -469,7 +469,7 @@ public class Server extends JPanel
          }     
       }
 
-      // Mise à jour du champ radius générique
+      // Mise ï¿½ jour du champ radius gï¿½nï¿½rique
 //      if( (modeRad&(RADSQR|RADSQRd|RADSQRs))!=0 ) radius.setText( Coord.getUnit(bm/60.)+" x "+Coord.getUnit(bm/60.) );
 //      else if( (modeRad&(RADBOX|RADBOXd|RADBOXs))!=0 ) radius.setText( Coord.getUnit(wm/60.)+" x "+Coord.getUnit(hm/60.) );
 //    else if( (modeRad&(RADIUS|RADIUSd|RADIUSs))!=0 ) radius.setText( Coord.getUnit(rm/60.) );
@@ -478,10 +478,10 @@ public class Server extends JPanel
       		String newRadius = Coord.getUnit(rm/60.);
       		radius.setText( newRadius );
 
-      		// résolution du bug #213 (cf. http://pclx5:8080/support/issue213 )
+      		// rï¿½solution du bug #213 (cf. http://pclx5:8080/support/issue213 )
       		radius.setCaretPosition(Math.min(radius.getCaretPosition(), newRadius.length()));
       	}
-      	// résolution de la demande #222 (cf. http://pclx5:8080/support/issue222 )
+      	// rï¿½solution de la demande #222 (cf. http://pclx5:8080/support/issue222 )
       	catch(Exception e) {}
 
       }
@@ -489,7 +489,7 @@ public class Server extends JPanel
 
    /** Transformation de la date dans la syntaxe propre au serveur
     * ATTENTION: POUR LE MOMENT JE LAISSE TEL QUEL, IL FAUDRA PRENDRE EN COMPTE JD, MJD...
-    * (sert pour initialiser la valeur par défaut pour les commandes scripts)
+    * (sert pour initialiser la valeur par dï¿½faut pour les commandes scripts)
     * @param s la date (ex: 1999/05/05T10:32)
     */
    protected void resolveDate(String s) {
@@ -572,7 +572,7 @@ public class Server extends JPanel
    protected String addDot(String s) {
       return s;
       // Sous certains Mac, les Dots se superposent stupidement au TextField qui suit
-      // je ne les génère donc pas.
+      // je ne les gï¿½nï¿½re donc pas.
 //      if( testMac==-1 ) {
 //         String syst = System.getProperty("os.name");
 //         testMac =  syst != null && syst.startsWith("Mac") ? 1 : 0;
@@ -589,9 +589,9 @@ public class Server extends JPanel
    final protected int FORVIZIER = 8;
    final protected int FORALADIN = 16;
 
-   /** Construction du panel générique pour le Target/radius
+   /** Construction du panel gï¿½nï¿½rique pour le Target/radius
     * Retourne la hauteur du panel
-    * @param p le Panel à créer (de fait mis à jour)
+    * @param p le Panel ï¿½ crï¿½er (de fait mis ï¿½ jour)
     * @return La hauteur du Panel
     */
    protected int makeTargetPanel(JPanel p,int mode) {
@@ -606,7 +606,7 @@ public class Server extends JPanel
 
       p.setLayout(null);
 
-      //  Construction des éléments pour le Target
+      //  Construction des ï¿½lï¿½ments pour le Target
       if( !noTarget ) {
          l=XTAB2-10;
          if( forVizieR ) l=100;
@@ -656,7 +656,7 @@ public class Server extends JPanel
 
       if( noRadius || forVizieR ) return y;
 
-      // Construction des éléments pour le Radius
+      // Construction des ï¿½lï¿½ments pour le Radius
       x=0;
       l = 55;
       String rad=RAD;
@@ -682,8 +682,8 @@ public class Server extends JPanel
    }
 
    /**
-    * Fixe le focus sur l'un des éléments du formulaire
-    * (on économise ainsi un click de souris)
+    * Fixe le focus sur l'un des ï¿½lï¿½ments du formulaire
+    * (on ï¿½conomise ainsi un click de souris)
     */
    protected void setInitialFocus() {
       if( target!=null && isVisible() ) {
@@ -693,7 +693,7 @@ public class Server extends JPanel
    }
 
    // TODO : temporaire
-   // sera supprimé après refonte MetadataTree/BasicTree
+   // sera supprimï¿½ aprï¿½s refonte MetadataTree/BasicTree
    boolean initDone;
    protected void initServer() {
        if( initDone ) return;
@@ -709,8 +709,8 @@ public class Server extends JPanel
    
 
    /**
-    * Mémorise le component qui sera toujours maximisé
-    * @param c Component à maximiser dans le panel
+    * Mï¿½morise le component qui sera toujours maximisï¿½
+    * @param c Component ï¿½ maximiser dans le panel
     */
    protected void setMaxComp(Component c) { maxComp=c; }
 
@@ -719,13 +719,13 @@ public class Server extends JPanel
    	    setMaxComp(c);
    }
 
-   // true si on ne souhaite maximiser qu'en Y, sans toucher à la largeur
+   // true si on ne souhaite maximiser qu'en Y, sans toucher ï¿½ la largeur
    private boolean maximizeInYOnly = false;
 
 
    /**
-    * Maximise la taille du component maxComp mémorisé par setMaxComp en fonction
-    * de la taille courante du Panel. Décale les components situés en dessous
+    * Maximise la taille du component maxComp mï¿½morisï¿½ par setMaxComp en fonction
+    * de la taille courante du Panel. Dï¿½cale les components situï¿½s en dessous
     */
    synchronized private void maximizeComp() {
       if( maxComp==null || getBounds().height<100 ) return;
@@ -754,7 +754,7 @@ public void layout() {
    }
 
 
-   /** Transformation des infos target/radius exprimées dans les champs génériques
+   /** Transformation des infos target/radius exprimï¿½es dans les champs gï¿½nï¿½riques
     * en valeurs correspondantes dans rad[] et coo[]
     * avec eventuellement resolution Simbad si necessaire
     * @return le target (resolu ou non) sinon null
@@ -779,13 +779,17 @@ public void layout() {
     	SMoc userSpecified = null;
     	
 		if (posBounds!=null) {
+			System.out.println("posBounds OK");
     		String radiusInput  = radius.getText().trim();
     		int i = getDelimiterIndex(radiusInput);
     		if (i<0) {
+    			System.out.println("posBounds OK circle");
 				//circle
+    			System.out.println("coord "+coo[0].getText()+" "+coo[1].getText()+" "+rad[0].getText());
     			userSpecified = aladin.createMocRegionCircle(Double.parseDouble(coo[0].getText()), Double.parseDouble(coo[1].getText()), Double.parseDouble(rad[0].getText()), -1, true);
 			} else {
 				//rectangly
+				System.out.println("posBounds OK rectangle");
 				double width = getWM(radiusInput)/60.;
 				double height = getHM(radiusInput)/60.;
 				userSpecified = aladin.createMocRegionRectangle(rectVertices, Double.parseDouble(coo[0].getText()), Double.parseDouble(coo[1].getText()), width, height);
@@ -793,18 +797,25 @@ public void layout() {
     		
     		if (userSpecified!=null) {
                if( aladin.levelTrace>=5) {
+            	   
                   aladin.execCommand("bounds= draw MOC "+posBounds.toASCII());
                   aladin.execCommand("users= draw MOC "+userSpecified.toASCII());
                }
-    		   
+               System.out.println("posBounds OK userspecified");
     		   if( posBounds.intersection( userSpecified ).isEmpty() ) {
+    			   System.out.println("posBounds OK intersection");
+    			  // System.out.println("bounds= draw MOC "+posBounds.toASCII());
+    			  // System.out.println("users= draw MOC "+userSpecified.toASCII());
                   result = TARGETOUTOFBOUNDSMESSAGE;
     		   }
+    		   else System.out.println("posBounds pas OK intersection ");
 			} else {
+				System.out.println("posBounds pas OK userspecified");
 				result = TARGETOUTOFBOUNDSMESSAGE;
 			}
         	
 		}
+		else 	System.out.println("posBounds pas OK");
     	return result;
 	}
     
@@ -817,7 +828,7 @@ public void layout() {
 	}
 
  /** Retourne le target courant en ICRS
-  * @param confirm true - teste que le champ est bien renseigné
+  * @param confirm true - teste que le champ est bien renseignï¿½
   */
    protected String getTarget() { return getTarget(true); }
    protected String getTarget(boolean confirm) {
@@ -829,18 +840,18 @@ public void layout() {
          return null;
       }
 
-      // Resolution d'un éventuel Target Name ? (dépendant du type de serveur)
+      // Resolution d'un ï¿½ventuel Target Name ? (dï¿½pendant du type de serveur)
       String s1 = resolveTargetName(s);
       if( s1!=null ) return s1;
       
       return aladin.localisation.getICRSCoord(s);
    }
    
-   // Par défaut, par de résolution de nom
-   // => C'est généralement le service distant qui assure la résolution
+   // Par dï¿½faut, par de rï¿½solution de nom
+   // => C'est gï¿½nï¿½ralement le service distant qui assure la rï¿½solution
    protected String resolveTargetName(String s) { return null; }
    
-   // Cf les classes dérivées (=> resolveTargetName() qui appelle resolveTargetNameNow()
+   // Cf les classes dï¿½rivï¿½es (=> resolveTargetName() qui appelle resolveTargetNameNow()
    protected String resolveTargetNameNow(String s) { 
       // ce n'est pas un nom d'objet, on laisse tomber
       if( !Localisation.notCoord(s) ) return  null;
@@ -855,7 +866,7 @@ public void layout() {
          if( coo == null ) Aladin.error("\"" + s + "\": " + aladin.chaine.getString("OBJUNKNOWN"), 1);
          s = coo.toString();
          
-         // On fait un changement de repère pour changer la position de la vue courante sur l'objet
+         // On fait un changement de repï¿½re pour changer la position de la vue courante sur l'objet
          aladin.view.setRepere(coo);
          return s;
 
@@ -866,7 +877,7 @@ public void layout() {
    }
    
    /** Retourne le radius courant
-    * @param confirm true - teste que le champ est bien renseigné et non <0
+    * @param confirm true - teste que le champ est bien renseignï¿½ et non <0
     */
      protected String getRadius() { return getRadius(true); }
      protected String getRadius(boolean confirm) {
@@ -882,7 +893,7 @@ public void layout() {
      }
 
      /** Retourne la date courante du formulaire
-      * @param confirm true - teste que le champ est bien renseigné
+      * @param confirm true - teste que le champ est bien renseignï¿½
       */
       protected String getDate(boolean confirm) {
          if( date==null ) return null;
@@ -907,11 +918,11 @@ public void layout() {
 
 
    /**
-    * Retourne le rayon exprimé par r en arcmin. r peut être suivi
-    * d'une unité. S'il n'y en a pas, l'unité considéré sera celle
-    * passé en paramètre (ou celle du formulaire si non indiqué)
+    * Retourne le rayon exprimï¿½ par r en arcmin. r peut ï¿½tre suivi
+    * d'une unitï¿½. S'il n'y en a pas, l'unitï¿½ considï¿½rï¿½ sera celle
+    * passï¿½ en paramï¿½tre (ou celle du formulaire si non indiquï¿½)
     * @param r la chaine exprimant le rayon
-    * @param modeRad l'unité par défaut
+    * @param modeRad l'unitï¿½ par dï¿½faut
     * @return le rayon en arcmin
     */
    static protected double getAngleInArcmin(String r,int modeRad) {
@@ -919,13 +930,13 @@ public void layout() {
 
 // System.out.println("getAngle["+r+"]");
 // Determination de l'unite
-      int offsetD1 = r.indexOf('°');
+      int offsetD1 = r.indexOf('ï¿½');
       int offsetD  = r.indexOf('d');
       int offsetS  = r.indexOf('s');
       int offsetQ  = r.indexOf('\"');
       int offsetM  = r.indexOf('\'');
       
-      // si l'utilisateur a passé deux quotes simples, plutôt qu'une double
+      // si l'utilisateur a passï¿½ deux quotes simples, plutï¿½t qu'une double
       if( offsetM<r.length()-1 && r.charAt(offsetM+1)=='\'' ) { offsetQ=offsetM; offsetM=-1; }
       
       int offsetM1 = r.indexOf('m');
@@ -934,7 +945,7 @@ public void layout() {
       else if( offsetS>0 || offsetQ>0) fct=1/60.0;	// Secondes
       else if( offsetM>0 || offsetM1>0 ) fct=1;     // Minutes
       
-      // Si absence d'unité, il s'agit de l'unité par défaut (modeRad)
+      // Si absence d'unitï¿½, il s'agit de l'unitï¿½ par dï¿½faut (modeRad)
       else {
          if( modeRad==RADIUSd ) fct=60.;
          else if( modeRad==RADIUSs ) fct=1/60.;
@@ -960,18 +971,18 @@ public void layout() {
 //      System.out.println("==>"+s+" ==> "+(a*60)+" ==> "+Coord.getUnit(a));
 //   }
 
-   /** Retourne la rayon (en arcmin) associé à un champ décrit par la chaine s */
+   /** Retourne la rayon (en arcmin) associï¿½ ï¿½ un champ dï¿½crit par la chaine s */
    static protected double getRM(String s) { return getRWM(s,0); }
 
-   /** Retourne la largeur (en arcmin) associé à un champ décrit par la chaine s */
+   /** Retourne la largeur (en arcmin) associï¿½ ï¿½ un champ dï¿½crit par la chaine s */
    static protected double getWM(String s) { return getRWM(s,1); }
 
-   /** Retourne la hauteur (en arcmin) associé à un champ décrit par la chaine s */
+   /** Retourne la hauteur (en arcmin) associï¿½ ï¿½ un champ dï¿½crit par la chaine s */
    static protected double getHM(String s) { return getRWM(s,2); }
 
-   /** Retourne la taille (en arcmin) associé à un champ décrit par une chaine
-    * Si le champ est donné sous forme d'un rayon on retournera le cas échéant le carré ENGLOBE,
-    * et si le champ est donné sous forme d'un rectangle on retournera le cas échéant le cercle ENGLOBANT.
+   /** Retourne la taille (en arcmin) associï¿½ ï¿½ un champ dï¿½crit par une chaine
+    * Si le champ est donnï¿½ sous forme d'un rayon on retournera le cas ï¿½chï¿½ant le carrï¿½ ENGLOBE,
+    * et si le champ est donnï¿½ sous forme d'un rectangle on retournera le cas ï¿½chï¿½ant le cercle ENGLOBANT.
     * @param s le champ (ex: 12"  ou 13' x 14'  ou 1.5 deg)
     * @param mode 0 - le rayon, 1 - la largeur, 2 - la hauteur
     */
@@ -982,15 +993,15 @@ public void layout() {
 
       int i = getDelimiterIndex(s);
 
-      // Le Champ est exprimé en Rayon (un seul paramètre)
+      // Le Champ est exprimï¿½ en Rayon (un seul paramï¿½tre)
       if( i<0 ) {
          rm = getAngleInArcmin(s,RADIUS); // Ca colle direct pour rm
-         hm=wm = 2*rm;            // On prend la boite à l'extérieur du cercle pour hm,wm
+         hm=wm = 2*rm;            // On prend la boite ï¿½ l'extï¿½rieur du cercle pour hm,wm
 
-      // Le Champ est exprimé en Rectangle (2 paramètres)
+      // Le Champ est exprimï¿½ en Rectangle (2 paramï¿½tres)
       } else {
-         wm = getAngleInArcmin(s.substring(0,i),RADIUS);  // On récupère la largeur
-         hm = getAngleInArcmin(s.substring(i+1),RADIUS);  // On récupère la hauteur
+         wm = getAngleInArcmin(s.substring(0,i),RADIUS);  // On rï¿½cupï¿½re la largeur
+         hm = getAngleInArcmin(s.substring(i+1),RADIUS);  // On rï¿½cupï¿½re la hauteur
          rm = Math.sqrt(wm*wm/4+hm*hm/4);         // On prend le cercle englobant la boite
       }
 
@@ -1016,9 +1027,9 @@ public void layout() {
       aladin.dialog.setDefaultTarget("");
    }
 
-   // Dans le cas de formulaire en deux étapes, met en exergue
-   // l'indication de l'étape courante en fonction de l'arbre
-   // des métadonnées
+   // Dans le cas de formulaire en deux ï¿½tapes, met en exergue
+   // l'indication de l'ï¿½tape courante en fonction de l'arbre
+   // des mï¿½tadonnï¿½es
    static private String EXERGUE = ">>> ";
    protected void setStepColor(JLabel step1, JLabel step2) {
       if( tree==null ) return;
@@ -1093,21 +1104,21 @@ public void layout() {
 		return result;
 	}
 	
-	/** Pré-remplissage du champ baseUrl */
+	/** Prï¿½-remplissage du champ baseUrl */
 	protected void setBaseUrl(String s) {
 	   if( baseUrl==null ) return;
 	   baseUrl.setText(s);
 	}
 
-   /** Pre-remplissage du champ Date. Si c'est une valeur double, on considère
-    * que c'est une année décimale et on la convertit en JD, sinon on laisse
+   /** Pre-remplissage du champ Date. Si c'est une valeur double, on considï¿½re
+    * que c'est une annï¿½e dï¿½cimale et on la convertit en JD, sinon on laisse
     * tel que.
     * @param s La chaine a mettre dans le champ Date
     */
     protected void setDate(String s) {
        if( date == null ) return;
        if( setDateForServerGluIsDateLinkForms()) return;
-       // On suppose que s est en année décimale (via getEpoch() )
+       // On suppose que s est en annï¿½e dï¿½cimale (via getEpoch() )
        try {
 // Methode Fox
 //          Astrotime a = new Astrotime();
@@ -1123,7 +1134,7 @@ public void layout() {
              date.setText(s);
        }
 
-       // résolution du bug #241 (cf. http://pclx5:8080/support/issue241 )
+       // rï¿½solution du bug #241 (cf. http://pclx5:8080/support/issue241 )
        try {
        	date.setCaretPosition(Math.min(date.getCaretPosition(), s.length()));
        }
@@ -1419,8 +1430,8 @@ public void layout() {
 		return output;
 	}
 
-    /** Positionnement d'une valeur particulière (s) sur un component
-     * de type INPUT. Nécessaire pour l'utilisation via Aladin script
+    /** Positionnement d'une valeur particuliï¿½re (s) sur un component
+     * de type INPUT. Nï¿½cessaire pour l'utilisation via Aladin script
      */
     protected void setSelectedItem(Component c,String s) {
        if( c instanceof TextField ) { ((TextField)c).setText(s); return; }
@@ -1430,7 +1441,7 @@ public void layout() {
        ((JComboBox)c).setSelectedItem(s);
     }
 
-    /** Retourne la liste des plans concerné par un sélecteur de type INPUT */
+    /** Retourne la liste des plans concernï¿½ par un sï¿½lecteur de type INPUT */
     protected Plan [] getInputPlane(JComponent c) {
        String masq;
 
@@ -1452,7 +1463,7 @@ public void layout() {
        Vector v = aladin.calque.getPlans(masq);
        if( v==null ) return null;
 
-       // Construction du vecteur résultat en fonction du type de input (IMG|IMGs|CAT|CATs)
+       // Construction du vecteur rï¿½sultat en fonction du type de input (IMG|IMGs|CAT|CATs)
        Vector v1 = new Vector();
        Enumeration e = v.elements();
        while( e.hasMoreElements() ) {
@@ -1471,9 +1482,9 @@ public void layout() {
 
     }
 
-    /** Retourne une chaine constituée de la concaténation de tous les noms de plans
-     * correspondant au "masque de nom de plan" indiqué par le Component passé en paramètre
-     * Le séparateur est l blanc
+    /** Retourne une chaine constituï¿½e de la concatï¿½nation de tous les noms de plans
+     * correspondant au "masque de nom de plan" indiquï¿½ par le Component passï¿½ en paramï¿½tre
+     * Le sï¿½parateur est l blanc
      */
     protected String getInputPlaneName(JComponent c) {
        Plan plan [] = getInputPlane(c);
@@ -1488,10 +1499,10 @@ public void layout() {
        return res==null ? null : res.toString();
     }
 
-    /** Retourne une chaine constituée de la concaténation de toutes les URL de plans
-     * correspondant au "masque de nom de plan" indiqué par le Component passé en paramètre
-     * Le séparateur est le | (pipe). Les éventuels | se trouvant dans les urls seront
-     * backslashés
+    /** Retourne une chaine constituï¿½e de la concatï¿½nation de toutes les URL de plans
+     * correspondant au "masque de nom de plan" indiquï¿½ par le Component passï¿½ en paramï¿½tre
+     * Le sï¿½parateur est le | (pipe). Les ï¿½ventuels | se trouvant dans les urls seront
+     * backslashï¿½s
      * */
     protected String getInputUrl(JComponent c) {
        Plan plan [] = getInputPlane(c);
@@ -1510,13 +1521,13 @@ public void layout() {
        return res==null ? null : res.toString();
     }
     
-    /** Retourne une URL temporaire pour récupérer des données locales (via le tiny httpd)
-     * Cette méthode est surchargée pour les services qui supportent le POST multipart => voir par exemple ServerSextractor */
+    /** Retourne une URL temporaire pour rï¿½cupï¿½rer des donnï¿½es locales (via le tiny httpd)
+     * Cette mï¿½thode est surchargï¿½e pour les services qui supportent le POST multipart => voir par exemple ServerSextractor */
     protected String getUrl4LocalData(Plan p) {
        return Export.export(p);  // Serveur local
     }
 
-     /** Backslash les éventuels '|' */
+     /** Backslash les ï¿½ventuels '|' */
      static protected String backSlashPipe(String s) {
         char a [] = s.toCharArray();
         StringBuffer res = new StringBuffer(100);
@@ -1527,7 +1538,7 @@ public void layout() {
         return res.toString();
      }
 
-     /** Retourne true si le Component passé en paramètre concerne un des champs
+     /** Retourne true si le Component passï¿½ en paramï¿½tre concerne un des champs
       * du target ou du radius */
      protected boolean isFieldTargetOrRadius(JComponent c) {
         if( coo!=null ) {
@@ -1558,7 +1569,7 @@ public void layout() {
 		return false;
 	}
 
-     /** Retourne true si le Component passé en paramètre concerne un
+     /** Retourne true si le Component passï¿½ en paramï¿½tre concerne un
       * dhamp de date  */
      protected boolean isFieldDate(JComponent c) {
     	 if( date!=null ) {
@@ -1583,7 +1594,7 @@ public void layout() {
      }
      
      
-     /** Retourne true si le Component passé en paramètre ne sert qu'à repérer un champ qui
+     /** Retourne true si le Component passï¿½ en paramï¿½tre ne sert qu'ï¿½ repï¿½rer un champ qui
       * recevra le suffixe d'une URL HiPS */
      protected boolean isFieldHiPS(JComponent c ) {
         return c instanceof JHiPS;
@@ -1591,19 +1602,19 @@ public void layout() {
      
      class JHiPS extends JComponent { }
 
-     /** Retourne true si le Component passé en paramètre est input */
+     /** Retourne true si le Component passï¿½ en paramï¿½tre est input */
      protected boolean isFieldInput(JComponent c) {
         return getFieldInput(c)>=0;
      }
 
-     /** Retourne l'indice dans input[] du component passé en paramètre */
+     /** Retourne l'indice dans input[] du component passï¿½ en paramï¿½tre */
      protected int getFieldInput(JComponent c) {
         if( input==null ) return -1;
         for( int i=0; i<nbInput; i++ ) if( input[i]==c ) return i;
         return -1;
      }
 
-     /** Mise à jour dynamique des choices associés aux champs input en fonction
+     /** Mise ï¿½ jour dynamique des choices associï¿½s aux champs input en fonction
       * des plans disponibles
       */
      protected void resumeInputChoice() {
@@ -1619,7 +1630,7 @@ public void layout() {
         }
      }
 
-     /** Surcharge de show() pour remettre à jour les Choice Input */
+     /** Surcharge de show() pour remettre ï¿½ jour les Choice Input */
      public void setVisible(boolean flag) {
         if( flag) {
            resumeTargetLabel();
@@ -1630,8 +1641,8 @@ public void layout() {
 
      /**
       * Mise a jour d'un menu deroulant contenant les labels des plans des champs input IMG et CAT
-      * @param Choice le Choice à mettre à jour
-      * @param v le vector contenant les plans dont les labels vont être utilisés.
+      * @param Choice le Choice ï¿½ mettre ï¿½ jour
+      * @param v le vector contenant les plans dont les labels vont ï¿½tre utilisï¿½s.
       * @param default L'item du menu par defaut
       */
      protected void adjustInputChoice(JComboBox c, Vector v,int defaut) {
@@ -1645,13 +1656,13 @@ public void layout() {
            while( e.hasMoreElements() ) c.addItem( ((Plan)e.nextElement()).label );
         }
 
-        // Sélection de l'item désigné
+        // Sï¿½lection de l'item dï¿½signï¿½
         if (defaut>0) c.setSelectedIndex(defaut);
 
-        // Premier item, ou deuxième item
+        // Premier item, ou deuxiï¿½me item
         else if (s==null || s.equals(NOINPUTITEM)) c.setSelectedIndex( c.getItemCount()>1?1:0);
 
-        // Précédent item sélectionné
+        // Prï¿½cï¿½dent item sï¿½lectionnï¿½
         else c.setSelectedItem(s);
      }
 
@@ -1707,10 +1718,10 @@ public void layout() {
    }
 
    /** Pour les interrogations par script, pour les vieux Servers tels que Aladin, VizieR,
-    * je déquote les paramètres le cas échéant. De toutes façons, ils ne supportent
-    * que des critères sans espaces
-    * @param s la liste des critères (ex: ["DSS1",Fits])
-    * @return la liste des critères déquotés (ex: [DSS1 Fits])
+    * je dï¿½quote les paramï¿½tres le cas ï¿½chï¿½ant. De toutes faï¿½ons, ils ne supportent
+    * que des critï¿½res sans espaces
+    * @param s la liste des critï¿½res (ex: ["DSS1",Fits])
+    * @return la liste des critï¿½res dï¿½quotï¿½s (ex: [DSS1 Fits])
     */
    static String specialUnQuoteCriteria(String s) {
       if( s==null || s.length()<2 ) return s;
@@ -1723,7 +1734,7 @@ public void layout() {
       return rep.toString();
    }
 
-   /** Retourne true si l'utilisateur a indiqué qu'il y avait trop d'images sélectionnées
+   /** Retourne true si l'utilisateur a indiquï¿½ qu'il y avait trop d'images sï¿½lectionnï¿½es
     * dans l'arbre */
    protected boolean tooManyChecked() {
       int n = tree.nbSelected();
@@ -1734,13 +1745,13 @@ public void layout() {
    /** Voir classes derivees */
    public void submit() {}
 
-    /** Retourne le target par défaut */
+    /** Retourne le target par dï¿½faut */
     protected String getDefaultTarget(){ return aladin.dialog.getDefaultTarget(); }
 
-    /** Retourne la taille par défaut */
+    /** Retourne la taille par dï¿½faut */
     protected String getDefaultTaille(){ return aladin.dialog.getDefaultTaille(); }
 
-    /** Retourne la date par défaut */
+    /** Retourne la date par dï¿½faut */
     protected String getDefaultDate() { return aladin.dialog.getDefaultDate(); }
 
 
@@ -1794,16 +1805,16 @@ public void layout() {
    public void keyReleased(KeyEvent e) { updateWidgets(); }
    public void keyTyped(KeyEvent e) { }
 
-  /** Retourne le Nom du server éventuellement précédé par son Popup.
-    * les / seront préfixés par \, les \n seront remplacés par un blanc,
-    * les ... seront supprimés en fin de popup.
+  /** Retourne le Nom du server ï¿½ventuellement prï¿½cï¿½dï¿½ par son Popup.
+    * les / seront prï¿½fixï¿½s par \, les \n seront remplacï¿½s par un blanc,
+    * les ... seront supprimï¿½s en fin de popup.
     * ex: Others/The STScI Server (DSS1\/DSS2)
     */
    protected String [] getNomPaths() {
       StringBuffer res = new StringBuffer();
       int i;
 
-      // On met le Popup en préfixe s'il y a lieu
+      // On met le Popup en prï¿½fixe s'il y a lieu
       if( aladinMenu!=null ) {
          for( i=0 ;i<aladinMenu.length(); i++ ) {
             char c = aladinMenu.charAt(i);
@@ -1825,8 +1836,8 @@ public void layout() {
       return new String[]{res.toString()};
    }
 
-   /** Test l'égalité du nom du serveur en prenant en compte les \n qui auraient
-    * pu être remplacé par ' ' */
+   /** Test l'ï¿½galitï¿½ du nom du serveur en prenant en compte les \n qui auraient
+    * pu ï¿½tre remplacï¿½ par ' ' */
    protected boolean sameNom(String s){ return sameNom(aladinLabel,s); }
 
    static protected boolean sameNom(String nom,String s) {
@@ -1842,7 +1853,7 @@ public void layout() {
       return true;
    }
 
-   /** Positionne si possible le paramètre principal dans le formulaire
+   /** Positionne si possible le paramï¿½tre principal dans le formulaire
     * (voir ArchiveServer) */
    protected boolean setParam(String param) { return false; }
 
@@ -1852,10 +1863,10 @@ public void layout() {
       return st.nextToken();
    }
    
-   /** Retourne un label associé au plan généré par ce serveur.
+   /** Retourne un label associï¿½ au plan gï¿½nï¿½rï¿½ par ce serveur.
     * Si s est vide ou null, ou ne contient qu'un identificateur technique "as id" retourne 
-    * un label par défaut. Dans le dernier cas le label par défaut sera inséré en préfixe.
-    * Dans tous les autres cas retourne le label proposé. */
+    * un label par dï¿½faut. Dans le dernier cas le label par dï¿½faut sera insï¿½rï¿½ en prï¿½fixe.
+    * Dans tous les autres cas retourne le label proposï¿½. */
 //   protected String getDefaultLabelIfRequired(String s) { return getDefaultLabelIfRequired(s,aladinLabel); }
    protected String getDefaultLabelIfRequired(String s) { return getDefaultLabelIfRequired(s,getNom()); }
    protected String getDefaultLabelIfRequired(String s,String defaut) {
@@ -1872,8 +1883,8 @@ public void layout() {
    }
 
    /**
-    * Retourne la ligne de description d'un filtre prédéfini
-    * @param filter le filtre selon la syntaxe décrite dans filters[]
+    * Retourne la ligne de description d'un filtre prï¿½dï¿½fini
+    * @param filter le filtre selon la syntaxe dï¿½crite dans filters[]
     * @return la description du filtre, ou null si aucune
     */
    static protected String getFilterDescription(String filter) {
@@ -1884,8 +1895,8 @@ public void layout() {
    }
 
    /**
-    * Retourne le nom d'un filtre prédéfini
-    * @param filter le filtre selon la syntaxe décrite dans filters[]
+    * Retourne le nom d'un filtre prï¿½dï¿½fini
+    * @param filter le filtre selon la syntaxe dï¿½crite dans filters[]
     * @return le nom du filtre, ou null si probleme
     */
    static protected String getFilterName(String filter) {
@@ -1899,8 +1910,8 @@ public void layout() {
    }
 
    /**
-    * Retourne le texte d'un filtre prédéfini sans les commentaires
-    * @param filter le filtre selon la syntaxe décrite dans filters[]
+    * Retourne le texte d'un filtre prï¿½dï¿½fini sans les commentaires
+    * @param filter le filtre selon la syntaxe dï¿½crite dans filters[]
     * @return le text du filtre
     */
    static protected String getFilter(String filter) {
@@ -1910,10 +1921,10 @@ public void layout() {
    }
 
    /**
-    * Retourne l'indice du filtre prédéfini
-    * @param filters le tableau des filtres prédéfinis
+    * Retourne l'indice du filtre prï¿½dï¿½fini
+    * @param filters le tableau des filtres prï¿½dï¿½finis
     * @param name le nom ou la description du filtre dont on cherche l'indice
-    * @return l'indice du filtre, ou -1 si non trouvé
+    * @return l'indice du filtre, ou -1 si non trouvï¿½
     */
    static protected int getFilterIndex(String filters[],String name) {
       // on cherche sur les noms des filtres
@@ -1931,9 +1942,9 @@ public void layout() {
    }
 
    /**
-    * Retourne le script d'un filter prédéfini
-    * @param filter le filtre selon la syntaxe décrite dans filters[]
-    * @return le script du filtre ou null si problème
+    * Retourne le script d'un filter prï¿½dï¿½fini
+    * @param filter le filtre selon la syntaxe dï¿½crite dans filters[]
+    * @return le script du filtre ou null si problï¿½me
     */
    static protected String getFilterScript(String filter) {
       int i=filter.indexOf('{');
@@ -1943,7 +1954,7 @@ public void layout() {
    }
 
    /**
-    * Creation d'un choice en fonction des filtres prédéfinis du serveur
+    * Creation d'un choice en fonction des filtres prï¿½dï¿½finis du serveur
     * (cf filters[])
     */
    protected JComboBox createFilterChoice() {
@@ -1961,7 +1972,7 @@ public void layout() {
       }
    }
 
-   /** Peuple la Combobox des filtres dédiés */
+   /** Peuple la Combobox des filtres dï¿½diï¿½s */
    private void populateFilterChoice(JComboBox c) {
       c.addItem(" - no filter -");
       for( int i=0; i<filters.length; i++ ) {
@@ -1972,9 +1983,9 @@ public void layout() {
       c.setSelectedIndex(aladin.configuration.getFilter()+1);
    }
 
-   /** Surcharge éventuelle des filtres prédéfinis - par exemple pour Simbad ou NED.
-    * Ceci ne concerne pas les serveurs automatiquement créés par le GLU, car
-    * ils ont déjà leur définition de filtres prédéfinis */
+   /** Surcharge ï¿½ventuelle des filtres prï¿½dï¿½finis - par exemple pour Simbad ou NED.
+    * Ceci ne concerne pas les serveurs automatiquement crï¿½ï¿½s par le GLU, car
+    * ils ont dï¿½jï¿½ leur dï¿½finition de filtres prï¿½dï¿½finis */
    protected void getGluFilters(String tagGlu) {
 
       if( aladin.glu.aladinDicFilters!=null ) {
@@ -1984,7 +1995,7 @@ public void layout() {
    }
 
    /**
-    * Retourne le numéro du filtre sélectionné dans filtersChoice, -1 si aucun ou problème
+    * Retourne le numï¿½ro du filtre sï¿½lectionnï¿½ dans filtersChoice, -1 si aucun ou problï¿½me
     */
    protected int getFilterChoiceIndex() {
       int nFilter=-1;
@@ -1994,7 +2005,7 @@ public void layout() {
       return nFilter;
    }
 
-   /** Positionnement du mode du voyant d'état en fonction du dernier plan
+   /** Positionnement du mode du voyant d'ï¿½tat en fonction du dernier plan
     * de la pile issu de ce serveur */
    protected void setStatus() {
       Plan [] allPlan = aladin.calque.getPlans();
@@ -2085,8 +2096,8 @@ public void layout() {
     * Ajoute au Panel du server les commentaires indiquant que le serveur fournit
     * des filters
     * @param x positionnement en abscisse
-    * @param y positionnement en ordonnée
-    * @return nouvelle ordonnée
+    * @param y positionnement en ordonnï¿½e
+    * @return nouvelle ordonnï¿½e
     */
    protected int addFilterComment(int x, int y) {
       JLabel label = new JLabel(HASFILTER1);
@@ -2143,7 +2154,7 @@ public void layout() {
 		}
 	}
    /**
-	 * Method parses adql query from user using Grégory
+	 * Method parses adql query from user using Grï¿½gory
 	 * Mantelet's (ARI/ZAH) adql parser lib
 	 * @return the adql query
 	 * @throws UnresolvedIdentifiersException 

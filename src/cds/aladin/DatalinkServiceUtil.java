@@ -113,9 +113,10 @@ public class DatalinkServiceUtil {
 	 * @param datalinksInfo - List to populate
 	 */
 	public static void populateDataLinksInfo(URL datalinkUrl, List<SimpleData> datalinksInfo) {
-		if (datalinksInfo==null) {
+		if (datalinksInfo==null) {  
 			return;
 		}
+		System.out.println("inside populate "+datalinkUrl);
 		SavotPullParser accessUrlResult = getDataSets(datalinkUrl);
 		if (accessUrlResult != null) {	
 			SavotResource resultsResource = Util.populateResultsResource(accessUrlResult);
@@ -136,6 +137,7 @@ public class DatalinkServiceUtil {
 								SavotField field = resultsResource.getFieldSet(i).getItemAt(k);
 								String key = null;
 								String value = theTDs.getContent(k);
+								System.out.println("value "+k+" "+value);
 								if (field.getId() == null || field.getId().isEmpty()) {
 									key = field.getName();
 								} else {
@@ -157,17 +159,19 @@ public class DatalinkServiceUtil {
 									}
 								}
 								params.put(key, value);
-								
+								System.out.println("key value"+key+" "+value);
 								if (field.getName().equalsIgnoreCase(SERVICE_DEF)) {
 									service_def = theTDs.getContent(k);
 								}
 							}
+							System.out.println("ici");
 							data.setParams(params);
 							if (service_def!=null && !service_def.isEmpty()) {
+								System.out.println("isNotEmpty");
 								data.setMetaResource(accessUrlResult.getResourceFromRef(service_def));
 								service_def = null;
 							}
-							
+							System.out.println("ici ici");
 							datalinksInfo.add(data);
 						}
 					}

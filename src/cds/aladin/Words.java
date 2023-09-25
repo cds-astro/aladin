@@ -21,12 +21,19 @@
 
 package cds.aladin;
 
+import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Map;
+import java.net.MalformedURLException;
+import java.net.URL ;
 
+import cds.savot.model.ParamSet;
+import cds.savot.model.SavotParam;
 import cds.savot.model.SavotResource;
 import cds.tools.Util;
 import cds.xml.Field;
+
 
 /**
  * Gestion des entites (suite de mots) composants une mesure.
@@ -50,16 +57,16 @@ public final class Words implements Runnable {
    // Les composantes de l'objet
    String text;		    // Texte a afficher (sauf repere)
    int width;		    // Nbre de caracteres, 0 si non cadre
-   int precision;       // Nbre de digits derrière la virgule
+   int precision;       // Nbre de digits derriï¿½re la virgule
    String id;		    // Identificateur pour une marque GLU
    String param;	    // Parametres pour une marque GLU
    int x,y;		        // Position (reference au texte)
    int w,h;		        // Largeur et hauteur (totales)
    int align;	    	// LEFT, RIGHT, CENTER ou COORD
    int size;		    // Utilise par le tag GLU ??????
-   int sort;            // pour une entête, permet d'indiquer le tri courant
+   int sort;            // pour une entï¿½te, permet d'indiquer le tri courant
 
-   boolean computed = false; // vrai s'il s'agit d'une colonne calculée
+   boolean computed = false; // vrai s'il s'agit d'une colonne calculï¿½e
 
    // Type de mots
    boolean glu;		    // Marque GLU
@@ -67,14 +74,15 @@ public final class Words implements Runnable {
    boolean pin;         // Epinglette
    boolean archive;	    // Bouton (acces a une archive FITS)
    boolean samp;        // Bouton (utilisera SAMP)
-   boolean footprint;   // Footprint associé
+   boolean footprint;   // Footprint associï¿½
+   boolean servdef ;
 
    // Les variables d'etat
    boolean onMouse;	        // Mot sous la souris
-   boolean show;            // Mot surligné pour être désigné
+   boolean show;            // Mot surlignï¿½ pour ï¿½tre dï¿½signï¿½
    boolean pushed=false;    // Ancre qui vient d'etre cliquee -> en rouge
    boolean haspushed=false; // Ancre qui a ete cliquee -> violet
-   int     num;             // numéro de ligne (pour pouvoir tracer les lignes dans 2 couleurs alternées)
+   int     num;             // numï¿½ro de ligne (pour pouvoir tracer les lignes dans 2 couleurs alternï¿½es)
    
    // Variable de travail
    Thread thread;	    // Utilise lors de l'appel d'une marque GLU
@@ -92,7 +100,7 @@ public final class Words implements Runnable {
     * @param tag La sequence
     * @param naxis1 le nombre de caracteres d'affichage
     * @param align le type d'alignement
-    * @param computed s'agit-il d'un champ calculé ?
+    * @param computed s'agit-il d'un champ calculï¿½ ?
     */
    protected Words(String tag, int num) { this(tag,null,0,-1,LEFT, false,Field.UNSORT,num); }
    protected Words(String tag,int width,int num) { this(tag,null,width,-1,LEFT, false,Field.UNSORT,num); }
@@ -133,7 +141,7 @@ public final class Words implements Runnable {
       // Les reperes sont des tags GLU dont l'id commence par _
       if( type.equals("_") ) repere=true;
       else if( type.equals("^") ) archive=true;
-      else if( type.equals("£") ) { archive=true; samp=true; }
+      else if( type.equals("ï¿½") ) { archive=true; samp=true; }
       else return;
 
       // On enleve le premier caractere
@@ -153,7 +161,7 @@ public final class Words implements Runnable {
       urlStatus.setText( getHref() );
    }
    
-   /** Retourne l'URL ou la marque GLU associée */
+   /** Retourne l'URL ou la marque GLU associï¿½e */
    protected String getHref() {
       String s;
       if( id.equals("Http") ) s=param;
@@ -184,7 +192,7 @@ public final class Words implements Runnable {
    }
    
    /** Retourne le dernier mot sans l'extension dans une chaine du genre un path, une url,
-    * si problème, ou trop courte on retourne toute la chaine */
+    * si problï¿½me, ou trop courte on retourne toute la chaine */
    private String shortLabel( String s ) {
       return s;
 //      if( s.length()<20 ) return s;
@@ -290,7 +298,7 @@ public final class Words implements Runnable {
    }
 
    public void run() {
-      if( callArchive ) { callArchive=false; callArchive1(_aladin,_o); }
+      if( callArchive ) { callArchive=false; try {callArchive1(_aladin,_o); } catch (Exception eCall) {System.out.println("malformed");}}
       else g.showDocument(id,param,id.equals("Http"));
       Util.pause(3000);
       pushed=false;
@@ -300,32 +308,82 @@ public final class Words implements Runnable {
    private boolean callArchive=false;
    private Aladin _aladin;
    private Obj _o;
+   private Source _oo ;
 
-   protected void callArchive(Aladin aladin,Obj o) {
+   protected void callArchive(Aladin aladin,Obj o, Source oo) {
 	   haspushed = pushed = true;
        callArchive = true;
       _aladin = aladin;
       _o = o;
+      _oo = oo ;
       
       thread = new Thread(this, "AladinCallGlu");
       thread.setPriority(Thread.NORM_PRIORITY - 1);
       thread.start();
    }
 
-   private void callArchive1(Aladin aladin,Obj o) {
+   private void callArchive1(Aladin aladin,Obj o) throws MalformedURLException {
       String label = param;
+      boolean servdef  ; 
+      System.out.println("label "+label);
       String url=getURL(aladin);
-      
-      // Les noms basé sur une url son généralement trop long
+      System.out.println("label "+url);
+      if (label == null && url.startsWith("s:")) { servdef = true ;label = url.substring(2);
+      // Les noms basï¿½ sur une url son gï¿½nï¿½ralement trop long
       if( label.startsWith("http://") || label.startsWith("https://")
             || label.startsWith("ftp://") ) label=text;
 
-      // Cas particulier où il faut transmettre l'URL à une application tierce via SAMP
+      // Cas particulier oï¿½ il faut transmettre l'URL ï¿½ une application tierce via SAMP
       if( samp ) {
-         //         System.out.println("Je dois transmettre à SAMP les données ["+label+"] via l'URL suivante : "+url);
+         //         System.out.println("Je dois transmettre ï¿½ SAMP les donnï¿½es ["+label+"] via l'URL suivante : "+url);
          aladin.mesure.mcanvas.toSamp(url,x+w/2,y);
          return;
       }
+     
+      
+      //URL datalinkUrl ;
+      //String toto = new String("http://127.0.0.1:8000/DataLink003.xml") ;
+      //datalinkUrl = new URL(toto) ;  
+      if ( servdef ) {
+    	  System.out.println("service "+label) ;
+    	//  System.out.println("ServDescriptor "+((Source)o).getServiceDescriptor().getId()) ;
+    //	SimpleData activeDataLinkGlu = new SimpleData();
+    //	activeDataLinkGlu.setMetaResource(((Source)o).getServiceDescriptor()) ;
+    	  SimpleData activeDataLinkGlu = ((Source)o).getServiceDescriptor() ;
+    	//SavotResource metaResource = activeDataLinkGlu.getMetaResource();
+    	//ParamSet resourceParams = metaResource.getParams();
+    	//SavotParam	resourceParam = null ;
+    	//for (int i = 0; i < resourceParams.getItemCount(); i++) {
+		//resourceParam = resourceParams.getItemAt(i);
+		//	System.out.println("resource param "+resourceParam.getName());
+    	//}
+    	
+    	  //if (aladin.mesure.activeDataLinkWord == null )
+    	  //{System.out.println("dataLinksInfo null ") ;
+    	  //aladin.mesure.activeDataLinkWord.datalinksInfo = new ArrayList<>();
+    	  
+    	
+    	  //System.out.println("avant populate");
+    	 // DatalinkServiceUtil.populateDataLinksInfo(datalinkUrl, aladin.mesure.activeDataLinkWord.datalinksInfo);
+    	  //System.out.println("aprÃ¨s populate");
+    	  //}
+    		//  activeDataLinkGlu = aladin.mesure.activeDataLinkWord.datalinksInfo.get(5) ;
+    	  try {
+    		  if (aladin.datalinkGlu == null) {
+					aladin.datalinkGlu = new DataLinkGlu(aladin);
+    		  }
+    	 aladin.datalinkGlu.createDLGlu(aladin.mesure.activeDataLinkSource,  activeDataLinkGlu);
+    	 return ;
+    	  }
+    	  catch (Exception eglu) {
+    		  eglu.printStackTrace();
+    		 System.out.println("error glu") ; 
+    		 return ;
+    	 }
+    	  
+      }
+      }
+       
       
 // FOR CHAITRA DALALINK => the getDataLinks flag is no longer required
 //      try {
@@ -338,18 +396,32 @@ public final class Words implements Runnable {
 //      }
 
       aladin.mesure.activeDataLinkWord = this;
+      
+      
+      
+      //try{aladin.datalinkGlu.createDLGlu(aladin.mesure.activeDataLinkSource, aladin.mesure.activeDataLinkWord.datalinksInfo.get(5));}
+     // catch (Exception eTry) {System.out.println("toto");}
       aladin.calque.newPlan(url, label, "provided by the original archive server", o);
 
    }
 
 
-   /** Juste pour récupérer l'URL associée */
+   /** Juste pour rï¿½cupï¿½rer l'URL associï¿½e */
    String getURL(Aladin aladin) {
+	   System.out.println("param in getURL "+param);
       if( id==null ) return "";
+      
+      System.out.println("id in getURL "+id);
       boolean flagHttp = id.equals("Http");
+      boolean flagServDef = id.startsWith("s:");
       String url;
       
      // URL ou nom de fichier
+      if (flagServDef) {
+          url = id ;
+          return url ;
+      }
+      
       if( flagHttp ) {
          url = param;
 

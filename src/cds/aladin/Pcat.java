@@ -55,6 +55,12 @@ import cds.xml.Field;
 import cds.xml.TableParser;
 import cds.xml.TableParserConsumer;
 
+import cds.savot.model.SavotResource;
+import cds.savot.pull.SavotPullEngine;
+import cds.savot.pull.SavotPullParser;
+
+
+
 //import cds.savot.pull.SavotPullEngine;
 //import cds.savot.pull.SavotPullParser;
 //import cds.xml.VOTableConsumer;
@@ -66,7 +72,7 @@ import cds.xml.TableParserConsumer;
  * Gestionnaire des objets d'un plan catalogue ou tool.
  *
  * @author P. Fernique CDS
- * @version 1.5 : (14 mars 2003) Recherche d'un éventuel champ _OID, et
+ * @version 1.5 : (14 mars 2003) Recherche d'un ï¿½ventuel champ _OID, et
  *                 appelle a Source.setOID() dans ce cas
  * @version 1.5 : (25 juillet 2002) VOTable s'ajoute a Astrores
  * @version 1.4 : (21 mars 2002) 2 tentatives d'ouverture de l'URL
@@ -92,18 +98,19 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    //   int nRa,nDec;           // Indice des columnes RA et DEC si connues, sinon -1
    int nId=-1;		       // Indice de la colonne de l'identificateur
    int nIdVraisemblance=0; // 10-nom commence par ID, 20-nom contient "name" ou "designation", 30-ucd=ID_main 40-ucd=meta.id,meta.main
-   boolean badRaDecDetection;       // true si la détection des colonnes RA et DEC est plus qu'incertaine
-   boolean flagVOTable=false;       // True si on est sûr a priori que c'est du VOTable (évite le test)
+   boolean badRaDecDetection;       // true si la dï¿½tection des colonnes RA et DEC est plus qu'incertaine
+   boolean flagVOTable=false;       // True si on est sï¿½r a priori que c'est du VOTable (ï¿½vite le test)
    boolean flagSIAV2 = false;
    boolean flagSIA = false;
    boolean flagEPNTAP = false;
    boolean flagLabelFromData=false; // True si on laisse possible le renommage du plan par le contenu
+   
 
-   protected StringBuffer parsingInfo=null;    // Information éventuelle sur le parsing des données
-   protected StringBuffer description=null;  // Information de description des tables concernées
+   protected StringBuffer parsingInfo=null;    // Information ï¿½ventuelle sur le parsing des donnï¿½es
+   protected StringBuffer description=null;  // Information de description des tables concernï¿½es
 
-   // Tableau indiquant dans quelle ViewSimple les objets peuvent être
-   // projeté (mis à jour dans projection(v))
+   // Tableau indiquant dans quelle ViewSimple les objets peuvent ï¿½tre
+   // projetï¿½ (mis ï¿½ jour dans projection(v))
    private final boolean drawnInViewSimple[] = new boolean[ViewControl.MAXVIEW];
 
    // References
@@ -149,7 +156,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    }
 
 
-   /** Retourne la référence au tableau d'objet (uniquement pour les méthodes déprecated de AladinData */
+   /** Retourne la rï¿½fï¿½rence au tableau d'objet (uniquement pour les mï¿½thodes dï¿½precated de AladinData */
    protected Obj[] getObj() { return o; }
 
    protected void reallocObjetCache() {
@@ -159,12 +166,12 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    }
 
    /**
-    * Retourne true si les objets sont projetables (projetés) dans
+    * Retourne true si les objets sont projetables (projetï¿½s) dans
     * la simpleView d'indice n.
     */
    protected boolean isDrawnInSimpleView(int n) { return drawnInViewSimple[n]; }
 
-   // Nécessaire pour les planBGCat qui possèdent autant de PlanObjet que de HealpixKeyCat
+   // Nï¿½cessaire pour les planBGCat qui possï¿½dent autant de PlanObjet que de HealpixKeyCat
    protected Projection [] projpcat = new Projection[ViewControl.MAXVIEW];
    
    
@@ -176,7 +183,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    protected void projection(ViewSimple v) {
       long t1 = Util.getTime();
 
-      drawnInViewSimple[v.n]=false;    // Par défaut, pas projetable
+      drawnInViewSimple[v.n]=false;    // Par dï¿½faut, pas projetable
 
       if( v.isFree() ) return;
 
@@ -188,7 +195,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                ||  plan instanceof PlanBGCat && !(plan instanceof PlanMoc) && projpcat[v.n]==proj )   // Dans le cas d'un planBGCat
             ) {
 //         Aladin.trace(3,"NO Proj. ra/dec->XY (view "+v.n+") of \""+plan.label+"\" on \""
-//                        +v+"\" => déjà fait !");
+//                        +v+"\" => dï¿½jï¿½ fait !");
          drawnInViewSimple[v.n]=true;
          return;        // Deja fait
       }
@@ -254,7 +261,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    boolean flagTarget=false;
    boolean flagEndResource;
    boolean flagFirstRecord=true;		// True si on n'a pas encore traite le premier enr.
-   long timeStartTable;                 // Date du début du parsing de la table
+   long timeStartTable;                 // Date du dï¿½but du parsing de la table
    int lastNb_o;                        // juste pour connaitre le nombre d'objets dans chaque table
    double minRa,maxRa,minDec,maxDec;
 
@@ -267,7 +274,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       table=plan.label;
    }
 
-   /** Interface pour le positionnement d'un filtre dédié */
+   /** Interface pour le positionnement d'un filtre dï¿½diï¿½ */
    public void setFilter(String filter) {
       plan.addFilter(filter);
    }
@@ -305,14 +312,14 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       if( plan.type==Plan.X ) return;
 
       // Mise en place de la forme des sources en fontions de nombre de sources
-      // Non utilisé si on vient d'un plugin Aladin
+      // Non utilisï¿½ si on vient d'un plugin Aladin
       if( setSourceType ) ((PlanCatalog)plan).setSourceType(Source.getDefaultType(nb_o));
       
       // Pas de projection associee
       if( flagXY ) {
 
          plan.hasXYorig=true;
-         flagXY=false;   // on resete ce flag sinon ça posera souci en cas de positionnement ultérieur d'une projection via RA,DEC manuel
+         flagXY=false;   // on resete ce flag sinon ï¿½a posera souci en cas de positionnement ultï¿½rieur d'une projection via RA,DEC manuel
 
          //         aladin.info(aladin.chaine.getString("INFOXY"));
          //
@@ -334,7 +341,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             0.0,false,
             typeProj,Calib.FK5,plan));
 
-      // Positionnement du centre que si ce n'est pas la valeur par défaut 0,0
+      // Positionnement du centre que si ce n'est pas la valeur par dï¿½faut 0,0
       if( rajc!=0 && dejc!=0 ) plan.co=new Coord(rajc,dejc);
    }
    
@@ -358,11 +365,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       lastNb_o=nb_o;
    }
 
-   private Vector<String> group=null;  // Liste des GROUP servant aux définitions des systèmes de coordonnées ou des Flux
+   private Vector<String> group=null;  // Liste des GROUP servant aux dï¿½finitions des systï¿½mes de coordonnï¿½es ou des Flux
 
-   // Ajoute un GROUP à la liste des GROUPs à associer à la prochaine légende qui sera créée
+   // Ajoute un GROUP ï¿½ la liste des GROUPs ï¿½ associer ï¿½ la prochaine lï¿½gende qui sera crï¿½ï¿½e
    private void addGroup(String s) {
-      if( s==null ) { group=null; return; } // reset forcé
+      if( s==null ) { group=null; return; } // reset forcï¿½
       if( group==null ) group = new Vector<>();
       group.addElement(s);
    }
@@ -436,7 +443,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     * @param s La chaine a filtrer
     * @param value[] Les valeurs correspondantes a chaque variable
     * @param methode 0: sans encodage http
-    *                1: avec encodage http (test automatiquement si on est avant le ? ou après)
+    *                1: avec encodage http (test automatiquement si on est avant le ? ou aprï¿½s)
     */
    private String dollarSub(String s,String [] value,int methode) {
       StringBuffer res = new StringBuffer();
@@ -513,12 +520,13 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
    boolean [] hiddenField;	         // Tableau des champs caches (1 pour cache 0 pour ok);
    boolean firstTrace=true;	         // Pour afficher la premiere source en cas de trace
-   private int indexAccessUrl=-1;    // Position de la colonne pour in access_url éventuel
-   private int indexAccessFormat=-1; // Position de la colonne pour un access_format éventuel
-   private int indexDataProductType=-1; // Position de la colonne pour un dataproduct_type éventuel
-   private int indexSTC=-1;          // Position de la colonne pour un FOV STC éventuel
+   private int indexAccessUrl=-1;    // Position de la colonne pour in access_url ï¿½ventuel
+   private int indexAccessFormat=-1; // Position de la colonne pour un access_format ï¿½ventuel
+   private int indexDataProductType=-1; // Position de la colonne pour un dataproduct_type ï¿½ventuel
+   private int indexServiceDef=-1 ;
+   private int indexSTC=-1;          // Position de la colonne pour un FOV STC ï¿½ventuel
    private int indexOID=-1;          // Position de la colonne OID eventuelle
-   private TableParser res;          // Parser utilisé pour créer les objets
+   private TableParser res;          // Parser utilisï¿½ pour crï¿½er les objets
    private StringBuilder line = new StringBuilder(500);
    private Map<Integer, Field> standardisedColumns = new HashMap<>();
    
@@ -526,10 +534,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    public void interrupt() throws Exception { res.interrupt(); }
 
 
-//   // Légende générique qui vient remplacer toutes les légendes propres
+//   // Lï¿½gende gï¿½nï¿½rique qui vient remplacer toutes les lï¿½gendes propres
 //   private Legende genericLeg=null;
 //
-//   /** Positionnement d'une légende générique pour tous les objets (concerne PlanBGCat) */
+//   /** Positionnement d'une lï¿½gende gï¿½nï¿½rique pour tous les objets (concerne PlanBGCat) */
 //   protected void setGenericLegende(Legende leg) {
 //      genericLeg=leg;
 //   }
@@ -538,13 +546,14 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    public void setRecord(double ra, double dec, double jdTime, String[] value) {
       int n;
       String oid = null; // OID trouve s'il y a lieu
-
+      SimpleData data = null ;
+      System.out.println("setRecord");
       try {
          // Construction de la legende associe a ces sources
          // uniquement fait a la premiere source (test sur flagFirstRecord)
 
          if( flagFirstRecord ) {
-            leg=null;   // Reinitialisation si plusieurs tables dans une même resource
+            leg=null;   // Reinitialisation si plusieurs tables dans une mï¿½me resource
             firstTrace = true; // Pour afficher la premiere source en cas de trace
             indexAccessFormat=indexAccessUrl=indexDataProductType=-1;
             n = vField.size();
@@ -574,7 +583,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                // Memorisation de l'index du champ OID s'il existe
                if( indexOID == -1 && f.name != null && f.name.equals("_OID") ) indexOID = i;
 
-               // Pour répérer où se trouve les champs _RAJ2000 et _DEJ2000
+               // Pour rï¿½pï¿½rer oï¿½ se trouve les champs _RAJ2000 et _DEJ2000
                if( f.name != null ) {
                   if( f.name.equals("_RAJ2000") ) {
                      underRA = i;
@@ -630,7 +639,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                fRA.visible = fDE.visible = false;
             }
 
-            // En cas de plan HiPS catalog, la légende est globale et externe
+            // En cas de plan HiPS catalog, la lï¿½gende est globale et externe
             if( plan instanceof PlanBGCat ) {
                leg=((PlanBGCat)plan).getFirstLegende();
             }
@@ -639,14 +648,14 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                leg.name=table;
             }
 
-            // Ajout de GROUPs éventuels
+            // Ajout de GROUPs ï¿½ventuels
             if( group!=null ) leg.setGroup(group);
             
             nbTable++;
             flagFirstRecord = false;
          }
 
-         // Dans le cas de la génération a posterio de la légende pour une table vide
+         // Dans le cas de la gï¿½nï¿½ration a posterio de la lï¿½gende pour une table vide
          if( value==null ) return;
 
          // Limite de chargement ?
@@ -695,6 +704,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             String gref = leg.getGref(j);
 //            String refText = leg.getRefText(j);
             String flagArchive = leg.getRefValue(j);
+            System.out.println("flagArchive "+flagArchive);
             String utype = leg.getUtype(j);
             String name = leg.getName(j);
             
@@ -718,7 +728,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   String ucd = leg.getUCD(j);
                   if( ucd!=null && Util.indexOfIgnoreCase(ucd,"Image_AccessReference")>=0 ) {
                      flagArchive="image/fits";
-                     indexAccessUrl=-2;  // Pour éviter de le traiter par la suite
+                     indexAccessUrl=-2;  // Pour ï¿½viter de le traiter par la suite
                   }
                }
                
@@ -726,7 +736,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                if( flagArchive==null ) {
                   if( utype!=null && Util.indexOfIgnoreCase(utype,"ssa:Access.Reference")>=0 ) {
                      flagArchive="spectrum/???";
-                     indexAccessUrl=-2;  // Pour éviter de le traiter par la suite
+                     indexAccessUrl=-2;  // Pour ï¿½viter de le traiter par la suite
                   }
                }
                // SSA + preview
@@ -737,31 +747,43 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   }
                }
                
-               // datalink uniquement basé sur le nom de la colonne (genre Markus)
+               // datalink uniquement basï¿½ sur le nom de la colonne (genre Markus)
                if( flagArchive==null && name!=null ) {
                   if( name.equalsIgnoreCase("datalink") ) flagArchive="data/???";
                }
             }
-            
+            if( flagArchive==null && name!=null ) {
+                if( name.equalsIgnoreCase("service_def") ) {
+                   flagArchive="service/???";
+                   System.out.println("flagArchive "+flagArchive);
+                   
+                   
+                }     
+            } 
+                   
             String tag = (gref != null) ? gref : (href != null) ? "Http " + href : null;
 
             // JE LE REMETS ACTIF DE MANIERE GENERIQUE POUR N'IMPORTE QUEL SPECTRE - PF sept 2012
-            if( tag!=null && flagArchive!=null && (flagArchive.startsWith("spectr") && flagArchive.indexOf('/')>0) ) tag="£"+tag;
+            if( tag!=null && flagArchive!=null && (flagArchive.startsWith("spectr") && flagArchive.indexOf('/')>0) ) tag="ï¿½"+tag;
             else if( tag != null && flagArchive != null && flagArchive.indexOf('/')>0  ) tag = "^" + tag;
+            else if (tag == null && flagArchive != null && flagArchive.startsWith("service")) {tag= "^s:" +value[i];
+            System.out.println("tag "+tag); 
+            
+            }
             
             // Juste pour se rappeler que ce champ va porter un bouton vers une archive
-            if( tag!=null && (tag.charAt(0)=='^' || tag.charAt(0)=='£') ) leg.field[j].flagArchive=true;
+            if( tag!=null && (tag.charAt(0)=='^' || tag.charAt(0)=='ï¿½') ) leg.field[j].flagArchive=true;
             
              // utype "a la obscore"
             if( indexAccessUrl==-1 && Util.indexOfIgnoreCase(utype,"Access.Reference")>=0 ) indexAccessUrl=j;
             if( indexAccessFormat==-1 && Util.indexOfIgnoreCase(utype,"Access.Format")>=0 ) indexAccessFormat=j;
             if( indexDataProductType==-1 && Util.indexOfIgnoreCase(utype,"Obs.dataProductType")>=0 ) indexDataProductType=j;
-
+            if( indexServiceDef==-1 && Util.indexOfIgnoreCase(name,"service_def")>=0 ) indexServiceDef=j;
             // DESORMAIS LE TEXTE FORCE EST MIS A LA VISUALISATION DES MESURES (A FAIRE)
 //            String text = (refText != null) ? refText : value[i];
             String text = value[i];
             
-            // Les TABs ne peuvent être présents dans les valeurs individuelles (au risque de ne plus pouvoir relire les données
+            // Les TABs ne peuvent ï¿½tre prï¿½sents dans les valeurs individuelles (au risque de ne plus pouvoir relire les donnï¿½es
             // correctement). Je les remplace par un espace
             if( text.indexOf('\t')>=0 ) text=text.replace("\t"," ");
             
@@ -799,12 +821,13 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   + ")"+(!Double.isNaN(jdTime)?" time="+Astrodate.JDToDate(jdTime):"")+" [" + line + "]");
             firstTrace = false;
 
-            // Dans le cas d'un résultat ObsTAP, on devra post-traiter le tag sur le champ "access_url" en fonction
+            // Dans le cas d'un rï¿½sultat ObsTAP, on devra post-traiter le tag sur le champ "access_url" en fonction
             // de la valeur MIME du champ "access_format" (alternativement content-type)
             if( indexAccessUrl==-1 )    indexAccessUrl    = leg.find("access_url");
             if( indexAccessFormat==-1 ) indexAccessFormat = leg.find("access_format");
             if( indexAccessFormat==-1 ) indexAccessFormat = leg.find("content_type");
             if( indexDataProductType==-1 ) indexDataProductType = leg.find("dataproduct_type");
+        //	aladin.mesure.getFormInfo(5);
          }
 
          // Creation de la source, soit en XY, soit en alph,delta
@@ -815,7 +838,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          if( oid != null ) source.setOID(oid);
          o[nb_o++] = source;
 
-         // Fov STCS attaché ?
+         // Fov STCS attachï¿½ ?
          int idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION1);
          if( idxSTCS<0 ) idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION2);
          if( idxSTCS<0 ) idxSTCS = indexSTC;
@@ -823,7 +846,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             try {
                String val = source.getValue(idxSTCS);
                
-               // Attention des petits rigolos (Markus) utilisent parfois des tableaux de réels où ils alternent lon/lat
+               // Attention des petits rigolos (Markus) utilisent parfois des tableaux de rï¿½els oï¿½ ils alternent lon/lat
                if( leg.isNumField(idxSTCS) && leg.field[idxSTCS].arraysize!=null ) {
                   val="Polygon UNKNOWNFrame UNKNOWNREFPOS "+val;
 //                  source.setValue(idxSTCS, val);
@@ -834,7 +857,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                e.printStackTrace();
             }
             
-         // Peut être un FoV peut être tout de même généré par SIA1 ou SSA ?
+         // Peut ï¿½tre un FoV peut ï¿½tre tout de mï¿½me gï¿½nï¿½rï¿½ par SIA1 ou SSA ?
          } else 
          
          if( flagSIA && !flagSIAV2 ) {
@@ -845,21 +868,26 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                source.setIdxFootprint(iScale);  // on l'associe manu militari sur le colonne des tailles des pixels
             }
          }
-
-         // Post-traitement ObsTap => on remplace le <&xxx par <^xxx ou <£xxx e la colonne "access_url"
-         // en fonction du type de donnée de la colonne dataproduct_type et sinon du MIME type de la colonne "access_format"
+         if(indexServiceDef>=0) {
+         String servdef = source.getCodedValue(indexServiceDef);
+         System.out.println("service descriptor "+servdef); 
+         }
+         // Post-traitement ObsTap => on remplace le <&xxx par <^xxx ou <ï¿½xxx e la colonne "access_url"
+         // en fonction du type de donnï¿½e de la colonne dataproduct_type et sinon du MIME type de la colonne "access_format"
          if( indexAccessUrl>=0 || indexDataProductType>=0 ) {
             try {
                String type = indexDataProductType==-1 ? "" : source.getCodedValue(indexDataProductType);
                String fmt = indexAccessFormat==-1 ? "" : source.getCodedValue(indexAccessFormat);
                String val = source.getCodedValue(indexAccessUrl);
+              System.out.println("indexes "+fmt+" "+val) ;
                if( val.startsWith("<&") && fmt.indexOf("html")<0 && fmt.indexOf("plain")<0 ) {
-                  String tag="^";
-                  if( type.length()>=0 && type.startsWith("spectr")) tag="£";
-                  else if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="£";
+                  String tag="^"; 
+                  if( type.length()>=0 && type.startsWith("spectr")) tag="ï¿½";
+                  else if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="ï¿½";
                   val = "<&"+tag+val.substring(2);
                   source.setValue(indexAccessUrl, val);
                   source.getLeg().field[indexAccessUrl].flagArchive=true;
+                 
                }
             } catch( Exception e ) {
                e.printStackTrace();
@@ -870,6 +898,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          if( aladin.levelTrace>=3 ) System.err.println("Pcat setRecord (3p) exception " + e);
          e.printStackTrace();
       }
+      
+      
    }
    
    /**
@@ -902,7 +932,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                      standardRepresentation = this.setStandardSpectralRepresentation(text);
                 }
 
-// Code Chaitra => bien trop lent [le split est à fuir]
+// Code Chaitra => bien trop lent [le split est ï¿½ fuir]
 //				if (field.ucd.split("\\.")[0].equalsIgnoreCase("time") && "D".equalsIgnoreCase(field.datatype)
 //						&& "d".equalsIgnoreCase(field.unit)) {
 //					Pattern regex = Pattern.compile(REGEX_NUMBER);
@@ -986,7 +1016,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    /** Retourne true si on a des infos sur le catalogue */
    protected boolean hasCatalogInfo() { return parsingInfo!=null || description!=null; }
 
-   /** retourne true si au-moins un objet est sélectionné */
+   /** retourne true si au-moins un objet est sï¿½lectionnï¿½ */
    protected boolean hasSelectedOrTaggedObj() {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
@@ -1002,8 +1032,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    /** Retourne true si on dispose d'informations techniques sur le parsing */
    protected boolean hasParsingInfo() { return parsingInfo!=null || description!=null; }
 
-   /** Affichage de la fenêtre contenant les informations sur le parsing
-       et les données */
+   /** Affichage de la fenï¿½tre contenant les informations sur le parsing
+       et les donnï¿½es */
    protected void seeCatalogInfo() {
       if( !hasParsingInfo() ) return;
       JFrame f = new JFrame("Catalog information");
@@ -1037,7 +1067,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       tableParserInfo(msg);
    }
    
-   /** Positionnement de l'époque originale */
+   /** Positionnement de l'ï¿½poque originale */
    public void setOriginalEpoch(String s ) throws Exception { plan.setOriginalEpoch(s); }
 
    /** This method is called by the TableParserConsumer for
@@ -1079,7 +1109,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       rajc=tmp[0]; dejc=tmp[1]; rm=tmp[2];
    }
    
-   /** Positionnement à l'avance du target finale => nécessairement en ICRS */
+   /** Positionnement ï¿½ l'avance du target finale => nï¿½cessairement en ICRS */
    public boolean setTargetCoord( String target ) {
       if( Localisation.notCoord(target) ) return false;
       aladin.trace(6,"Pcat.setTargetCoord("+target+")");
@@ -1134,7 +1164,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
    /**
     * Parsing de la table
-    * @param dis Le flux à parser
+    * @param dis Le flux ï¿½ parser
     * @param endTag en cas de parsing partiel, le tag de fin, sinon null
     * @return le nombre d'objets dans la table
     * @throws Exception
@@ -1176,9 +1206,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          ok = res.parse(dis,endTag);
       }
 
-      // Cas particulier pour un plan hiérarchique
+      // Cas particulier pour un plan hiï¿½rarchique
       if( ok && plan instanceof PlanBGCat ) {
-         if( nb_o==0 ) setRecord(0, 0, Double.NaN, null);  // pour initialiser tout de même la légende
+         if( nb_o==0 ) setRecord(0, 0, Double.NaN, null);  // pour initialiser tout de mï¿½me la lï¿½gende
          return nb_o;
       }
 
@@ -1207,10 +1237,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          
       } else {
          try {
-            // Si toute tombe dans la même cellule MOC de 1°, on fera une projection limitée à 1°
-            // sinon on fera large (on ne s'embête plus car généralement il y a un HiPS en dessous)
+            // Si toute tombe dans la mï¿½me cellule MOC de 1ï¿½, on fera une projection limitï¿½e ï¿½ 1ï¿½
+            // sinon on fera large (on ne s'embï¿½te plus car gï¿½nï¿½ralement il y a un HiPS en dessous)
             Healpix hpx = new Healpix();
-            SMoc moc = new SMoc(6);    // cellule de 1°
+            SMoc moc = new SMoc(6);    // cellule de 1ï¿½
             moc.bufferOn();
             
             int gap = 1;
@@ -1238,7 +1268,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    private void computeTarget() { createDefaultProj(); }
    
    
-   /** (Re)génération de la projection par défaut associée à la liste des objets en prenant
+   /** (Re)gï¿½nï¿½ration de la projection par dï¿½faut associï¿½e ï¿½ la liste des objets en prenant
     * comme centre de projection le barycentre */
 //   protected void createDefaultProj() {
 //      for( int i=0; i<nb_o; i++ ) {
@@ -1309,7 +1339,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
    /** Remplissage d'un Plan de catalogue
     * @param plan Le plan d'appartenance
-    * @param u L'URL d'acces aux données a analyser
+    * @param u L'URL d'acces aux donnï¿½es a analyser
     * @param verbose true si on peut afficher des messages d'erreur
     * @return le nombre d'objets ou <I>-1</I> si probleme
     */
@@ -1319,7 +1349,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
    /** Remplissage d'un Plan de catalogue
     * @param plan Le plan d'appartenance
-    * @param dis le flux d'acces axdonnées a analyser (ou null)
+    * @param dis le flux d'acces axdonnï¿½es a analyser (ou null)
     * @param endTag en cas de parsing partiel, le tag de fin
     * @param verbose true si on peut afficher des messages d'erreur
     * @return le nombre d'objets ou <I>-1</I> si probleme
@@ -1331,7 +1361,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    /** Remplissage d'un Plan de catalogue
     * @param plan Le plan d'appartenance
     * @param u L'URL d'acces au TSV a analyser	(ou null)
-    * @param dis le flux d'acces aux données a analyser (ou null)
+    * @param dis le flux d'acces aux donnï¿½es a analyser (ou null)
     * @param endTag en cas de parsing XML partiel, le tag de fin, sinon null
     * @param verbose true si on peut afficher des messages d'erreur
     * @return le nombre d'objets ou <I>-1</I> si probleme
@@ -1339,18 +1369,26 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    protected int setPlanCat(Plan plan, URL u, MyInputStream dis,String endTag,boolean verbose) {
       int nb=-1;
       boolean flagFootprint = false;
+      boolean flagDataLink=false ;
+  // MyInputStream dis1 = new MyInputStream(dis) ;
+ //  SavotPullParser parser1 = new SavotPullParser(dis1, SavotPullEngine.FULL,null);
+//  System.out.println("nb ressources "+parser1.getResourceCount());
+   
       // Construction et appel de l'URL
       try {
 
          // Pour de l'info
          if( u!=null ) tableParserInfo(u+"\n");
-
+         else System.out.println("u null");
+         if (u == null) System.out.println("u null 2");
          // Deux tentatives... cochonnerie de JAVA
          if( dis==null ) {
             try { dis =Util.openStream(u); }
             catch( Exception efirst ) { dis =Util.openStream(u); }
          }
          plan.dis=dis;
+         
+         
 
          long type=dis.getType();
          flagVOTable=(type & MyInputStream.VOTABLE)!=0;
@@ -1358,12 +1396,14 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 //         flagSIAV2 = (type & MyInputStream.SIAV2)!= 0;
          flagSIA = (type & MyInputStream.SIA)!= 0;
          flagEPNTAP = (type & MyInputStream.EPNTAP)!= 0;
-         if( flagFootprint ) {
+         flagDataLink = (type & MyInputStream.DATALINK)!= 0;
+         if(( flagFootprint )||(flagDataLink)) {
             // devrait etre RESOURCE, mais il y a un bug dans getUnreadBuffer (mange un tag trop en avant)
             endTag = "TABLE";
          }
          //System.out.println("flagFOV : "+flagFootprint);
          nb = tableParsing(dis,endTag);
+         System.out.println("nb "+nb);
       }
       catch( OutOfMemoryError e ) {
          aladin.error = OUTOFMEMORY;;
@@ -1395,8 +1435,37 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          Hashtable<String, FootprintBean> idToFootprint = fParser.getFooprintHash();
          attachFootprintToSources(idToFootprint);
       }
-
-      // par défaut, on montre les footprints associés à un plan catalogue
+      
+      if ( flagDataLink ) {
+    	  FootprintParser sdParser = new FootprintParser(dis, res.getUnreadBuffer());
+    	  Hashtable<String, SavotResource> idToServiceDescriptor = sdParser.getSDHash();
+    	 // System.out.println("utype "+(idToServiceDescriptor.get("soda-sync")).getUtype());
+    	  attachSDToSources(idToServiceDescriptor);
+    	  
+    	//  System.out.println("flagDataLink") ;
+    	// SavotPullParser parser = null ;
+    	 
+    	 // SavotResource ServiceDescriptor = null ;
+    	//  System.out.println(u.toString());
+    	//  SavotResource ServiceDescriptor = ((Source)o[0]).getServiceDescriptor() ;       }
+    	 // if(dis == null)System.out.println("dis null");
+    	 // try {
+    	//	  System.out.println("buffer "+res.getUnreadBuffer()) ;
+    	//	 parser = new SavotPullParser(dis, SavotPullEngine.FULL,null);
+    	//	 if(parser == null)System.out.println("parser null");
+    	//	 System.out.println("nb ressources "+parser.getResourceCount());
+    	  // accessUrlResult = DatalinkServiceUtil.getDataSets(u);
+    	  // SavotPullParser parser = new SavotPullParser(dis, SavotPullEngine.FULL,null,false); 
+    	 // }
+    	 // catch (Exception uu ) { System.out.println("echec getDataSets");}
+    	  // try {ServiceDescriptor =  parser.getResourceFromRef("soda-sync") ; 
+    	  // }   
+    	  // catch (Exception uuu ) { System.out.println("echec getResource");}
+    	  // if (ServiceDescriptor == null) System.out.println("echec");
+    	 // else System.out.println("succÃ¨s") ;
+      }
+      
+      // par dï¿½faut, on montre les footprints associï¿½s ï¿½ un plan catalogue
       // NON, PAS UNE BONNE IDEE
       //       if (plan instanceof PlanCatalog && ((PlanCatalog) plan).hasAssociatedFootprints()) {
       //           ((PlanCatalog) plan).showFootprints(true);
@@ -1406,7 +1475,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    }
 
    /**
-    * Attache les footprint aux objets précédemment créés
+    * Attache les footprint aux objets prï¿½cï¿½demment crï¿½ï¿½s
     *
     * @param hash le hash donnant la correspondance ID --> footprint
     */
@@ -1451,15 +1520,61 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       }
    }
 
+   private void attachSDToSources(Hashtable<String, SavotResource> hash) {
+	      Source s;
+	      int idx = -1;
+	      String key;
+	      SavotResource servDef;
+	      PlanField pf;	
+	      HashMap<String,String> params = new HashMap<String,String>();
+	      
+	      for( int i=0; i<nb_o; i++ ) {
+//	         if( ! (o[i] instanceof Source) ) continue;
+	         if( !o[i].asSource() ) continue;
+	         s = (Source)o[i];
+	         pf=null;
+
+	         idx = s.findColumn("service_def");
+	       //  if( idx<0 ) idx = s.findUtype("char:SpatialAxis.coverage.support.id");
+	         if( idx<0 )  continue;
+
+	         key = s.getValue(idx);
+	         servDef = hash.get(key);
+	         int sourceLeng = s.getSize() ;
+	         String[] Names = s.getNames() ;
+	         String[] Values = s.getValues() ;
+	         for (int j=0; j< sourceLeng; j++) {
+	         // System.out.println("source size "+sourceLeng);
+	         params.put(Names[j],Values[j]) ;	 
+	         }
+	        // String service = s.getValue(s.findColumn("service_def"));
+	        // params.put("service_def",service);
+	        // String id = s.getValue(s.findColumn("ID"));
+	        // params.put("ID",id);
+	        // s.setIdxFootprint(idx);
+	         // we attach the found footprint to the current source
+	         if( servDef!=null ) {
+	        	    SimpleData SiDaForSdef = new SimpleData() ;
+	        	    SiDaForSdef.setMetaResource(servDef);
+                    SiDaForSdef.setParams(params);
+	        	    System.out.println("ServDef "+servDef.getId());
+	        	 s.setServiceDescriptor(SiDaForSdef);
+	        	 
+	         }
+	       
+	     
+	      }
+	   }
+
    private int nextID=0;
 
-   /** Retourne un indice unique afin de pouvoir générer un ID de l'objet.
-    * Celui-ci peut être différent de l'index de l'objet, notamment si des objets
-    * sont supprimés en cours de traitement */
+   /** Retourne un indice unique afin de pouvoir gï¿½nï¿½rer un ID de l'objet.
+    * Celui-ci peut ï¿½tre diffï¿½rent de l'index de l'objet, notamment si des objets
+    * sont supprimï¿½s en cours de traitement */
    protected int getNextID() { return nextID; }
 
    // Retourne le prochain index libre dans le tableau des objets
-   // et met à jour un numéro unique pour pouvoir faire  un identificateur (voir getnextID())
+   // et met ï¿½ jour un numï¿½ro unique pour pouvoir faire  un identificateur (voir getnextID())
    int nextIndex() {
       if( o==null ) {
          o = new Obj[DEFAULTBLOC];
@@ -1479,7 +1594,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    }
 
    /** Ajout d'un nouvel objet
-    * Retourne la position d'insertion dans le tableau o[], -1 si problème */
+    * Retourne la position d'insertion dans le tableau o[], -1 si problï¿½me */
    protected int setObjet(Obj newobj) {
       int i = nextIndex();
       if( i<0 ) return -1;         // C'est plein
@@ -1501,15 +1616,15 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       return i;
    }
    
-   /** Insertion de la source après la dernière source de même légende, sinon à la fin */
+   /** Insertion de la source aprï¿½s la derniï¿½re source de mï¿½me lï¿½gende, sinon ï¿½ la fin */
    protected void insertSource(Source src) {
       for( int i=nb_o-1; i>=0; i-- ) {
          if( !o[i].asSource() ) continue;
          
-         // On a trouvé ?
+         // On a trouvï¿½ ?
          if( ((Source)o[i]).getLeg()==src.getLeg() ) {
             int n = nextIndex();
-            for( int j=n; j>i+1; j--) o[j] = o[j-1];  // décalage
+            for( int j=n; j>i+1; j--) o[j] = o[j-1];  // dï¿½calage
             o[i+1] = src;
             return;
          }
@@ -1524,9 +1639,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       o[i] = newobj;
    }
 
-   /** Vérifie et fixe le nombre de champs de toutes les objets Source
-    * ayant la même légende que celle passée en paramètre.
-    * @param leg La légende "étalon"
+   /** Vï¿½rifie et fixe le nombre de champs de toutes les objets Source
+    * ayant la mï¿½me lï¿½gende que celle passï¿½e en paramï¿½tre.
+    * @param leg La lï¿½gende "ï¿½talon"
     */
    protected void fixInfo(Legende leg) {
       int j=0;
@@ -1536,20 +1651,20 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          Source s = (Source)o[i];
          if( s.getLeg()==leg ) { s.fixInfo(); j++; }
       }
-      //System.out.println("FIX J'ai fixé "+j+" sources du plan "+plan);
+      //System.out.println("FIX J'ai fixï¿½ "+j+" sources du plan "+plan);
    }
 
-   /** Retourne l'indice d'un objet, ou -1 si non trouvé */
+   /** Retourne l'indice d'un objet, ou -1 si non trouvï¿½ */
    protected int getIndex(Obj x) {
       for( int i=0; i<nb_o; i++ ) if( x==o[i] ) return i;
       return -1;
    }
 
-   protected boolean removable = false;     // Possibilité de changer le statut d'un plan catalogue
+   protected boolean removable = false;     // Possibilitï¿½ de changer le statut d'un plan catalogue
 
    /** Suppression d'un objet, simple ou multicomponent
     * @param obj L'objet a supprimer
-    * @param force true si on peut supprimer même les sources des catalogues
+    * @param force true si on peut supprimer mï¿½me les sources des catalogues
     * @return <I>true</I> si trouve, sinon <I>false</I>
     */
    protected boolean delObjet(Obj obj) { return delObjet(obj,removable); }
@@ -1562,7 +1677,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     * Suppression d'un objet par ecrasement de sa reference
     * avec le dernier element du tableau
     * @param obj L'objet a supprimer
-    * @param force true si on peut supprimer même les sources des catalogues
+    * @param force true si on peut supprimer mï¿½me les sources des catalogues
     * @return <I>true</I> si trouve, sinon <I>false</I>
     */
    protected boolean delObjetOne(Obj obj,boolean force) {
@@ -1572,7 +1687,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 //      if( !force && obj instanceof Source ) return false;
       if( !force && obj.asSource() ) return false;
 
-      // Peut être faut-il qu'il mette à jour certains paramètres (ex. Ligne)
+      // Peut ï¿½tre faut-il qu'il mette ï¿½ jour certains paramï¿½tres (ex. Ligne)
       obj.remove();
 
       // Parcours de tous les objets du plan
@@ -1603,10 +1718,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     */
    protected void showBaratin(int i) { o[i].status(aladin); }
 
-   /** Avant un Draw ou un writeLink, refait la projection si nécessaire,
-    * et vérifie si le plan doit être affiché dans la vue
-    * @param v la vue concernée
-    * @param draw réponse initiale (permet de retourner false et tout de même reprojeter
+   /** Avant un Draw ou un writeLink, refait la projection si nï¿½cessaire,
+    * et vï¿½rifie si le plan doit ï¿½tre affichï¿½ dans la vue
+    * @param v la vue concernï¿½e
+    * @param draw rï¿½ponse initiale (permet de retourner false et tout de mï¿½me reprojeter
     * @return true si la source est visible, false sinon
     */
    protected boolean computeAndTestDraw(ViewSimple v,boolean draw) {
@@ -1643,7 +1758,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       try  {
 
          // gestion de la transparence
-         // Le test d'impression est fait par dx==0 car à l'écran, il n'y a pas d'offset
+         // Le test d'impression est fait par dx==0 car ï¿½ l'ï¿½cran, il n'y a pas d'offset
          if( dx==0 && plan!=null && Aladin.isFootprintPlane(plan) &&
                Aladin.ENABLE_FOOTPRINT_OPACITY && plan.getOpacityLevel()>0.02 && g instanceof Graphics2D ) {
             drawFovInTransparency(g, r, v, draw, dx, dy);
@@ -1679,7 +1794,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
          // cas d'un Cercle
          if( o[i] instanceof Cercle ) {
-            // on ne fait rien ici, intégré dans Cercle.draw
+            // on ne fait rien ici, intï¿½grï¿½ dans Cercle.draw
          }
 
          // cas d'un Polygone
@@ -1688,7 +1803,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          }
       }
 
-      // traitement et affichage des polylignes trouvés
+      // traitement et affichage des polylignes trouvï¿½s
       if( linesToProcess.size()>0 ) {
          Ligne[] lArray = (Ligne[])linesToProcess.toArray(new Ligne[linesToProcess.size()]);
          Ligne curLine, startLine;
@@ -1699,7 +1814,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          int k;
          // parcours du tableau en partant de la fin
          for( int i=lArray.length-1; i>=0; i-- ) {
-            // déja traité ? on passe au suivant
+            // dï¿½ja traitï¿½ ? on passe au suivant
             if( ! linesToProcess.contains(lArray[i]) ) continue;
 
             polyLine.clear();
@@ -1712,7 +1827,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                polyLine.add(curLine);
                linesToProcess.remove(curLine);
             }
-            // dessin du polygone trouvé
+            // dessin du polygone trouvï¿½
             if( polyLine.size()>0 ) {
                points = new Point[polyLine.size()];
                x = new int[polyLine.size()];
@@ -1730,7 +1845,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   k++;
                }
                g2d.setColor(curLine.getColor());
-               // TODO : toute la gestion de la transparence serait simplifié avec un objet PolyLigne
+               // TODO : toute la gestion de la transparence serait simplifiï¿½ avec un objet PolyLigne
                if( curLine.isVisible() ) g2d.fill(new Polygon(x, y, k));
             }
          }
@@ -1740,7 +1855,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    }
 
 
-   /** Génération des lignes des liens pour une carte HTML cliquable
+   /** Gï¿½nï¿½ration des lignes des liens pour une carte HTML cliquable
     * Affiche tous les objets du plan sous la forme
     * NOMDUPLAN <TAB> x <TAB> y <TAB> id <TAB> url
     * @param out le flux de sortie
@@ -1767,13 +1882,13 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    /** retourne true si le plan contient des objets */
    protected boolean hasObj() { return nb_o>0; }
 
-   /** retourne l'objet à l'index précisé */
+   /** retourne l'objet ï¿½ l'index prï¿½cisï¿½ */
    protected Obj getObj(int index) { return index>=nb_o ? null : o[index]; }
 
-   // Recupération d'un itérator sur les objets
+   // Recupï¿½ration d'un itï¿½rator sur les objets
    protected Iterator<Obj> iterator() { return new PlanObjetIterator(null); }
 
-   // Recupération d'un itérator sur les objets visibles dans la vue
+   // Recupï¿½ration d'un itï¿½rator sur les objets visibles dans la vue
    protected Iterator<Obj> iterator(ViewSimple v) { return new PlanObjetIterator(v); }
    
    class PlanObjetIterator implements Iterator<Obj> {

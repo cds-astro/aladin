@@ -60,9 +60,9 @@ import cds.xml.Field;
  * Canvas d'affichage des mesures des objets selectionnees
  *
  * @author Pierre Fernique [CDS]
- * @version 2.2 : dec 2016 Couleurs alternées
+ * @version 2.2 : dec 2016 Couleurs alternï¿½es
  * @version 2.1 : mars 2006 blink de la source courante
- * @version 2   : (21 janvier 2004) Changement de mode de mémorisation
+ * @version 2   : (21 janvier 2004) Changement de mode de mï¿½morisation
  * @version 1.2 : 28 mars 00  Toilettage du code
  * @version 1.1 : 3 juin 99   Gestion du bloc-note
  * @version 1.0 : (10 mai 99) Toilettage du code
@@ -97,8 +97,8 @@ MouseWheelListener, Widget
    int currentsee=-1;    // Ligne courante (sous la souris)
    int nbligne;          // Nombre de lignes visibles actuellement
    Source oo;            // Precedente Source montree
-   Vector mouseLigne;      // La dernière ligne sous la souris
-   Vector showLigne;     // La ligne montrée (surlignée en bleue)
+   Vector mouseLigne;      // La derniï¿½re ligne sous la souris
+   Vector showLigne;     // La ligne montrï¿½e (surlignï¿½e en bleue)
    Words wButton;	     // Dernier bouton appuye
    Obj oButton;	         // Objet associe au dernier bouton appuye
    int yrep=-1;          // l'ordonnee du dernier repere courant
@@ -110,13 +110,13 @@ MouseWheelListener, Widget
    int currentselect=-2;
    protected int triTag = Field.UNSORT;  //Indique un tri sur les tags
 
-   protected Legende oleg=null;           // La légende courante
-   protected Vector ligneHead=null;     // L'entête courante
-   protected Source objSelect=null;       // Source sélectionné (pour pouvoir bloquer son entête), sinon null
-   protected Source objShow=null;         // Source pointée sous la souris dans l'image (le temps de faire le paintComponent=
-   private boolean flagDrawHead=false;  // Juste pour réafficher rapidement le cas échéant
+   protected Legende oleg=null;           // La lï¿½gende courante
+   protected Vector ligneHead=null;     // L'entï¿½te courante
+   protected Source objSelect=null;       // Source sï¿½lectionnï¿½ (pour pouvoir bloquer son entï¿½te), sinon null
+   protected Source objShow=null;         // Source pointï¿½e sous la souris dans l'image (le temps de faire le paintComponent=
+   private boolean flagDrawHead=false;  // Juste pour rï¿½afficher rapidement le cas ï¿½chï¿½ant
    private int onBordField=-1;          // Champ en cours de redimensionnement, -1 si aucun
-   private int onBordX;                 // Début du drag lors d'un redimensionnement
+   private int onBordX;                 // Dï¿½but du drag lors d'un redimensionnement
 
    int indiceCourant=-1,sortField=-1;
    Source sCourante = null;
@@ -174,7 +174,7 @@ MouseWheelListener, Widget
    /* menuTag,menuUntag,*/menuTag1,menuUntag1,menuHelpTag,
    /*menuKeepTag,menuKeepUntag,*/menuCreateMulti,menuCreateUniq,
    /* menuLoadImg,menuLoadImgs,*/menuUnselect,
-   menuAddColumn,menuGoto,menuDel,menuTableInfo,menuEdit,menuCooToolbox,menuInfo;
+   menuAddColumn,menuGoto,menuDel,menuTableInfo,menuEdit,menuCooToolbox,menuInfo,menuLaunch;
 
    // Cree le popup menu associe au View
    private void createPopupMenu() {
@@ -240,6 +240,9 @@ MouseWheelListener, Widget
       j.addActionListener(this);
       popMenu.add( menuCooToolbox=j=new JMenuItem(aladin.COOTOOL));
       j.addActionListener(this);
+      popMenu.add( menuLaunch=j=new JMenuItem("Launch service"));
+      j.addActionListener(this);
+
 
       add(popMenu);
    }
@@ -279,6 +282,7 @@ MouseWheelListener, Widget
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
       else if( src==menuAddColumn ) aladin.addCol(objSelect.plan);
       else if( src==menuCooToolbox ) openCooToolbox(objSelect);
+      else if( src==menuLaunch ) aladin.mesure.getCurObjLaunch();
 
       // envoi via SAMP
       else if( src instanceof JMenuItem && ((JMenuItem)src).getActionCommand().equals(MBROADCASTSPECTRUM) ) {
@@ -300,7 +304,7 @@ MouseWheelListener, Widget
    }
 
    /**
-    * Envoie aux Appli SAMP indiquées, ou à toutes (null), le spectre pointé par l'url */
+    * Envoie aux Appli SAMP indiquï¿½es, ou ï¿½ toutes (null), le spectre pointï¿½ par l'url */
    protected void sendBySAMP(String url, String plasticApp) {
       AppMessagingInterface mMgr = aladin.getMessagingMgr();
       if( ! Aladin.PLASTIC_SUPPORT || ! mMgr.isRegistered() ) return;
@@ -328,8 +332,8 @@ MouseWheelListener, Widget
    
    private String urlSamp;
 
-   /** Mémorise l'url d'un spectre qui va être envoyé via SAMP lorsque l'utilisateur aura indiqué
-    * l'application SAMP cibles via le popupmenu qui va apparaître */
+   /** Mï¿½morise l'url d'un spectre qui va ï¿½tre envoyï¿½ via SAMP lorsque l'utilisateur aura indiquï¿½
+    * l'application SAMP cibles via le popupmenu qui va apparaï¿½tre */
    protected void toSamp(String url,int x,int y) {
       urlSamp=url;
       aladin.view.infoCassis(null);
@@ -337,7 +341,7 @@ MouseWheelListener, Widget
    }
 
 
-   //   /** Chargement d'une image centrée sur la source sélectionnée dans le tableau des mesures */
+   //   /** Chargement d'une image centrï¿½e sur la source sï¿½lectionnï¿½e dans le tableau des mesures */
    //   private void loadImg() {
    //      Source s = objSelect;
    //      if( s==null ) return;
@@ -345,12 +349,12 @@ MouseWheelListener, Widget
    //      aladin.execAsyncCommand("\""+s.id+"\"=get "+aladin.configuration.getLoadImgCmd()+" "+target);
    //   }
    //
-   //   /** Chargement d'une image centrée pour chaque source dans la table des mesures
-   //    * S'il y a au-moins une source taguée, ne concerne que les sources taguées*/
+   //   /** Chargement d'une image centrï¿½e pour chaque source dans la table des mesures
+   //    * S'il y a au-moins une source taguï¿½e, ne concerne que les sources taguï¿½es*/
    //   private void loadImgs() {
    //      int n=0;
    //
-   //      // Décompte du nombre de sources concernées
+   //      // Dï¿½compte du nombre de sources concernï¿½es
    //      for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
    //         Source s = aladin.mesure.src[i];
    //         if( !s.isTagged() ) continue;
@@ -369,7 +373,7 @@ MouseWheelListener, Widget
    //      }
    //   }
 
-   // Retourne l'état des tags : 0-aucune sources, 1-au-moins une, 2-toutes
+   // Retourne l'ï¿½tat des tags : 0-aucune sources, 1-au-moins une, 2-toutes
    private int getTagFlag() {
       int n=0;
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
@@ -379,7 +383,7 @@ MouseWheelListener, Widget
       return n==0 ? 0 : n==aladin.mesure.nbSrc ? 2 : 1;
    }
 
-   /** Affichage du popupPin avec (dés)activation des menus concernés */
+   /** Affichage du popupPin avec (dï¿½s)activation des menus concernï¿½s */
    private void popPinShow(int x,int y) {
       int tagMode=getTagFlag();
       menuTag1.setEnabled(tagMode<2);
@@ -387,10 +391,10 @@ MouseWheelListener, Widget
       popMenuTag.show(this,x,y);
    }
 
-   /** Affichage du popup avec (dés)activation des menus concernés */
+   /** Affichage du popup avec (dï¿½s)activation des menus concernï¿½s */
    private void popupShow(int x,int y) {
 
-      // Détermine s'il y a au-moins une source taguée
+      // Dï¿½termine s'il y a au-moins une source taguï¿½e
       boolean tag=getTagFlag()==1;
       boolean flag = objSelect!=null;
       menuUnselect.setEnabled(flag);
@@ -445,13 +449,13 @@ MouseWheelListener, Widget
 
       if( popMenuSAMP==null ) createSAMPPopupMenu();
 
-      // Activation des items relatifs à PLASTIC
+      // Activation des items relatifs ï¿½ PLASTIC
       if( Aladin.PLASTIC_SUPPORT ) {
          AppMessagingInterface mMgr = aladin.getMessagingMgr();
 
          ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_SPECTRUM_FROM_URL);
          
-         // On ajoute Topcat manu-militari si présent (ajustement pour Petr Skoda)
+         // On ajoute Topcat manu-militari si prï¿½sent (ajustement pour Petr Skoda)
          for( String s :mMgr.getAppsSupportingTables() ) {
             if( s.equals("topcat") ) { spectrumApps.add(s); break; }
          }
@@ -584,7 +588,7 @@ MouseWheelListener, Widget
     * @param g       Le contexte du graphique
     * @param w       Le mot
     * @param flagClear true s'il faut au prealable effacer
-    * @param background La couleur du fond (par défaut)
+    * @param background La couleur du fond (par dï¿½faut)
     * @return        La taille calculee
     */
    protected int drawWords(Graphics g, Words w, boolean flagClear) {
@@ -598,7 +602,7 @@ MouseWheelListener, Widget
       int widthw;	     // Taille du mot
       String text =  w.text;
       
-      // Prise en compte de la precision pour aligner le point décimal
+      // Prise en compte de la precision pour aligner le point dï¿½cimal
       if( w.precision>=0 ) {
          int j = text.indexOf(' ');
          if( j<0 ) {
@@ -624,7 +628,7 @@ MouseWheelListener, Widget
       }
 
       // Determination de la taille
-      boolean flagCut=false;  // true si le mot est tronqué
+      boolean flagCut=false;  // true si le mot est tronquï¿½
       FontMetrics fm = g.getFontMetrics();
       widthw = fm.stringWidth(text) + (w.sort!=Field.UNSORT ? 12 : 0);
 //      widthw = (int)( text.length()*wblanc + (w.sort!=Field.UNSORT ? 12 : 0) );
@@ -649,10 +653,10 @@ MouseWheelListener, Widget
          // Ligne sous la souris
          else if( w.show ) {
             
-            // Ligne non "sélectionnée" (changement pour simple mouseMove)
+            // Ligne non "sï¿½lectionnï¿½e" (changement pour simple mouseMove)
             if( objSelect==null ) bg = Aladin.COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE;
             
-            // Ligne sélectionnée (il faut recliquer pour la désélectionner)
+            // Ligne sï¿½lectionnï¿½e (il faut recliquer pour la dï¿½sï¿½lectionner)
             else  bg = Aladin.COLOR_STACK_SELECT;
          }
 
@@ -667,34 +671,34 @@ MouseWheelListener, Widget
 
       Color fg = Aladin.COLOR_MEASUREMENT_FOREGROUND;
       
-      // ça dépasse à gauche ou à droite
+      // ï¿½a dï¿½passe ï¿½ gauche ou ï¿½ droite
       if( x+width<1  || x>W ) return width;
 
       // Une marque GLU (ancre)
       else if( w.glu) { // && !(w.archive || w.footprint) ) {
          
-         // Le lien vient d'être cliqué
+         // Le lien vient d'ï¿½tre cliquï¿½
          if( w.pushed ) fg = Color.red ;
          
-         // Le lien a été cliqué au préalable
+         // Le lien a ï¿½tï¿½ cliquï¿½ au prï¿½alable
          else if( w.haspushed ) {
             fg =  Color.green;
          }
          
-         // Le lien n'a jamais été cliqué jusqu'à présent
+         // Le lien n'a jamais ï¿½tï¿½ cliquï¿½ jusqu'ï¿½ prï¿½sent
          else fg = Aladin.COLOR_FOREGROUND_ANCHOR;
       } 
       
       // Sous la souris ?
       else if( w.onMouse ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE;
       
-      // Dans l'entête ?
+      // Dans l'entï¿½te ?
       else if( y<=2*HF ) fg = Aladin.COLOR_MEASUREMENT_HEADER_FOREGROUND;
       
-      // Une valeur issue d'une colonne "calculée"
+      // Une valeur issue d'une colonne "calculï¿½e"
       else if( w.computed ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_COMPUTED;
       
-      // Ligne sélectionnée => Adaptation de la couleur pour que cela tranche sur le fond
+      // Ligne sï¿½lectionnï¿½e => Adaptation de la couleur pour que cela tranche sur le fond
       if( w.show ) {
          if( w.onMouse ) fg = fg.darker().darker();
          else fg = fg.brighter().brighter();
@@ -716,10 +720,10 @@ MouseWheelListener, Widget
          else if( w.align==Words.CENTER ) xtext=x+width/2 - widthw/2;
       }
 
-      if( w.archive || w.footprint ) drawButton(g,xtext,y,HF,width,text,w);
+      if( w.archive || w.footprint || w.servdef ) drawButton(g,xtext,y,HF,width,text,w);
       else g.drawString(text,xtext,y);
 
-      // On ajoute des points à la fin du mot s'il est coupé
+      // On ajoute des points ï¿½ la fin du mot s'il est coupï¿½
       if( flagCut ) {
          Font f = g.getFont();
          int xp = g.getFontMetrics().stringWidth(text.trim())+xtext;
@@ -728,7 +732,7 @@ MouseWheelListener, Widget
          g.setFont(f);
       }
 
-      // On dessine le triangle du mode de tri (ne concerne que l'entête)
+      // On dessine le triangle du mode de tri (ne concerne que l'entï¿½te)
       if( w.sort!=Field.UNSORT ) {
          Color c = w.onMouse ? Color.white :  background;
          drawSort(g,x+width-10,y,w.sort,c );
@@ -737,7 +741,7 @@ MouseWheelListener, Widget
       // On souligne s'il s'agit d'une ancre
 //      if( w.glu ) g.drawLine(xtext,y+1,xtext+fm.stringWidth(text),y+1);
 
-      // Tracé de l'épinglette
+      // Tracï¿½ de l'ï¿½pinglette
       if( w.pin && !aladin.isFullScreen() )  {
          if( pin==null ) pin = aladin.getImagette("Pin.png");
          g.drawImage(pin,x-16,y-HF-1,aladin);
@@ -815,7 +819,7 @@ MouseWheelListener, Widget
          // Affichage du repere de debut de ligne si necessaire
          if( rep!=null && y>HF ) Util.drawCheckbox(g,X+3,y-HF/2-3,o.plan.c,null,null,o.isTagged());
 
-         // On finit le fond de la ligne si nécessaire
+         // On finit le fond de la ligne si nï¿½cessaire
          if( x<X+W ) {
             g.setColor(show ? Aladin.COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE : bg);
             g.fillRect(x-4, y-HF, X+W-(x-4), HF+2);
@@ -837,9 +841,9 @@ MouseWheelListener, Widget
    //           && hist.o==o && hist.nField==nField;
    //   }
 
-   /** Redessine l'entête qui si c'est nécessaire (sur un mouseMoved par exemple) */
+   /** Redessine l'entï¿½te qui si c'est nï¿½cessaire (sur un mouseMoved par exemple) */
    private void quickDrawHead(Graphics g,Source o) {
-      if( o!=null && o.getLeg()==oleg  ) return;      // déjà fait
+      if( o!=null && o.getLeg()==oleg  ) return;      // dï¿½jï¿½ fait
       drawHead(g,o);
    }
 
@@ -851,9 +855,9 @@ MouseWheelListener, Widget
       //      Aladin.trace(4,"MCanvas.clearHead()");
    }
 
-   private Image pin=null;  // L'image de l'épinglette
+   private Image pin=null;  // L'image de l'ï¿½pinglette
 
-   /** Dessine la ligne d'entête, ou l'efface si null */
+   /** Dessine la ligne d'entï¿½te, ou l'efface si null */
    protected void drawHead(Graphics g,Source o) { drawHead(g,0,0,o,W); }
    protected void drawHead(Graphics g,int X,int y,Source o,int W) {
       Vector head;
@@ -881,7 +885,7 @@ MouseWheelListener, Widget
       for( int i=0; e.hasMoreElements(); i++ ) {
          w = (Words) e.nextElement();
 
-         // Dans le cas de la position du repère
+         // Dans le cas de la position du repï¿½re
          if( i==0 ) {
             width=tX[2];
             if( W!=-1 ) {
@@ -901,7 +905,7 @@ MouseWheelListener, Widget
 
       if( W!=-1 ) {
 
-         // On finit le fond de la ligne si nécessaire
+         // On finit le fond de la ligne si nï¿½cessaire
          if( x<X+W ) {
             g.setColor(Aladin.COLOR_MEASUREMENT_HEADER_BACKGROUND);
             g.fillRect(x-4, y-HF, W-(x-4), HF+2);
@@ -920,7 +924,7 @@ MouseWheelListener, Widget
       if( flagDrag ) { return; }
       int x = ev.getX();
       int y = ev.getY();
-
+       System.out.println("x y "+x+" "+y); 
       requestFocusInWindow();
 
       //Menu Popup
@@ -939,7 +943,7 @@ MouseWheelListener, Widget
          
          aladin.mesure.datalinkshowX = x;
 		 aladin.mesure.datalinkshowY = y;
-         wButton.callArchive(aladin, oButton);
+         wButton.callArchive(aladin, oButton, oo);
          
          wButton=null; oButton=null;
          repaint();
@@ -956,8 +960,8 @@ MouseWheelListener, Widget
    //   private double [] xHist = null;
    //   private String [] sHist = null;
 
-   /** Tri des sources de même type que celle passée en paramètre. La légende
-    * concernée permet de déterminer le précédent tri effectué pour éventuellement
+   /** Tri des sources de mï¿½me type que celle passï¿½e en paramï¿½tre. La lï¿½gende
+    * concernï¿½e permet de dï¿½terminer le prï¿½cï¿½dent tri effectuï¿½ pour ï¿½ventuellement
     * switcher entre un tri ascendant et descendant */
    private void tri(Source o,int nField) {
       boolean ascending;
@@ -976,8 +980,8 @@ MouseWheelListener, Widget
       aladin.mesure.tri(o,nField,ascending);
    }
 
-   //   /** Génération de l'histogramme de répartition des valeurs du champ nField
-   //    * de toutes les sources de même légende que la source étalon o
+   //   /** Gï¿½nï¿½ration de l'histogramme de rï¿½partition des valeurs du champ nField
+   //    * de toutes les sources de mï¿½me lï¿½gende que la source ï¿½talon o
    //    */
    //   protected void histo(Source o,int nField) {
    //      if( o.leg.isNumField(nField) ) {
@@ -989,7 +993,7 @@ MouseWheelListener, Widget
    //      }
    //   }
 
-   /** Tri des sources de même type que celle passée en paramètre. */
+   /** Tri des sources de mï¿½me type que celle passï¿½e en paramï¿½tre. */
    protected void tri(Source o,int nField,boolean ascending) {
       //      nField=o.leg.getRealFieldNumber(nField);
       o.getLeg().setSort(nField, ascending?Field.SORT_ASCENDING:Field.SORT_DESCENDING);
@@ -1028,13 +1032,13 @@ MouseWheelListener, Widget
          flagPopup=true;
       }
       
-      // externalisation d'un panel dans une fenêtre indépendante
+      // externalisation d'un panel dans une fenï¿½tre indï¿½pendante
       if( rectOut!=null && rectOut.contains(ev.getPoint()) ) {
          aladin.mesure.split();
          return;
       }
 
-      // Clic dans l'entête
+      // Clic dans l'entï¿½te
       if( !flagPopup && y<MH && ligneHead!=null) {
 
          // On va redimensionner
@@ -1043,13 +1047,13 @@ MouseWheelListener, Widget
             return;
          }
 
-         // Info sur l'épinglette et les boites à cocher
+         // Info sur l'ï¿½pinglette et les boites ï¿½ cocher
          if( indiceCourant==-1 ) {
             popPinShow( ev.getX(), ev.getY());
             return;
          }
 
-         // On va faire l'histogramme et si déjà fait trier
+         // On va faire l'histogramme et si dï¿½jï¿½ fait trier
          timer.stop();
          Source o = (Source) ligneHead.elementAt(0);
          aladin.calque.zoom.zoomView.setHist(o,indiceCourant);
@@ -1071,8 +1075,8 @@ MouseWheelListener, Widget
       Enumeration e = ligne.elements();      // Pour faciliter la manip.
       Source o = (Source)e.nextElement();    // L'objet lui-meme
       
-      // Pour déselectionner la source correspondant à la ligne sous
-      // la souris (shift appuyé). Il faut mettre ow=null pour éviter
+      // Pour dï¿½selectionner la source correspondant ï¿½ la ligne sous
+      // la souris (shift appuyï¿½). Il faut mettre ow=null pour ï¿½viter
       // des ghosts par la suite
       if( !flagPopup && ev.isShiftDown() ) {
          deselect(o);
@@ -1084,7 +1088,7 @@ MouseWheelListener, Widget
          aladin.frameNewCalib.mouse(0,0,null,o);
       }
 
-      // repérage de la source
+      // repï¿½rage de la source
       boolean rep;
 
       // Synchronization de toutes les vues sur la source
@@ -1120,7 +1124,7 @@ MouseWheelListener, Widget
                
                if( !w.glu && !w.footprint ) continue;             // Inutile si ce n'est pas une marque GLU
 
-               // Mémorisation du lien qui aura été cliqué
+               // Mï¿½morisation du lien qui aura ï¿½tï¿½ cliquï¿½
                aladin.mesure.setHaspushed(o,numField);
                
               // Indication d'appel direct a l'archive
@@ -1157,11 +1161,11 @@ MouseWheelListener, Widget
          }
       }
 
-      // Sélection temporaire de l'objet cliqué pour pouvoir voir le menu associé
+      // Sï¿½lection temporaire de l'objet cliquï¿½ pour pouvoir voir le menu associï¿½
       if( objSelect==null || flagPopup ) { objSelect=o; setShow(ligne,true); }
       else objSelect=null;
 
-      // Pour le déplacement horizontal et vertical par souris
+      // Pour le dï¿½placement horizontal et vertical par souris
       flagDragX=x;
       flagDragY=y;
       flagDrag=false;
@@ -1170,7 +1174,7 @@ MouseWheelListener, Widget
       repaint();
    }
    
-   /** Déselection de la source indiquée */
+   /** Dï¿½selection de la source indiquï¿½e */
    void deselect(Source o) {
       if( o==null ) return;
       if( aladin.view.deSelect(o) ) {
@@ -1258,15 +1262,15 @@ MouseWheelListener, Widget
       mouseLigne=null;
    }
 
-   /** Suppression des drapeaux show et OnMouse de la ligne sélectionnée en vue
+   /** Suppression des drapeaux show et OnMouse de la ligne sï¿½lectionnï¿½e en vue
     * de son effacement */
    private void clearShowLigne(Graphics g) {
       clearLigne1(g,showLigne,true);
       showLigne=null;
    }
 
-   /** Suppression des drapeaux show et onMouse de la ligne passée en paramètre
-    * + réaffichage (voir clearMouse() et clearShow()) */
+   /** Suppression des drapeaux show et onMouse de la ligne passï¿½e en paramï¿½tre
+    * + rï¿½affichage (voir clearMouse() et clearShow()) */
    private void clearLigne1(Graphics g,Vector ligne,boolean flagShow) {
       if( ligne==null ) return;
       Enumeration e1 = ligne.elements();
@@ -1289,7 +1293,7 @@ MouseWheelListener, Widget
          else size=drawWords(g,w,true);
       }
 
-      // On finit le fond de la ligne si nécessaire
+      // On finit le fond de la ligne si nï¿½cessaire
       int x=w.x+size+3;
       if( x<W ) {
          g.setColor(w.show ? Aladin.COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE : w.y<HF ? Aladin.COLOR_MEASUREMENT_HEADER_BACKGROUND : bg);
@@ -1300,14 +1304,14 @@ MouseWheelListener, Widget
       if( rep!=null && y>HF) Util.drawCheckbox(g,3,y+HF/2-3,o.plan.c,null,null,o.isTagged());
    }
 
-   /** Initialisation de la ligne à montrer  + affichage */
+   /** Initialisation de la ligne ï¿½ montrer  + affichage */
    private int initShow(Graphics g,int y,Vector ligne) {
       setShow(ligne,true);
       showLigne=ligne;
       return drawLigne(g,y,ligne,true);
    }
 
-   /** Initialisation de la ligne à montrer (drapeau show à positionner sur tous les mots */
+   /** Initialisation de la ligne ï¿½ montrer (drapeau show ï¿½ positionner sur tous les mots */
    private void setShow(Vector ligne,boolean flag) {
       if( ligne==null ) return;
       Enumeration e1 = ligne.elements();
@@ -1318,14 +1322,14 @@ MouseWheelListener, Widget
       }
    }
 
-   /** Force la reconstruction de la ligne d'entête */
+   /** Force la reconstruction de la ligne d'entï¿½te */
    protected void reloadHead() {
       if( ligneHead==null ) return;
       Source o = (Source)ligneHead.elementAt(0);
       ligneHead=aladin.mesure.getHeadLine(o);
    }
 
-   /** Désélection de la ligne en cours de sélection */
+   /** Dï¿½sï¿½lection de la ligne en cours de sï¿½lection */
    protected void unselect() { objSelect=null; }
 
    /** Construit la description du champ i de l'objet o */
@@ -1351,7 +1355,7 @@ MouseWheelListener, Widget
          Field f = leg.field[i];
          if( f.description==null && f.unit==null && f.ucd==null && f.utype==null ) return "";
          
-         // Récupération du titre de la légende et du petit nom du obs_collection
+         // Rï¿½cupï¿½ration du titre de la lï¿½gende et du petit nom du obs_collection
          String s = leg.name!=null ? leg.name : "";
          if( o.plan!=null ) {
             MyProperties prop = aladin.directory.getProperties( o.plan.id );
@@ -1379,7 +1383,7 @@ MouseWheelListener, Widget
       return res.toString();
    }
    
-   // Conversion éventuelle, sinon null
+   // Conversion ï¿½ventuelle, sinon null
    private String convert( String val, String unit) {
       if( unit==null || val==null ) return null;
 
@@ -1395,13 +1399,13 @@ MouseWheelListener, Widget
       return null;
    }
    
-   // Enlève cette cochonnerie de "? " en préfixe de certaines descriptions VizieR
+   // Enlï¿½ve cette cochonnerie de "? " en prï¿½fixe de certaines descriptions VizieR
    private String adjustVizier( String description ) {
       if( description==null || !description.startsWith("? ") ) return description;
       return description.substring(2);
    }
    
-   // Ajoute à un String builder un mot, avec un éventuel suffixe
+   // Ajoute ï¿½ un String builder un mot, avec un ï¿½ventuel suffixe
    private void A(StringBuilder res, String s) { A(res," ",s); }
    private void A(StringBuilder res, String sep, String s) {
       if( s==null || s.length()==0 ) return;
@@ -1409,7 +1413,7 @@ MouseWheelListener, Widget
       else { res.append(sep); res.append(s); }
    }
 
-   //   /** Retourne le numéro du champ où se trouve la souris */
+   //   /** Retourne le numï¿½ro du champ oï¿½ se trouve la souris */
    //   private int getFieldIndex(Vector v,int x,int y) {
    //      Enumeration e = vhead.elements();
    //      e.nextElement();
@@ -1454,16 +1458,16 @@ MouseWheelListener, Widget
       oTimer=null;
    }
 
-   private Words ow=null; // Dernier mot sous la souris (pour éviter de refaire la même chose)
+   private Words ow=null; // Dernier mot sous la souris (pour ï¿½viter de refaire la mï¿½me chose)
 
-   // Calcule le véritable indice du champ dans la légende associée à la source
-   // en fonction de l'indice dans la table affichée car certains champs peuvent être cachée
-   // et il y a un décalage d'une valeur pour tenir compte de la case à cocher en début de ligne
+   // Calcule le vï¿½ritable indice du champ dans la lï¿½gende associï¿½e ï¿½ la source
+   // en fonction de l'indice dans la table affichï¿½e car certains champs peuvent ï¿½tre cachï¿½e
+   // et il y a un dï¿½calage d'une valeur pour tenir compte de la case ï¿½ cocher en dï¿½but de ligne
    private int getRealIndice(Source s,int indice) {
       indice--;
       if( s.getLeg()==null ) return indice;
       
-      // Comme si on affichait à nouveau
+      // Comme si on affichait ï¿½ nouveau
       int pos=-1;
       for( int i=0; i<s.getLeg().field.length; i++ ) {
          int nField = s.getLeg().fieldAt[ i ];
@@ -1496,7 +1500,7 @@ MouseWheelListener, Widget
       int indice;
 
 
-      // Est-on sur l'entête ?
+      // Est-on sur l'entï¿½te ?
       if( y<=MH ) {
          if( ligneHead==null ) return;
          Util.toolTip(this, TIPHEAD);
@@ -1514,7 +1518,7 @@ MouseWheelListener, Widget
                indiceCourant=indice;
                sCourante = o;
 
-               // Démarrage du timer pour l'histogramme
+               // Dï¿½marrage du timer pour l'histogramme
                startTimerHist(sCourante,indice);
 
                if( objSelect==null && showLigne!=null ) clearShowLigne(g);
@@ -1575,8 +1579,8 @@ MouseWheelListener, Widget
       Vector ligne = aladin.mesure.getWordLine(currentsee);
       o = (Source)ligne.elementAt(0);
 
-      // La ligne à montrer est-elle simplement sous la souris et s'agit-il
-      // d'une ligne préalablement cliquée ?
+      // La ligne ï¿½ montrer est-elle simplement sous la souris et s'agit-il
+      // d'une ligne prï¿½alablement cliquï¿½e ?
       Source oshow = objSelect!=null ? objSelect : o;
 
       // Visualisation dans la vue de la source associee a la mesure courante
@@ -1592,10 +1596,10 @@ MouseWheelListener, Widget
       // Affichage de la coordonnees de la source
       aladin.localisation.seeCoord(oshow);
 
-      // Pour mettre à jour le point d'un SED en cours de tracé
+      // Pour mettre ï¿½ jour le point d'un SED en cours de tracï¿½
       showSEDPoint(oshow);
 
-      // Affichage de l'entête correspondant à l'objet
+      // Affichage de l'entï¿½te correspondant ï¿½ l'objet
       if( flagDrawHead ) drawHead(g,oshow);
       else quickDrawHead(g,oshow);
       flagDrawHead=false;
@@ -1614,7 +1618,7 @@ MouseWheelListener, Widget
             indiceCourant=indice;
             sCourante = o;
 
-            // Démarrage du timer pour l'histogramme
+            // Dï¿½marrage du timer pour l'histogramme
             startTimerHist(sCourante,indice);
 
             if( objSelect==null && showLigne!=null ) clearShowLigne(g);
@@ -1636,7 +1640,7 @@ MouseWheelListener, Widget
 //            tip = sTip.length()>0 ? "<html>"+sTip.toString()+"</html>" : null;
 //            Util.drawEdge(g,W,H);
 
-            // Recuperation de la description du champ et d'un éventuel tooltip
+            // Recuperation de la description du champ et d'un ï¿½ventuel tooltip
             if( w.archive )  tip=TIPARCH;
             else if( w.glu )      tip=TIPGLU;
             else if( w.footprint)  tip=TIPFOV;
@@ -1689,7 +1693,7 @@ MouseWheelListener, Widget
       ow=null;
       if( aladin.inHelp ) { aladin.help.setText(Help()); return; }
 
-      // Juste pour repasser un sélection
+      // Juste pour repasser un sï¿½lection
       if( aladin.mesure.getNbSrc()>0 ) aladin.toolBox.mouseEnter(null,0,0);
 
       //      if( aladin.mesure.nbSrc>0 ) requestFocusInWindow();  // pour pouvoir taper une chaine
@@ -1721,18 +1725,18 @@ MouseWheelListener, Widget
       repaint();
    }
 
-   /** Ouverture de l'outil de manipulation des coordonnées pour la source indiquée */
+   /** Ouverture de l'outil de manipulation des coordonnï¿½es pour la source indiquï¿½e */
    protected void openCooToolbox(Source o) {
       if( aladin.frameCooTool==null ) aladin.frameCooTool = new FrameCooToolbox(aladin);
       aladin.frameCooTool.setSource(o);
    }
 
-   /** Désignation d'une ligne de mesure.
+   /** Dï¿½signation d'une ligne de mesure.
     * Recherche d'une ligne de mesures dans la fenetre des mesures
     * associees a un objet
     * @param o L'objet a trouver dans la liste des mesures
-    * @param mode 0-montre qq soit l'état, 1-montre si non bloqué,
-    *             2-montre et bloque, 3-montre et bloque si non bloqué avant, sinon débloque
+    * @param mode 0-montre qq soit l'ï¿½tat, 1-montre si non bloquï¿½,
+    *             2-montre et bloque, 3-montre et bloque si non bloquï¿½ avant, sinon dï¿½bloque
     * @return <I>true</I> si la recherche aboutie, sinon <I>false</I>
     */
    protected boolean show(Source o,int mode) {
@@ -1763,7 +1767,7 @@ MouseWheelListener, Widget
                aladin.mesure.validate();  // pour la scrollV
             }
             currentsee=n;             // Nouvelle position courante
-            objShow=o;                  // Ligne qu'il faut montrer (surligné en bleu)
+            objShow=o;                  // Ligne qu'il faut montrer (surlignï¿½ en bleu)
             retour=true;
             break;
          }
@@ -1781,7 +1785,7 @@ MouseWheelListener, Widget
 
    /** Ajustement du scrollbar horizontal si necessaire
     * @param max le nombre de pixels du texte
-    * @return true si on a dû ajouter la barre horizontale
+    * @return true si on a dï¿½ ajouter la barre horizontale
     */
    private void adjustScrollH(int max) {
       boolean ok;
@@ -1833,8 +1837,8 @@ MouseWheelListener, Widget
       scrollV.setBlockIncrement(nl-1);
    }
 
-   /** Surcharge juste pour en profiter pour mettre à jour
-    * le nombre de sources sélectionnées dans la fenêtre des mesures */
+   /** Surcharge juste pour en profiter pour mettre ï¿½ jour
+    * le nombre de sources sï¿½lectionnï¿½es dans la fenï¿½tre des mesures */
    public void repaint() {
       aladin.adjustNbSel();
       super.repaint();
@@ -1850,7 +1854,7 @@ MouseWheelListener, Widget
       drawIconOut(gr);
    }
    
-   // tracé de l'icone permettant l'extraction du panel dans une fenêtre indépendante
+   // tracï¿½ de l'icone permettant l'extraction du panel dans une fenï¿½tre indï¿½pendante
    private void drawIconOut(Graphics gr) {
       if( aladin.isFullScreen() ) return;
       if( aladin.mesure.isSplitted() ) return;
@@ -1868,7 +1872,7 @@ MouseWheelListener, Widget
       
       super.paintComponent(gr);
       
-      // Initialisation de la taille d'une lettre (la fonte est nécessaire monoscaped)
+      // Initialisation de la taille d'une lettre (la fonte est nï¿½cessaire monoscaped)
       if( wblanc==-1 ) {
          StringBuilder s = new StringBuilder();
          for( int i=0; i<100; i++ ) s.append('M');
@@ -1911,18 +1915,18 @@ MouseWheelListener, Widget
       g.setFont(FONT);
       aladin.mesure.memoWordLineClear();
 
-      Source oleg= objShow!=null ? objShow : objSelect;     // Quelle source à montrer ?
+      Source oleg= objShow!=null ? objShow : objSelect;     // Quelle source ï¿½ montrer ?
 
       for( j=0; lastsee<ts && j<nbligne; lastsee++, j++, y+=HL ) {
          Vector word = aladin.mesure.getWordLine(lastsee);
          if( word==null ) continue;
 
-         // Mémorisation de la première source pour afficher l'entête correspondante
+         // Mï¿½morisation de la premiï¿½re source pour afficher l'entï¿½te correspondante
          if( oleg==null ) oleg = (Source)word.elementAt(0);
 
          int m = drawLigne(g,y,word,true);
          
-         // Mémorisation de la WordLine afin de ne pas perdre les paramètres du tracé
+         // Mï¿½morisation de la WordLine afin de ne pas perdre les paramï¿½tres du tracï¿½
          aladin.mesure.memoWordLine(word,lastsee);
 
          if( m>max ) max=m;
@@ -1930,15 +1934,15 @@ MouseWheelListener, Widget
       lastsee--;
       objShow=null;
 
-      // On affiche l'entête de la source concernée (soit sous la souris, soit cliquée (oSelect))
+      // On affiche l'entï¿½te de la source concernï¿½e (soit sous la souris, soit cliquï¿½e (oSelect))
       if( j>0 ) drawHead(g,oleg);
       else {
          ligneHead=null;
          clearHead(g,0,W);
       }
 
-      // Si j'ai une scrollbar horizontale mais quelle ne serait pas nécessaire
-      // il faut tout de même regarder si par hasard la ligne suivante n'en nécessiterait
+      // Si j'ai une scrollbar horizontale mais quelle ne serait pas nï¿½cessaire
+      // il faut tout de mï¿½me regarder si par hasard la ligne suivante n'en nï¿½cessiterait
       // pas une. Sinon, il va y avoir un effet de clignotement (ajout/retrait de
       // la scrollBar)
       if( showScrollH && max<W && lastsee+1<ts ) {

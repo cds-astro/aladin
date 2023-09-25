@@ -63,7 +63,7 @@ import cds.xml.Field;
  * Element de l'interface d'affichage des mesures
  *
  * @author Pierre Fernique [CDS]
- * @version 2   : (21 janvier 2004) Changement de mode de mémorisation
+ * @version 2   : (21 janvier 2004) Changement de mode de mï¿½morisation
  * @version 1.2 : (25 juillet 2002) VOTable s'ajoute a Astrores
  * @version 1.1 : (28 mars 00) ReToilettage du code
  * @version 1.0 : (10 mai 99)  Toilettage du code
@@ -78,18 +78,18 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    Status status;		  // status propre a une fenetre independante
    boolean flagSplit;		  // true si la fenetre est independante
    int previousHeight=0;	  // Hauteur en fenetree
-   Search search;           // Champ du search dans si la fenêtre est détachée
+   Search search;           // Champ du search dans si la fenï¿½tre est dï¿½tachï¿½e
 
    // Gestion des Sources
    static private int DEFAULTBLOC = 100;
    static private int MAXBLOC = 100000;
-   protected Source src[] = new Source[DEFAULTBLOC];   // Sources gérées
-   protected int nbSrc=0;                            // Nb de sources gérées
+   protected Source src[] = new Source[DEFAULTBLOC];   // Sources gï¿½rï¿½es
+   protected int nbSrc=0;                            // Nb de sources gï¿½rï¿½es
    protected FrameMesure frameMesure=null;
 
-   // Mémorisation des WordLines qui ont été affichées dans MCanvas afin
-   // d'éviter de les regénérer à chaque fois et de perdre du coup
-   // les paramètres associées au tracé (position, hauteur et largeur)
+   // Mï¿½morisation des WordLines qui ont ï¿½tï¿½ affichï¿½es dans MCanvas afin
+   // d'ï¿½viter de les regï¿½nï¿½rer ï¿½ chaque fois et de perdre du coup
+   // les paramï¿½tres associï¿½es au tracï¿½ (position, hauteur et largeur)
    private Hashtable memoWL = new Hashtable(DEFAULTBLOC);
    private JButton cross;
    
@@ -163,8 +163,17 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
     * @param o
     * @throws MalformedURLException
     */
+   
+   
+   
+   
+   
+   
+   
+   
    public void showAssociatedDatalinks(String url, Obj o) throws MalformedURLException {
 		// TODO Auto-generated method stub
+	   System.out.println("url "+url);
 		aladin.makeCursor(mcanvas, Aladin.WAITCURSOR);
    	
       	URL datalinkUrl = null;
@@ -184,8 +193,9 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
     	  this.activeDataLinkWord.datalinksInfo = new ArrayList<>();
           SimpleData activeDatalinkLabel = this.activeDataLinkGlu;
           datalinkUrl = new URL(activeDatalinkLabel.getParams().get(Constants.ACCESSURL));
+          
        }
-
+        System.out.println("avanaa "+ datalinkUrl.getFile());
        this.activeDataLinkSource = (Source) o;
        DatalinkServiceUtil.populateDataLinksInfo(datalinkUrl, this.activeDataLinkWord.datalinksInfo);
 
@@ -222,11 +232,13 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 	      
 	      for (int i = 0; i < datalinksInfo.size(); i++) {
 	    	SimpleData datalinkInfo = datalinksInfo.get(i);
+	    	System.out.println("datalinInfo "+datalinkInfo.getDisplayString()) ;
 			additionalServiceMenu.add(j = new JMenuItem(datalinkInfo.getDisplayString()), i);
 			j.setActionCommand(String.valueOf(i));
 			j.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent clickEvent) {
 					int menuIndex = Integer.parseInt(clickEvent.getActionCommand());
+					System.out.println("index "+menuIndex);
 					aladin.mesure.getFormInfo(menuIndex);
 					
 				}
@@ -234,6 +246,12 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 		}
 		add(additionalServiceMenu);
 	 }
+   protected String getCurObjLaunch() {
+	      if(  mcanvas.indiceCourant==-1 )return "";
+	      System.out.println("indice "+mcanvas.indiceCourant);
+	    //  aladin.mesure.getFormInfo(mcanvas.indiceCourant);
+	      return "OK" ;
+	   }
    
    /**
     * Method to handle datasets which are linked to a datalink
@@ -244,8 +262,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 		activeDataLinkGlu = this.activeDataLinkWord.datalinksInfo.get(menuIndex);
 		try {
 			String accessUrl = activeDataLinkGlu.getParams().get(ACCESSURL);
-			
-			if (activeDataLinkGlu != null) {
+			System.out.println("index "+menuIndex);
+			if (activeDataLinkGlu != null) {System.out.println("activeDqatalink");
 				Map<String,String> params = activeDataLinkGlu.getParams();
 				if (params != null) {
 					String semantics = activeDataLinkGlu.getParams().get(SEMANTICS);
@@ -310,19 +328,19 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       mcanvas.repaint();
    }
 
-   /** Appelé par le popup menu */
+   /** Appelï¿½ par le popup menu */
    protected void tri(boolean ascendant) {
       mcanvas.tri(mcanvas.sCourante,mcanvas.sortField,ascendant);
    }
 
    /** Extrait un tableau de valeurs sous la forme de doubles
-    * @param xCell Le tableau à remplir ou null s'il faut le régénérer
-    * @param o l'objet qui sert d'étalon pour connaitre le type de Source
+    * @param xCell Le tableau ï¿½ remplir ou null s'il faut le rï¿½gï¿½nï¿½rer
+    * @param o l'objet qui sert d'ï¿½talon pour connaitre le type de Source
     * @param nField l'indice du champ
-    * @return le tableau x ou sa regénération si x==null au préalable ou x.length modifié
+    * @return le tableau x ou sa regï¿½nï¿½ration si x==null au prï¿½alable ou x.length modifiï¿½
     */
    synchronized protected double [] getFieldNumericValues(Source o,int nField) {
-      // Décompte
+      // Dï¿½compte
       int nb=0;
       for( int i=0; i<nbSrc; i++ ) {
          if( src[i].getLeg()!=o.getLeg() ) continue;
@@ -331,16 +349,16 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
       double [] x = new double[nb];
 
-      // Récupération des valeurs du champ indiqué
+      // Rï¿½cupï¿½ration des valeurs du champ indiquï¿½
       for( int i=0,j=0; i<nbSrc; i++ ) {
          if( src[i].getLeg()!=o.getLeg() ) continue;
          x[j]=Double.NaN;
          String s = src[i].getValue(nField);
          int n = s.length();
          //          boolean neuf=true;
-         //          if( n>3 ) for( int k=n-1; neuf && k>=0; k-- ) neuf=s.charAt(k)=='9';    // que des 9999 => ignoré
+         //          if( n>3 ) for( int k=n-1; neuf && k>=0; k-- ) neuf=s.charAt(k)=='9';    // que des 9999 => ignorï¿½
          if( n> 0 /* && !neuf */) {
-            if( !Character.isDigit(s.charAt(n-1)) ) s=s.substring(0,n-1);  // Une unité accolée ?
+            if( !Character.isDigit(s.charAt(n-1)) ) s=s.substring(0,n-1);  // Une unitï¿½ accolï¿½e ?
             try { x[j] = Double.parseDouble(s); }
             catch( Exception e ) { x[j]=Double.NaN; }
          }
@@ -351,13 +369,13 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    }
 
    /** Extrait un tableau de valeurs sous la forme de Chaine
-    * @param xCell Le tableau à remplir ou null s'il faut le régénérer
-    * @param o l'objet qui sert d'étalon pour connaitre le type de Source
+    * @param xCell Le tableau ï¿½ remplir ou null s'il faut le rï¿½gï¿½nï¿½rer
+    * @param o l'objet qui sert d'ï¿½talon pour connaitre le type de Source
     * @param nField l'indice du champ
-    * @return le tableau x ou sa regénération si x==null au préalable ou x.length modifié
+    * @return le tableau x ou sa regï¿½nï¿½ration si x==null au prï¿½alable ou x.length modifiï¿½
     */
    synchronized protected String [] getFieldStringValues(Source o,int nField) {
-      // Décompte
+      // Dï¿½compte
       int nb=0;
       for( int i=0; i<nbSrc; i++ ) {
          if( src[i].getLeg()!=o.getLeg() ) continue;
@@ -366,7 +384,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
       String [] x = new String[nb];
 
-      // Récupération des valeurs du champ indiqué
+      // Rï¿½cupï¿½ration des valeurs du champ indiquï¿½
       for( int i=0,j=0; i<nbSrc; i++ ) {
          if( src[i].getLeg()!=o.getLeg() ) continue;
          x[j] = src[i].getValue(nField);
@@ -388,28 +406,28 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       else run();
    }
 
-   /** Tague toutes les sources de la fenêtre des mesures */
+   /** Tague toutes les sources de la fenï¿½tre des mesures */
    protected void tag() {
       for( int i=0; i<nbSrc; i++ ) src[i].setTag(true);
       mcanvas.repaint();
       aladin.view.repaintAll();
    }
 
-   /** Untague toutes les sources de la fenêtre des mesures */
+   /** Untague toutes les sources de la fenï¿½tre des mesures */
    protected void untag() {
       for( int i=0; i<nbSrc; i++ ) src[i].setTag(false);
       mcanvas.repaint();
       aladin.view.repaintAll();
    }
 
-   /** Conserve dans la fenêtre des mesures les sources non taguées */
+   /** Conserve dans la fenï¿½tre des mesures les sources non taguï¿½es */
    protected void keepUntag() { keepTag1(false); }
 
-   /** Conserve dans la fenêtre des mesures les sources taguées */
+   /** Conserve dans la fenï¿½tre des mesures les sources taguï¿½es */
    protected void keepTag() { keepTag1(true); }
 
-   /** Procédure interne pour keepTag et keepUntag
-    * @param keep true je garde le objets tagués, sinon je les vire
+   /** Procï¿½dure interne pour keepTag et keepUntag
+    * @param keep true je garde le objets taguï¿½s, sinon je les vire
     */
    private void keepTag1(boolean keep) {
       for( int i=nbSrc-1; i>=0; i-- ) {
@@ -433,10 +451,10 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       //       if( s.length()>0 && nbSrc>0 ) infoSearch(nOccurence);
       return rep;
 
-      //System.out.println("J'ai cherché ["+s+"] mode="+mode+" trouve="+nOccurence);
+      //System.out.println("J'ai cherchï¿½ ["+s+"] mode="+mode+" trouve="+nOccurence);
    }
 
-   /** Affichage des infos sur la dernière recherche dans le status aladin */
+   /** Affichage des infos sur la derniï¿½re recherche dans le status aladin */
    private void infoSearch(int nOccurence) {
       if( nOccurence>=0) showStatus(MFSEARCH+" => "
             + nOccurence+" "+MFSEARCHO+(nOccurence>1?"s":"")/*+"        "
@@ -449,7 +467,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    //
    //    synchronized private void setFlagBrowse(boolean flag) { flagBrowse=flag; }
    //
-   //    /** Fait défiler les objets dans la liste des mesures */
+   //    /** Fait dï¿½filer les objets dans la liste des mesures */
    //    protected void browse() {
    //       if( flagBrowse ) return;
    //       text=aladin.mesure.getText();
@@ -464,11 +482,11 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    //    }
 
 
-   /** Sélection des objets en fonction d'une chaine dans tous les objets présents
-    * dans les catalogues (pas nécessairement sélectionnés)
-    * @param s la chaine à chercher
-    * @param clear true si on doit effacer la liste préalable
-    * @return true si au moins une source trouvée
+   /** Sï¿½lection des objets en fonction d'une chaine dans tous les objets prï¿½sents
+    * dans les catalogues (pas nï¿½cessairement sï¿½lectionnï¿½s)
+    * @param s la chaine ï¿½ chercher
+    * @param clear true si on doit effacer la liste prï¿½alable
+    * @return true si au moins une source trouvï¿½e
     */
    protected boolean selectByString(String s,int clear) {
       aladin.view.selectSrcByString(s,clear);
@@ -479,11 +497,11 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
    Source lastOcc=null;
 
-   /** Recherche et sélection de la prochaine mesure qui match la chaine "masq"
-    * @param masq sous-chaine à rechercher
-    * @param fromField numéro de champ courant (lié à la dernière recherche)
-    * @param sens -1 en arrière, 0 première recherche, 1 en avant
-    * @return 0-pas trouvé, 1- trouvé et montré, -1 trouvé mais hors images
+   /** Recherche et sï¿½lection de la prochaine mesure qui match la chaine "masq"
+    * @param masq sous-chaine ï¿½ rechercher
+    * @param fromField numï¿½ro de champ courant (liï¿½ ï¿½ la derniï¿½re recherche)
+    * @param sens -1 en arriï¿½re, 0 premiï¿½re recherche, 1 en avant
+    * @return 0-pas trouvï¿½, 1- trouvï¿½ et montrï¿½, -1 trouvï¿½ mais hors images
     */
    protected int search(String masq,int sens) {
       int n=-1;
@@ -505,20 +523,20 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       n+=sens;
       if( n==-1 ) n=sens<0 ? nbSrc-1: 0;
 
-      //System.out.println("Je cherche ["+masq+"] à partir de "+n+" nOccurence="+nOccurence+" flagSame="+flagSame);
+      //System.out.println("Je cherche ["+masq+"] ï¿½ partir de "+n+" nOccurence="+nOccurence+" flagSame="+flagSame);
 
       // Analyse de la recherche (ex: FLU*>10, OTYPE=X, Star, ...)
-      StringBuffer col = new StringBuffer();    // pour récupérer un éventuel nom de colonne
-      StringBuffer v = new StringBuffer();      // pour récupérer la valeur à chercher
+      StringBuffer col = new StringBuffer();    // pour rï¿½cupï¿½rer un ï¿½ventuel nom de colonne
+      StringBuffer v = new StringBuffer();      // pour rï¿½cupï¿½rer la valeur ï¿½ chercher
       int mode = aladin.view.getAdvancedSearch(col,v,masq);    // type de recherche voir View.EGAL...
       masq = v.toString();
       boolean abs=false;                        // true si on travaille en valeur absolue
       if( col.length()>0 ) abs = aladin.view.getAbsSearch(col);
 
-      int colIndex = -1;             // Index de la colonne dans le cas où un nom de champ aurait été spécifié
-      double numS=Double.MAX_VALUE;  // Valeur numérique de la valeur à chercher si mode numérique
-      boolean numeric=false;         // mode de recherche littéral ou numérique
-      Legende oLeg=null;             // Légende de la source précédente
+      int colIndex = -1;             // Index de la colonne dans le cas oï¿½ un nom de champ aurait ï¿½tï¿½ spï¿½cifiï¿½
+      double numS=Double.MAX_VALUE;  // Valeur numï¿½rique de la valeur ï¿½ chercher si mode numï¿½rique
+      boolean numeric=false;         // mode de recherche littï¿½ral ou numï¿½rique
+      Legende oLeg=null;             // Lï¿½gende de la source prï¿½cï¿½dente
 
       fini:
          for( int i=0; i<nbSrc; i++,n+=sens) {
@@ -529,7 +547,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             if( s==null ) continue;
             lastOcc=s;
 
-            // Y a-t-il un nom de colonne précisée ? dans le cas où je change de légende
+            // Y a-t-il un nom de colonne prï¿½cisï¿½e ? dans le cas oï¿½ je change de lï¿½gende
             if( col.length()>0 && oLeg!=s.getLeg()) {
                colIndex = s.getLeg().matchIgnoreCaseColIndex(col.toString());
                if( colIndex==-1 ) break;  // Pas dans ce plan
@@ -544,11 +562,11 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
             String val[] = s.getValues();
 
-            // Un nom de colonne précisée ?
+            // Un nom de colonne prï¿½cisï¿½e ?
             if( colIndex>=0 ) {
                if( aladin.view.advancedSearch(mode,numeric,abs,val[colIndex],masq,numS) ) {
                   if( t==null ) t=s;
-                  if( flagSame ) break fini;  // C'est la même requête, inutile de faire le tour
+                  if( flagSame ) break fini;  // C'est la mï¿½me requï¿½te, inutile de faire le tour
                   nOccurence++;
                }
             }
@@ -557,7 +575,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             else for( int j=0; j<val.length; j++ ) {
                if( nMasq==0 || Util.indexOfIgnoreCase(val[j],masq)>=0 ) {
                   if( t==null ) t=s;
-                  if( flagSame ) break fini;   // C'est la même requête, inutile de faire le tour
+                  if( flagSame ) break fini;   // C'est la mï¿½me requï¿½te, inutile de faire le tour
                   nOccurence++;
                   break;
                }
@@ -576,14 +594,14 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return rep;
    }
 
-   /** réaffichage les mesures. Utilisé dans le cas d'une modif d'attributs de la table
+   /** rï¿½affichage les mesures. Utilisï¿½ dans le cas d'une modif d'attributs de la table
     * via Legende.setValueAt() */
    protected void redisplay() {
       mcanvas.reloadHead();
       mcanvas.repaint();
    }
    
-   /** Mémorise la liste des sourses sélectionnées
+   /** Mï¿½morise la liste des sourses sï¿½lectionnï¿½es
     * @param memoSrcList Tableau qui va accueillir les sources
     * @return le nombre de sources
     */
@@ -592,7 +610,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return nbSrc;
    }
    
-   /** Retaure la liste des sources sélectionnées, préalablement sauvegardée */
+   /** Retaure la liste des sources sï¿½lectionnï¿½es, prï¿½alablement sauvegardï¿½e */
    synchronized protected void restoreSrcList(Source [] memoSrcList,int nbSrc) {
       this.src=memoSrcList;
       this.nbSrc=nbSrc;
@@ -666,13 +684,13 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       aladin.console.setEnabledDumpButton(nbSrc>0);
    }
 
-   /** Suppression d'une source particulière - PAS UTILISE */
+   /** Suppression d'une source particuliï¿½re - PAS UTILISE */
    //   synchronized private void rmSrc(Source s) {
    //      int i=findSrc(s);
    //      if( i!=-1 ) rmSrc(i);
    //   }
 
-   /** Retourne une copie de la liste des sources sélectionnées */
+   /** Retourne une copie de la liste des sources sï¿½lectionnï¿½es */
    protected Source [] getSources() {
       synchronized( this ) {
          Source [] s = new Source[nbSrc];
@@ -681,7 +699,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       }
    }
 
-   /** Suppresssion d'une liste de sources repéré par leurs indices (ordonnés) */
+   /** Suppresssion d'une liste de sources repï¿½rï¿½ par leurs indices (ordonnï¿½s) */
    protected void rmSrc(ArrayList list) {
       synchronized ( this ) {
          int n=0,i,m=0;
@@ -714,7 +732,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       aladin.console.setEnabledDumpButton(nbSrc>0);
    }
 
-   /** Repérage de l'indice de la source s, -1 si non trouvé  */
+   /** Repï¿½rage de l'indice de la source s, -1 si non trouvï¿½  */
    protected int findSrc(Source s) {
       for( int i=0; i<nbSrc; i++) if( src[i]==s ) return i;
       return -1;
@@ -728,31 +746,31 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       public void remove() { }
    }
 
-   // Retourne la première source du tableau
+   // Retourne la premiï¿½re source du tableau
    protected Source getFirstSrc() { return nbSrc<1 ? null : src[0]; }
 
    private Object verrou = new Object();
 
-   /** Retourne le nombre de source actuellement gérées */
+   /** Retourne le nombre de source actuellement gï¿½rï¿½es */
    protected int getNbSrc() { synchronized( verrou ) { return nbSrc; } }
 
-   /** Reset de la mémorisation des WordLines tracées dans le MCanvas */
+   /** Reset de la mï¿½morisation des WordLines tracï¿½es dans le MCanvas */
    protected void memoWordLineClear() {
       synchronized( verrou ) {
          memoWL.clear();
       }
    }
 
-   /** Mémorisation d'une wordLine (uniquement appelé par MCanvas.update()),
-    * La clé est l'indice dans le tableau src[] */
+   /** Mï¿½morisation d'une wordLine (uniquement appelï¿½ par MCanvas.update()),
+    * La clï¿½ est l'indice dans le tableau src[] */
    protected void memoWordLine(Vector wl,int i) {
       synchronized( verrou ) {
          memoWL.put(new Integer(i),wl);
       }
    }
 
-   /** Récupération (si mémorisé dans memoWL) ou création de la WordLine
-    * associée à la source d'indice i dans src[] */
+   /** Rï¿½cupï¿½ration (si mï¿½morisï¿½ dans memoWL) ou crï¿½ation de la WordLine
+    * associï¿½e ï¿½ la source d'indice i dans src[] */
    protected Vector getWordLine(int i) {
       synchronized( verrou ) {
          Vector wl = (Vector)memoWL.get(new Integer(i));
@@ -761,7 +779,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       }
    }
    
-   // Retourne la précision d'un champ, et si inconnue, essaye de le déterminer en fonction des valeurs 
+   // Retourne la prï¿½cision d'un champ, et si inconnue, essaye de le dï¿½terminer en fonction des valeurs 
    private int getPrecision(Source o, int field ) {
       Legende leg = o.getLeg();
       int p = leg.getPrecision(field);
@@ -790,21 +808,21 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    }
 
    
-   // Retourne la largeur d'affichage d'un champ, et si inconnu, essaye de le déterminer en fonction des valeurs 
+   // Retourne la largeur d'affichage d'un champ, et si inconnu, essaye de le dï¿½terminer en fonction des valeurs 
    private int getWidth(Source o, int field ) {
       Legende leg = o.getLeg();
       return leg.getWidth(field);
    }
 
 
-   /** Génération de la HeadLine associée à la source passée en paramètre */
+   /** Gï¿½nï¿½ration de la HeadLine associï¿½e ï¿½ la source passï¿½e en paramï¿½tre */
    protected Vector getHeadLine(Source o) {
       Vector wordLine;
       Legende leg = o.getLeg();
       wordLine = new Vector(leg.field.length+2);
 
       wordLine.addElement(o);           // L'objet lui-meme est tjrs en premiere place
-      wordLine.addElement(new Words("",-1)); // A la place du repère
+      wordLine.addElement(new Words("",-1)); // A la place du repï¿½re
 
       for( int i=0; i<leg.field.length; i++ )  {
          int nField = leg.fieldAt[i];
@@ -818,8 +836,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return wordLine;
    }
 
-   // Liste des liens qui ont déjà été cliqué (on mémorise le hashcode de l'obj et l'index
-   // de la colonne concernée
+   // Liste des liens qui ont dï¿½jï¿½ ï¿½tï¿½ cliquï¿½ (on mï¿½morise le hashcode de l'obj et l'index
+   // de la colonne concernï¿½e
    private HashSet<String> haspushedSet = new HashSet<>();
    protected void setHaspushed(Obj o, int numField) {
       String key = o.hashCode()+"/"+numField;
@@ -830,7 +848,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return haspushedSet.contains( key );
    }
 
-   /** Génération de la WordLine associée à la source passée en paramètre */
+   /** Gï¿½nï¿½ration de la WordLine associï¿½e ï¿½ la source passï¿½e en paramï¿½tre */
    protected Vector getWordLine(Source o,int num) {
       if( o==null ) return null;
       
@@ -860,7 +878,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             try {
                nField = o.getLeg().fieldAt[i-1];
             } catch( Exception e ) {
-               // Y a un problème
+               // Y a un problï¿½me
                System.out.println("Y a un prob. =>"+s);
                continue;
             }
@@ -871,7 +889,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             // Determination de l'alignement en fonction du type de donnees
             int align= o.getLeg().isNumField(nField) ? Words.RIGHT : Words.LEFT;
 
-            // Creation d'un mot dans le cas d'un footprint associé (Thomas, VOTech)
+            // Creation d'un mot dans le cas d'un footprint associï¿½ (Thomas, VOTech)
             if( indexFootPrint==nField ) {
                w = new Words("  FoV",getWidth(o,nField),getPrecision(o,nField),Words.LEFT,
                      false,true,num);
@@ -920,7 +938,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 		return result;
 	}
 	
-	/** retourne true si les mesures sont dans une fenêtre indépendantes */
+	/** retourne true si les mesures sont dans une fenï¿½tre indï¿½pendantes */
 	protected boolean isSplitted() { return flagSplit; }
 
    /** Ajustement du panel pour une visualisation dans une fenetre independante */
@@ -942,10 +960,10 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       setSize( getPreferredSize());
    }
 
-//   /** retourne l'état courant de la fenêtre des mesures (réduite ou agrandie) */
+//   /** retourne l'ï¿½tat courant de la fenï¿½tre des mesures (rï¿½duite ou agrandie) */
 //   protected boolean isReduced() { return flagReduced; }
 
-//   /** permute l'état réduit/agrandit de la fenêtre des mesures */
+//   /** permute l'ï¿½tat rï¿½duit/agrandit de la fenï¿½tre des mesures */
 //   protected void switchReduced() {
 //      if( f!=null ) split();
 //      setReduced(!flagReduced);
@@ -1018,7 +1036,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return w.getURL(aladin);
    }
 
-   /**  Retourne les coordonnées de l'objet sous la souris */
+   /**  Retourne les coordonnï¿½es de l'objet sous la souris */
    protected String getCurObjCoord() {
       Source s = mcanvas.objSelect;
       if( s==null ) return "";
@@ -1033,7 +1051,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    /** Retourne les mesures sous forme de texte.
     *  Utilise par le Pad, et par les popupCopy...
     *
-    * @param ascii si true, on utilisera des blancs comme séparateurs, sinon une tabulation
+    * @param ascii si true, on utilisera des blancs comme sï¿½parateurs, sinon une tabulation
     *
     */
    protected String getText(boolean ascii) {
@@ -1074,7 +1092,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return res.toString();
    }
 
-   // retourne sous forme de chaine la ligne des mesures pour l'objet couramment sélectionné (en TSV ou en JSON)
+   // retourne sous forme de chaine la ligne des mesures pour l'objet couramment sï¿½lectionnï¿½ (en TSV ou en JSON)
    protected String getCurObjMeasurement(boolean json) {
       StringBuilder sb = new StringBuilder();
       Source s = mcanvas.objSelect;
@@ -1137,7 +1155,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       scrollV.setValues(0,1,0,1);
    }
 
-   /** Suppression de la ligne d'une source particulière
+   /** Suppression de la ligne d'une source particuliï¿½re
     */
    protected void remove(Source s) {
       boolean dopaint = false;
@@ -1156,7 +1174,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       if( dopaint ) display();
    }
 
-   /** Réaffiche les mesures */
+   /** Rï¿½affiche les mesures */
    protected void display() {
       mcanvas.currentsee=-1;
       mcanvas.currentselect=-2;

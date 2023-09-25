@@ -78,9 +78,9 @@ public final class Command implements Runnable {
 
    Aladin a;
    Calque c;
-   private CommandDS9 ds9; // Pour gérer les conversions de commandes DS9
-   private boolean stop; // passe à true pour tuer les threads de lecture
-   private String lastCmd = ""; // Dernière commande exécutée
+   private CommandDS9 ds9; // Pour gï¿½rer les conversions de commandes DS9
+   private boolean stop; // passe ï¿½ true pour tuer les threads de lecture
+   private String lastCmd = ""; // Derniï¿½re commande exï¿½cutï¿½e
 
    // protected boolean syncNeedSave=false; // True si on doit attendre la fin d'un Save,Export ou Backup pour quitter
    protected Synchro syncSave = new Synchro();
@@ -145,7 +145,7 @@ public final class Command implements Runnable {
       } else return execHelp + "\n";
    }
 
-   // Liste des commandes scripts documentés
+   // Liste des commandes scripts documentï¿½s
    static final String CMD[] = { "addcol", "backup", "bitpix", "blink", "browse", "call", "cm", "cmoc", "collapse", "conv",
          "contour", "coord", "copy", "ccat", "cview", "crop", "demo", "draw", "expand", "export", "filter", "moreonfilter",
          "function", "flipflop", "get", "grey", "grid", "help", "hide", "hist", "info", "kernel", "list", "load", "lock", "macro",
@@ -154,16 +154,16 @@ public final class Command implements Runnable {
          /* "stick", */"sync", "tag", "thumbnail", "trace", "unlock", /* "unstick", */
          "untag", "xmatch", "moreonxmatch", "zoom", "+", "-", "*", "/", "=", };
    
-   // Liste des commandes scripts additionnelles (non documentées)
+   // Liste des commandes scripts additionnelles (non documentï¿½es)
    static final String CMDPLUS[] = { "goto", "scale", "unstick", "stick" };
 
-   // Liste des commandes qui ne requierent pas un sync() avant d'être exécutée
+   // Liste des commandes qui ne requierent pas un sync() avant d'ï¿½tre exï¿½cutï¿½e
    static final private String NOSYNCCMD[] = { "call", "collapse", "demo", "expand", "function", "=", "get", "grid", "help",
          "hist", "info", "list", "kernel", "load", "lock", "md", "mem", "pause", /* "reset", */"reticle",
          "scale", /* "setconf", */
          "status", "stick", "sync", "timeout", "trace", "unlock", "unstick", };
 
-   /** retourne true si la commande requiert un sync() avant d'être exécutée */
+   /** retourne true si la commande requiert un sync() avant d'ï¿½tre exï¿½cutï¿½e */
    private boolean needSync(String cmd) {
       return Util.indexInArrayOf(cmd, NOSYNCCMD) == -1;
    }
@@ -182,7 +182,7 @@ public final class Command implements Runnable {
       }
    }
 
-   /** Arrêt forcer du thread de lecture des commandes */
+   /** Arrï¿½t forcer du thread de lecture des commandes */
    protected void stop() {
       stop = true;
    }
@@ -225,12 +225,12 @@ public final class Command implements Runnable {
    synchronized void setStream(InputStream in) {
       if( in == null ) {
          // thomas 02/02/2005
-         // in=(InputStream)(stackStream.empty()?System.in:stackStream.pop()); // original, commenté
+         // in=(InputStream)(stackStream.empty()?System.in:stackStream.pop()); // original, commentï¿½
 
          if( stackStream.empty() ) in = System.in;
-         // thomas 02/02/2005 : le pb du pop() est que dans certains cas, on dépile le stream qu'on venait de consommer
-         // entièrement
-         // ce qui provoquait un dépilage en série non désiré (du coup, on perdait certaines commandes !!)
+         // thomas 02/02/2005 : le pb du pop() est que dans certains cas, on dï¿½pile le stream qu'on venait de consommer
+         // entiï¿½rement
+         // ce qui provoquait un dï¿½pilage en sï¿½rie non dï¿½sirï¿½ (du coup, on perdait certaines commandes !!)
          else {
             in = stackStream.pop();
             if( in == stream && in != System.in && !stackStream.empty() ) {
@@ -248,7 +248,7 @@ public final class Command implements Runnable {
 
    /**
     * Module de controle des commandes asynchrones. Il s'agit d'un thread qui lit l'entree standard et execute les commandes qu'il
-    * recoit. D'autre part, cette méthode affiche automatique le formulaire des serveurs le cas échéant.
+    * recoit. D'autre part, cette mï¿½thode affiche automatique le formulaire des serveurs le cas ï¿½chï¿½ant.
     */
    public void run() {
       a.waitDialog();
@@ -281,7 +281,7 @@ public final class Command implements Runnable {
 
    int X = 0;
 
-   /** Retourne true s'il y a encore une commande dans le flux d'entrée */
+   /** Retourne true s'il y a encore une commande dans le flux d'entrï¿½e */
    protected boolean hasCommand() {
       try {
          // System.out.println("stream="+stream+" available="+stream.available()+" isSyncServer="+isSyncServer());
@@ -293,23 +293,23 @@ public final class Command implements Runnable {
    }
 
    // Procedure un peu tordue pour lire une commande provenant
-   // d'un flux (STDIN ou autre) ou éventuellement de la console Aladin (Pad)
+   // d'un flux (STDIN ou autre) ou ï¿½ventuellement de la console Aladin (Pad)
    private String readLine() {
       StringBuilder s = new StringBuilder();
       boolean encore = true;
       int b = 0;
-      int acc = 0; // Profondeur de crochets pour éviter les fausses détections de ';' au sein d'une UCD
+      int acc = 0; // Profondeur de crochets pour ï¿½viter les fausses dï¿½tections de ';' au sein d'une UCD
 
       do {
 
          // Une commande qui provient du pad ou d'un lot n'est pas prioritaire sur stdin
          if( (stream == null || stream == System.in) && a.console != null ) {
             if( a.console.hasWaitingCmd() ) {
-               // System.out.println("Command pop à exécuter");
+               // System.out.println("Command pop ï¿½ exï¿½cuter");
                return a.console.pollCmd();
             }
             if( a.console.hasWaitingLot() ) {
-               // System.out.println("Lot à prendre en compte");
+               // System.out.println("Lot ï¿½ prendre en compte");
                return null; // A traiter en amont
             }
          }
@@ -317,8 +317,8 @@ public final class Command implements Runnable {
          // Commandes provenant d'un stream (STDIN et/ou autres)
          try {
 
-            // Petite garantie pour éviter une boucle bloquante en cas de
-            // problème sur stream.available (ex. sous Tomcat)
+            // Petite garantie pour ï¿½viter une boucle bloquante en cas de
+            // problï¿½me sur stream.available (ex. sous Tomcat)
             // if( X>100000 ) Util.pause(1000);
             // X++;
 
@@ -355,7 +355,7 @@ public final class Command implements Runnable {
 
       } while( encore && !stop && b != 10 && !(b == ';' && acc == 0) );
 
-      // System.out.println("Command stream à exécuter");
+      // System.out.println("Command stream ï¿½ exï¿½cuter");
       return s.toString();
    }
 
@@ -411,11 +411,11 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Retourne le numéro de la vue correspondant à son identificateur qui doit suivre la syntaxe A1... D4. La lettre représente la
+    * Retourne le numï¿½ro de la vue correspondant ï¿½ son identificateur qui doit suivre la syntaxe A1... D4. La lettre reprï¿½sente la
     * colonne et le chiffre la ligne
     * @param vID identificateur d'une vue
     * @param verbose true si on accepte les messages d'erreur
-    * @return numéro de la vue (de 0 à ViewControl.MAXVIEW-1) ou -1 si problème ou non visible
+    * @return numï¿½ro de la vue (de 0 ï¿½ ViewControl.MAXVIEW-1) ou -1 si problï¿½me ou non visible
     */
    protected int getViewNumber(String vID) {
       return getViewNumber(vID, true);
@@ -435,9 +435,9 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Extraction des indices des colonnes pour un paramètre suivant la syntaxe suivante : NomPlan(Column1,Column2). S'il n'y a pas
-    * de colonne mentionnée, retourne 0,1
-    * @return : le nom de la table sans les parenthèses
+    * Extraction des indices des colonnes pour un paramï¿½tre suivant la syntaxe suivante : NomPlan(Column1,Column2). S'il n'y a pas
+    * de colonne mentionnï¿½e, retourne 0,1
+    * @return : le nom de la table sans les parenthï¿½ses
     */
    protected String parseColumnIndex(String[] col, String s) {
       col[0] = "";
@@ -456,11 +456,11 @@ public final class Command implements Runnable {
     * Retourne le plan en fonction de son numero, ou de son label ou d'un masque (jokers). dans la pile (1 etant celui tout en
     * bas).
     * @param s la chaine qui doit contenir le numero
-    * @param methode 0 si le s ne peut etre qu'un numero (éventuellement précédé de @) 1 si s peut etre egalement un nom de plan
-    *           (éventuellement précédé de @), ou un masque de nom de plan
-    * @param atStrict true si seul le @n est autorisé et non le "n" simple
+    * @param methode 0 si le s ne peut etre qu'un numero (ï¿½ventuellement prï¿½cï¿½dï¿½ de @) 1 si s peut etre egalement un nom de plan
+    *           (ï¿½ventuellement prï¿½cï¿½dï¿½ de @), ou un masque de nom de plan
+    * @param atStrict true si seul le @n est autorisï¿½ et non le "n" simple
     * @param verbose
-    * @return le plan, ou null si non trouvé
+    * @return le plan, ou null si non trouvï¿½
     */
    protected Plan getNumber(String s) {
       return getNumber(s, 1);
@@ -472,7 +472,7 @@ public final class Command implements Runnable {
 
    protected Plan getNumber(String s, int methode, boolean atStrict, boolean verbose) {
       int n = 0;
-      boolean at = s.length() > 1 && s.charAt(0) == '@'; // préfixe @ sur le numéro du plan
+      boolean at = s.length() > 1 && s.charAt(0) == '@'; // prï¿½fixe @ sur le numï¿½ro du plan
 
       try {
          n = Integer.parseInt(atStrict ? s.substring(1) : at ? s.substring(1) : s);
@@ -500,8 +500,8 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Retourne le plan indiqué dans le paramètre, soit par son nom, soit par son numéro dans le stack, soit par l'identificateur
-    * d'une vue (sauf si method==1. Retourne null si problème
+    * Retourne le plan indiquï¿½ dans le paramï¿½tre, soit par son nom, soit par son numï¿½ro dans le stack, soit par l'identificateur
+    * d'une vue (sauf si method==1. Retourne null si problï¿½me
     */
    private Plan getPlanFromParam(String s) {
       return getPlanFromParam(s, 0, false);
@@ -523,7 +523,7 @@ public final class Command implements Runnable {
          }
       }
 
-      // Un plan par son nom ou son numéro ?
+      // Un plan par son nom ou son numï¿½ro ?
       if( p == null ) {
          p = getNumber(s, 1, atStrict, false);
          // int n=getNumber(s,1,atStrict,false);
@@ -540,8 +540,8 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Retourne le premier plan qui correspond à l'identificateur (label, wildcard, id de vue)
-    * @param planID désignation du plan
+    * Retourne le premier plan qui correspond ï¿½ l'identificateur (label, wildcard, id de vue)
+    * @param planID dï¿½signation du plan
     * @return le plan, ou null si aucun qui correspond.
     */
    protected Plan getFirstPlan(String planID) {
@@ -553,9 +553,9 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Construit un tableau des plans spécifiés dans param. si param est "", prend les plans sélectionnés
-    * @param method 0: tous les plans prêts 1: tous les plans images simples prêts 2: tous les plans prêts sans prendre en compte
-    *           les identificateur de vue (ex: B2) 3: tous les plans Folder 4: Idem que 2 mais également les plans non prêts
+    * Construit un tableau des plans spï¿½cifiï¿½s dans param. si param est "", prend les plans sï¿½lectionnï¿½s
+    * @param method 0: tous les plans prï¿½ts 1: tous les plans images simples prï¿½ts 2: tous les plans prï¿½ts sans prendre en compte
+    *           les identificateur de vue (ex: B2) 3: tous les plans Folder 4: Idem que 2 mais ï¿½galement les plans non prï¿½ts
     */
    protected Plan[] getPlan(String param) {
       return getPlan(param, 0);
@@ -566,7 +566,7 @@ public final class Command implements Runnable {
 
       param = param.trim();
 
-      // Les plans images sélectionnés dans la pile
+      // Les plans images sï¿½lectionnï¿½s dans la pile
       Plan[] allPlan = a.calque.getPlans();
       if( param.length() == 0 ) {
          for( int i = 0; i < allPlan.length; i++ ) {
@@ -575,13 +575,13 @@ public final class Command implements Runnable {
             if( p.flagOk && p.selected ) v.addElement(p);
          }
 
-         // Les plans images spécifiés par le paramètre
+         // Les plans images spï¿½cifiï¿½s par le paramï¿½tre
       } else {
          Tok st = new Tok(param);
          while( st.hasMoreTokens() ) {
             String s = st.nextToken();
 
-            // Requête avec jokers
+            // Requï¿½te avec jokers
             if( s.indexOf('*') >= 0 || s.indexOf('?') >= 0 ) {
                for( Plan p : allPlan ) {
                   if( p == null ) continue;
@@ -614,14 +614,14 @@ public final class Command implements Runnable {
    // }
    // return true;
    // }
-   /** Retourne true si tous les serveurs sont syncrhonisés */
+   /** Retourne true si tous les serveurs sont syncrhonisï¿½s */
    protected boolean isSyncServer() {
       if( a.synchroServer.isReady() ) return true;
       Aladin.trace(4, "Command.isSyncServer() : waiting server...\n" + "==> " + a.synchroServer);
       return false;
    }
 
-   /** Retourne true si tous les plugins sont syncrhonisés */
+   /** Retourne true si tous les plugins sont syncrhonisï¿½s */
    protected boolean isSyncPlugin() {
       if( a.plugins == null ) return true;
       boolean rep = a.plugins.isSync();
@@ -629,14 +629,14 @@ public final class Command implements Runnable {
       return rep;
    }
 
-   /** Retourne true si tous les plans sont syncrhonisés */
+   /** Retourne true si tous les plans sont syncrhonisï¿½s */
    protected boolean isSyncPlan() {
       if( a.synchroPlan.isReady() ) return true;
       Aladin.trace(4, "Command.isSyncPlan() : waiting plane...\n" + "==> " + a.synchroPlan);
       return false;
    }
 
-   /** Retourne true si tous les serveurs sont syncrhonisés */
+   /** Retourne true si tous les serveurs sont syncrhonisï¿½s */
    protected boolean isSyncSave() {
       if( syncSave.isReady() ) return true;
       Aladin.trace(4, "Command.isSyncSave() : waiting save process...\n" + "==> " + syncSave);
@@ -740,7 +740,7 @@ public final class Command implements Runnable {
 
    private boolean inSync = false; // true si un sync est en cours
 
-   // Les différents modes de synchronisation des plans
+   // Les diffï¿½rents modes de synchronisation des plans
    final protected static int SYNCOFF = 0;
 
    final protected static int SYNCON = 1;
@@ -793,7 +793,7 @@ public final class Command implements Runnable {
       }
    }
 
-   /** teste si robot est supporté, et fixe la valeur de Aladin.ROBOTSUPPORT */
+   /** teste si robot est supportï¿½, et fixe la valeur de Aladin.ROBOTSUPPORT */
    private void testRobot() {
       try {
          Class< ? > x = Class.forName("java.awt.Robot");
@@ -809,7 +809,7 @@ public final class Command implements Runnable {
       }
    }
 
-   /** Attends que l'action soit exécutée */
+   /** Attends que l'action soit exï¿½cutï¿½e */
    private void robotSync() {
       long d = System.currentTimeMillis();
       while( !ActionExecutor.ready || ActionExecutor.interruptAction ) {
@@ -822,7 +822,7 @@ public final class Command implements Runnable {
       Util.pause(1000);
    }
 
-   static String[] UNIT = { "m", "arcmin", "'", "s", "sec", "\"", "d", "deg", "°" };
+   static String[] UNIT = { "m", "arcmin", "'", "s", "sec", "\"", "d", "deg", "ï¿½" };
 
    /** Affichage du status */
    private String execStatusCmd(String param) {
@@ -898,7 +898,7 @@ public final class Command implements Runnable {
          }
       }
 
-      // statut des vues (soit par leur ID, soit toutes si aucune spécification)
+      // statut des vues (soit par leur ID, soit toutes si aucune spï¿½cification)
       StringBuffer x = new StringBuffer();
       if( param == null || param.equals("") || param.equals("*") || param.equals("views") ) x = a.view.getStatus();
       else {
@@ -963,9 +963,9 @@ public final class Command implements Runnable {
    static final private String OP = "+-*/";
 
    /**
-    * Cherche un éventuel opérateur arithmétique en vérifiant que les opérandes potentielles sont bien des noms de plans ou des
+    * Cherche un ï¿½ventuel opï¿½rateur arithmï¿½tique en vï¿½rifiant que les opï¿½randes potentielles sont bien des noms de plans ou des
     * scalaires.
-    * @return la position de l'opérateur, 0 si unaire, -1 si pas trouvé
+    * @return la position de l'opï¿½rateur, 0 si unaire, -1 si pas trouvï¿½
     */
    private int findPosAlgebre(String cmd) {
       for( int i = 0; i < OP.length(); i++ ) {
@@ -981,7 +981,7 @@ public final class Command implements Runnable {
             }
             boolean f2 = getNumber(Tok.unQuote(p2), 1, true, false) != null;
             if( pos == 0 && (!Double.isNaN(n2) || f2) ) {
-               // System.out.println("Trouvé algèbre unaire pos="+pos+" ["+op+p2+"]");
+               // System.out.println("Trouvï¿½ algï¿½bre unaire pos="+pos+" ["+op+p2+"]");
                return pos; // Cas unaire
             }
 
@@ -992,7 +992,7 @@ public final class Command implements Runnable {
             }
             boolean f1 = getNumber(Tok.unQuote(p1), 1, true, false) != null;
             if( (!Double.isNaN(n1) || f1) && (!Double.isNaN(n2) || f2) && !(!Double.isNaN(n1) && !Double.isNaN(n2)) ) {
-               // System.out.println("Trouvé algèbre binaire pos="+pos+" ["+p1+op+p2+"]");
+               // System.out.println("Trouvï¿½ algï¿½bre binaire pos="+pos+" ["+p1+op+p2+"]");
                return pos;
             }
          }
@@ -1001,26 +1001,26 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Extrait le nom d'un plan qui aurait été spécifié en préfixe d'une commande. Retourne la commande sans le préfixe. Le nom du
-    * plan peut être éventuellement quoté, il sera automatiquement "déquoté". De plus, en profite pour ajouter des blancs autour
-    * d'un opérateur arithmétique éventuel Ex : toto = get aladin(dss1) m1 => targetPlane = toto => return : get aladin(dss1) m1
-    * @param targetPlane Le nom du plan, ou inchangé si non spécifié
-    * @param cmd la commande avec un éventuel préfixe "nomplan = "
-    * @return la commande sans son préfixe, avec des blancs autour d'opérateur arith.
+    * Extrait le nom d'un plan qui aurait ï¿½tï¿½ spï¿½cifiï¿½ en prï¿½fixe d'une commande. Retourne la commande sans le prï¿½fixe. Le nom du
+    * plan peut ï¿½tre ï¿½ventuellement quotï¿½, il sera automatiquement "dï¿½quotï¿½". De plus, en profite pour ajouter des blancs autour
+    * d'un opï¿½rateur arithmï¿½tique ï¿½ventuel Ex : toto = get aladin(dss1) m1 => targetPlane = toto => return : get aladin(dss1) m1
+    * @param targetPlane Le nom du plan, ou inchangï¿½ si non spï¿½cifiï¿½
+    * @param cmd la commande avec un ï¿½ventuel prï¿½fixe "nomplan = "
+    * @return la commande sans son prï¿½fixe, avec des blancs autour d'opï¿½rateur arith.
     */
    protected String getTargetPlane(StringBuffer targetPlane, String cmd) {
       String s;
       int pos = cmd.indexOf('=');
-      if( pos == 0 ) return cmd; // de fait une commande "=" (évaluation expression arithmétique)
+      if( pos == 0 ) return cmd; // de fait une commande "=" (ï¿½valuation expression arithmï¿½tique)
       if( pos == -1 ) s = cmd;
       else s = cmd.substring(pos + 1).trim();
 
-      // S'il y a des blancs dans le nom de plan et pas de quotes au début
+      // S'il y a des blancs dans le nom de plan et pas de quotes au dï¿½but
       // c'est qu'il s'agit d'une commande du genre: get File(http://xxx?toto=bidule)
       String name = pos == -1 ? "" : cmd.substring(0, pos).trim();
       if( name.indexOf(' ') > 0 && name.charAt(0) != '"' && name.charAt(0) != '\'' ) { return cmd; }
 
-      // Peut être faut-il mettre des blancs autour d'un opérateur arithmétique
+      // Peut ï¿½tre faut-il mettre des blancs autour d'un opï¿½rateur arithmï¿½tique
       int i;
       if( findAlgebre(s) < 0 && (i = findPosAlgebre(s)) >= 0 ) {
          if( i == 0 ) s = s.charAt(i) + " " + s.substring(i + 1);
@@ -1069,7 +1069,7 @@ public final class Command implements Runnable {
       // doute uniquement d'un target
       StringTokenizer st = new StringTokenizer(s, ",(");
       String server = st.nextToken();
-      if( server.equalsIgnoreCase("allsky") ) server = "hips"; // pour compatibilité
+      if( server.equalsIgnoreCase("allsky") ) server = "hips"; // pour compatibilitï¿½
       if( !withServer || a.dialog.getServer(server) < 0 && !server.equalsIgnoreCase("HiPS") ) {
          // && (!Aladin.BETA || Aladin.BETA && !server.equalsIgnoreCase("HiPS"))) {
 
@@ -1084,7 +1084,7 @@ public final class Command implements Runnable {
             if( p != null && p.trim().length() > 0 ) s = s + "(" + p + ")";
             // }
 
-            // Est-ce bien un objet résolvable par Sésame ?
+            // Est-ce bien un objet rï¿½solvable par Sï¿½same ?
             String rep = a.view.sesameResolve(cmd, true);
             if( rep == null ) {
                a.error(a.dialog.server[0].UNKNOWNOBJ);
@@ -1106,7 +1106,7 @@ public final class Command implements Runnable {
             // Sinon il va tenter une multiplication
             cmd = Tok.unQuote(cmd);
 
-            // La commande est donc une position que l'on va tout de même mémoriser
+            // La commande est donc une position que l'on va tout de mï¿½me mï¿½moriser
             target.append(cmd);
 
             // Via une adresse healpix norder/npi
@@ -1133,14 +1133,14 @@ public final class Command implements Runnable {
             a.dialog.setDefaultTaille(radius.toString());
          }
 
-         // On mémorise le target comme nouveau target par défaut
+         // On mï¿½morise le target comme nouveau target par dï¿½faut
          a.dialog.setDefaultTarget(t);
       }
 
       target.append(t);
 
-      // On recherche le rayon par défaut si nécessaire
-      // Rq: Pas pour les HiPS car la taille par défaut est indiqué dans le fichier properties, et sera donc résolue plus tard
+      // On recherche le rayon par dï¿½faut si nï¿½cessaire
+      // Rq: Pas pour les HiPS car la taille par dï¿½faut est indiquï¿½ dans le fichier properties, et sera donc rï¿½solue plus tard
       if( radius.length() == 0 && !server.equalsIgnoreCase("hips") ) {
          waitingPlanInProgress();
          radius.append(Server.getRM(a.dialog.getDefaultTaille()) + "'");
@@ -1150,7 +1150,7 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Attend que les plans en cours de chargement aient pu positionner le target par défaut afin d'éviter un sync()
+    * Attend que les plans en cours de chargement aient pu positionner le target par dï¿½faut afin d'ï¿½viter un sync()
     */
    private void waitingPlanInProgress() {
       return;
@@ -1170,7 +1170,7 @@ public final class Command implements Runnable {
       // }
       // }
       // if( encore ) {
-      // // Au cas où ça tarde trop, je sors quand même
+      // // Au cas oï¿½ ï¿½a tarde trop, je sors quand mï¿½me
       // //TODO IL FAUDRA QUE J'AUGMENTE LE TIMEOUT A 1MN
       // if( t-System.currentTimeMillis()>30000 ) {
       // System.err.println("Command.waitingFileInProgress timeout");
@@ -1268,7 +1268,7 @@ public final class Command implements Runnable {
 
    /**
     * retourne false si la ligne designant les serveurs ne contient que le serveur Local(...) ou MyData(...) ou File(...) ou
-    * Aladin(allsky), càd n'a pas besoin de désignation de target
+    * Aladin(allsky), cï¿½d n'a pas besoin de dï¿½signation de target
     */
    private boolean isTargetRequired(StringBuffer s) {
       char b[] = s.toString().toCharArray();
@@ -1341,12 +1341,12 @@ public final class Command implements Runnable {
          i = getServerInfo(serverX, criteriaX, b, i);
 
          String server = serverX.toString();
-         if( server.equalsIgnoreCase("allsky") ) server = "hips"; // pour assurer la compatibilité
+         if( server.equalsIgnoreCase("allsky") ) server = "hips"; // pour assurer la compatibilitï¿½
          String criteria = criteriaX.toString();
          Aladin.trace(4, "Command.execGetCmd(" + cmd + "," + label + ") => server=[" + server + "] criteria=[" + criteria
                + "] target=[" + target + "] radius=[" + radius + "])");
-         if( server.equalsIgnoreCase("VizierX") ) server = "VizieR"; // Pour charger tout un catalogue sans poser un problème de
-                                                                     // compatibilité
+         if( server.equalsIgnoreCase("VizierX") ) server = "VizieR"; // Pour charger tout un catalogue sans poser un problï¿½me de
+                                                                     // compatibilitï¿½
 
          if( server.equalsIgnoreCase("hips") ) {
             int n = a.directory.createPlane(target, radius, criteria, label, null);
@@ -1379,9 +1379,9 @@ public final class Command implements Runnable {
    }
    
 
-   protected HipsGen hipsgen = null; // pour la génération des allskys via commande script
+   protected HipsGen hipsgen = null; // pour la gï¿½nï¿½ration des allskys via commande script
 
-   /** Lancement via une commande script de la génération d'un allsky */
+   /** Lancement via une commande script de la gï¿½nï¿½ration d'un allsky */
    // protected void execSkyGen(String param) {
    // try {
    // Tok tok = new Tok(param);
@@ -1389,7 +1389,7 @@ public final class Command implements Runnable {
    // for( int i=0; i<arg.length; i++ ) arg[i] = tok.nextToken();
    //
    //
-   // // Interruption d'une exécution précédente en cours
+   // // Interruption d'une exï¿½cution prï¿½cï¿½dente en cours
    // if( Util.indexOfIgnoreCase(param, "abort")>=0 || Util.indexOfIgnoreCase(param, "pause")>=0
    // || Util.indexOfIgnoreCase(param, "resume")>=0) {
    // Context context = skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ? skygen.context : null;
@@ -1418,7 +1418,7 @@ public final class Command implements Runnable {
       try {
          Tok tok = new Tok(param);
 
-         // Récupération des lignes de commandes de la macro
+         // Rï¿½cupï¿½ration des lignes de commandes de la macro
          String scriptFile = a.getFullFileName(tok.nextToken());
          scriptStream = (new MyInputStream(Util.openAnyStream(scriptFile))).startRead();
          String s;
@@ -1432,7 +1432,7 @@ public final class Command implements Runnable {
          // Instanciation du controler de macro
          MacroModel macro = new MacroModel(a);
 
-         // Récupération des paramètres de la macro
+         // Rï¿½cupï¿½ration des paramï¿½tres de la macro
          String paramFile = a.getFullFileName(tok.nextToken());
          paramStream = (new MyInputStream(Util.openAnyStream(paramFile))).startRead();
          HashMap params = new HashMap();
@@ -1587,12 +1587,12 @@ public final class Command implements Runnable {
    /** Execution d'une commande set [PlaneNames*][(specifications)] propertie = value */
    protected String execSetCmd(String param) {
 
-      // Recupération de la valeur (NE DOIT PAS CONTENIR LE SIGNE =)
+      // Recupï¿½ration de la valeur (NE DOIT PAS CONTENIR LE SIGNE =)
       int egaleOffset = param.lastIndexOf('=');
       if( egaleOffset == -1 ) return null;
       String value = param.substring(egaleOffset + 1).trim();
 
-      // Récupération de la Propertie
+      // Rï¿½cupï¿½ration de la Propertie
       char b[] = param.toCharArray();
       int i;
       for( i = egaleOffset - 1; i > 0 && b[i] == ' '; i-- )
@@ -1620,7 +1620,7 @@ public final class Command implements Runnable {
          }
       }
 
-      // Récupération de la désignation des plans concernés
+      // Rï¿½cupï¿½ration de la dï¿½signation des plans concernï¿½s
       String plans = (new String(b, 0, i)).trim();
       // String plans = param.substring(0,i).trim();
 
@@ -1629,7 +1629,7 @@ public final class Command implements Runnable {
 
       Plan[] p = getPlan(plans, 2);
 
-      // Test qu'il n'y a qu'un plan concerné dans le cas d'une spécification "/xxx"
+      // Test qu'il n'y a qu'un plan concernï¿½ dans le cas d'une spï¿½cification "/xxx"
       if( specif != null && p.length > 1 ) {
          String s = "set error: only suppport one plane with \"/\" specification";
          printConsole("!!! set error: " + s);
@@ -1650,7 +1650,7 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Exécution des paramètres de changement de la palette et/ou de l'autocut
+    * Exï¿½cution des paramï¿½tres de changement de la palette et/ou de l'autocut
     * @param param [PlanID] [cmParam...]
     * @return "" si ok, sinon le message d'erreur
     */
@@ -1661,7 +1661,7 @@ public final class Command implements Runnable {
       String s = null;
       boolean ok = false;
 
-      // Analyse des plans passés en paramètre
+      // Analyse des plans passï¿½s en paramï¿½tre
       Tok tok = new Tok(param);
       while( tok.hasMoreTokens() ) {
          s = tok.nextToken();
@@ -1674,7 +1674,7 @@ public final class Command implements Runnable {
          v.add(p);
       }
 
-      // Si aucun plan indiqué, on essaye le plan de base
+      // Si aucun plan indiquï¿½, on essaye le plan de base
       if( v.size() == 0 && defaultPlan ) {
          p = a.calque.getPlanBase();
          if( p != null ) v.add(p);
@@ -1683,7 +1683,7 @@ public final class Command implements Runnable {
       // Aucun plan
       if( v.size() == 0 ) return "No image plane";
 
-      // On ré-empile tous les paramètres qui suivent le noms des plans
+      // On rï¿½-empile tous les paramï¿½tres qui suivent le noms des plans
       StringBuffer par = new StringBuffer();
       while( s != null ) {
          par.append(" " + s);
@@ -1692,14 +1692,14 @@ public final class Command implements Runnable {
       }
       s = par.toString();
 
-      // Action par défaut
+      // Action par dï¿½faut
       if( s.length() == 0 ) {
          s = a.configuration.get(Configuration.CM);
          if( s == null ) s = "gray reverse autocut";
          s = s + " all";
       }
 
-      // On applique chaque paramètre pour chaque plan
+      // On applique chaque paramï¿½tre pour chaque plan
       Enumeration<Plan> e = v.elements();
       while( e.hasMoreElements() ) {
          PlanImage pi = (PlanImage) e.nextElement();
@@ -1768,7 +1768,7 @@ public final class Command implements Runnable {
    // return s;
    // }
 
-   /** Supprime les marques de liens dans une chaine de caractères */
+   /** Supprime les marques de liens dans une chaine de caractï¿½res */
    protected String removeLinks(String help) {
       if( help.indexOf('@') < 0 ) return help;
       StringBuffer s = new StringBuffer();
@@ -1784,7 +1784,7 @@ public final class Command implements Runnable {
       return Character.isLetterOrDigit(c) || OTHERS.indexOf(c) >= 0;
    }
 
-   /** Transforme les marques des liens en équivalent HTML */
+   /** Transforme les marques des liens en ï¿½quivalent HTML */
    protected String translateLinks(String help) {
       StringBuffer s = new StringBuffer();
       StringTokenizer tok = new StringTokenizer(help, " |\t\n\r\f", true);
@@ -1820,14 +1820,14 @@ public final class Command implements Runnable {
       try {
          if( param.length() == 0 ) a.view.createROI();
 
-         // Spécification en distance angulaire
+         // Spï¿½cification en distance angulaire
          else if( !Character.isDigit(param.charAt(param.length() - 1)) ) {
             double radius = Server.getRM(param.substring(0, param.length() - 1));
             a.view.createROI(radius / 60);
             // double radius = Double.valueOf(param.substring(0,param.length()-1)).doubleValue();
             // a.view.createROI(radius/3600);
 
-            // Spécification en pixels
+            // Spï¿½cification en pixels
          } else {
             int pixels = Integer.parseInt(param);
             a.view.createROI(pixels);
@@ -1844,9 +1844,9 @@ public final class Command implements Runnable {
       int nbTokens = tokens.length;
       // System.out.println("tokens.length : "+tokens.length);
       // for( int i=0; i<tokens.length; i++ ) System.out.println("tokens["+i+"] : "+tokens[i]);
-      int curIdx = 1; // on commence à 1 car tokens[0] == "xmatch"
+      int curIdx = 1; // on commence ï¿½ 1 car tokens[0] == "xmatch"
       double dist = -1;
-      int mode = CDSXMatch.BESTMATCH; // mode de xmatch par défaut : best match
+      int mode = CDSXMatch.BESTMATCH; // mode de xmatch par dï¿½faut : best match
       Plan pCat1 = null;
       Plan pCat2 = null;
 
@@ -1887,7 +1887,7 @@ public final class Command implements Runnable {
             dist = -1;
          }
       }
-      // si dist n'est pas donné, on prend 4 arcsec comme distance par défaut
+      // si dist n'est pas donnï¿½, on prend 4 arcsec comme distance par dï¿½faut
       else dist = 4.0;
 
       if( curIdx < nbTokens ) {
@@ -1910,8 +1910,8 @@ public final class Command implements Runnable {
          }
          CDSXMatch xMatch = new CDSXMatch(a);
 
-         // une fois qu'on a les indices des plans, et qu'on s'est assuré qu'il s'agit
-         // de PlanCatalog, on peut analyser les noms des col. de coordonnées (si elles ont été fournies)
+         // une fois qu'on a les indices des plans, et qu'on s'est assurï¿½ qu'il s'agit
+         // de PlanCatalog, on peut analyser les noms des col. de coordonnï¿½es (si elles ont ï¿½tï¿½ fournies)
          int[] p1CoordIdx, p2CoordIdx;
          p1CoordIdx = p2CoordIdx = null;
          if( p1Cols != null ) {
@@ -1928,7 +1928,7 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Retourne le tableau des index des coordonnées
+    * Retourne le tableau des index des coordonnï¿½es
     * @param pc
     * @param colStr
     * @return
@@ -2004,7 +2004,7 @@ public final class Command implements Runnable {
       }
    }
 
-   /** Affiche le Help des commandes à la queue leuleu */
+   /** Affiche le Help des commandes ï¿½ la queue leuleu */
    private void execAllHelp() {
       println(removeLinks(execHelp()));
       for( int i = 0; i < CMD.length; i++ ) {
@@ -2013,7 +2013,7 @@ public final class Command implements Runnable {
       }
    }
 
-   /** Affiche le Help des commandes à la queue leuleu en HTML */
+   /** Affiche le Help des commandes ï¿½ la queue leuleu en HTML */
    private void execHTMLHelp() {
       println("<PRE>\n" + translateLinks(execHelp()) + "</PRE>\n");
       for( int i = 0; i < CMD.length; i++ ) {
@@ -2023,14 +2023,14 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Mise en forme d'un texte de help avec éventuellement récupération au préalable du paragraphe du help associé à une commande
+    * Mise en forme d'un texte de help avec ï¿½ventuellement rï¿½cupï¿½ration au prï¿½alable du paragraphe du help associï¿½ ï¿½ une commande
     * @param p chaine du help (commence par #) ou nom de commande
     * @return le paragraphe du help mis en forme
     */
    private String getHelpString(String p) {
       String s;
 
-      // Il s'agit déjà du texte de help et non pas d'une commande
+      // Il s'agit dï¿½jï¿½ du texte de help et non pas d'une commande
       if( p.charAt(0) == '#' ) s = p;
 
       // Recherche du Help via le fichier Aladin.String
@@ -2043,9 +2043,9 @@ public final class Command implements Runnable {
          }
       }
 
-      // Découpage par section. La syntaxe est la suivante :
+      // Dï¿½coupage par section. La syntaxe est la suivante :
       // #s:synopsys#d:texte\ntexte#e:exemple1#e:exemple2
-      // # séparateur de champ
+      // # sï¿½parateur de champ
       // s:synopys, n:description 1 ligne, d:description, e:exemple,
       // t:note, g:see also
       // Le champ peut contenir des \n, l'indentation et le repli des lignes
@@ -2060,7 +2060,7 @@ public final class Command implements Runnable {
          char c = s.charAt(0);
          s = s.substring(2);
 
-         // Détermination d'un éventuel titre de section
+         // Dï¿½termination d'un ï¿½ventuel titre de section
          if( c != oc ) {
             res.append(" \n" + (c == 'n' ? " \n \n \n#NAME#"
                   : c == 's' ? "#SYNOPSIS#"
@@ -2070,7 +2070,7 @@ public final class Command implements Runnable {
          }
          oc = c;
 
-         // Découpage du texte par ligne avec éventuellement repli des lignes
+         // Dï¿½coupage du texte par ligne avec ï¿½ventuellement repli des lignes
          StringTokenizer st1 = new StringTokenizer(s, "\n");
          while( st1.hasMoreTokens() ) {
             StringBuffer line = new StringBuffer(indent.toString());
@@ -2092,7 +2092,7 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Mise en forme HTML d'un texte de help avec éventuellement récupération au préalable du paragraphe du help associé à une
+    * Mise en forme HTML d'un texte de help avec ï¿½ventuellement rï¿½cupï¿½ration au prï¿½alable du paragraphe du help associï¿½ ï¿½ une
     * commande
     * @param p chaine du help (commence par #) ou nom de commande
     * @return le paragraphe du help mis en forme
@@ -2100,7 +2100,7 @@ public final class Command implements Runnable {
    private String getHelpStringHTML(String p) {
       String s;
 
-      // Il s'agit déjà du texte de help et non pas d'une commande
+      // Il s'agit dï¿½jï¿½ du texte de help et non pas d'une commande
       if( p.charAt(0) == '#' ) s = p;
 
       // Recherche du Help via le fichier Aladin.String
@@ -2113,9 +2113,9 @@ public final class Command implements Runnable {
          }
       }
 
-      // Découpage par section. La syntaxe est la suivante :
+      // Dï¿½coupage par section. La syntaxe est la suivante :
       // #s:synopsys#d:texte\ntexte#e:exemple1#e:exemple2
-      // # séparateur de champ
+      // # sï¿½parateur de champ
       // s:synopys, n:description 1 ligne, d:description, e:exemple,
       // t:note, g:see also
       // Le champ peut contenir des \n, l'indentation et le repli des lignes
@@ -2130,7 +2130,7 @@ public final class Command implements Runnable {
          char c = s.charAt(0);
          s = s.substring(2);
 
-         // Détermination d'un éventuel titre de section
+         // Dï¿½termination d'un ï¿½ventuel titre de section
          if( c != oc ) {
             res.append("<P>\n"
                   + (c == 'n' ? ""
@@ -2144,7 +2144,7 @@ public final class Command implements Runnable {
 
          res.append(s);
 
-         // // Découpage du texte par ligne avec éventuellement repli des lignes
+         // // Dï¿½coupage du texte par ligne avec ï¿½ventuellement repli des lignes
          // StringTokenizer st1 = new StringTokenizer(s,"\n");
          // while( st1.hasMoreTokens() ) {
          // StringBuffer line = new StringBuffer(indent.toString());
@@ -2217,7 +2217,7 @@ public final class Command implements Runnable {
 
    }
    
-   /** Un range de 2 dates séparées par un espace, ou une seule date */
+   /** Un range de 2 dates sï¿½parï¿½es par un espace, ou une seule date */
    protected boolean execDateCmd(String date ) {
       try {
          ViewSimple v = a.view.getCurrentView();
@@ -2251,7 +2251,7 @@ public final class Command implements Runnable {
       return false;
    }
 
-   /** Interprétation d'une position healpix donnée par norder/npix */
+   /** Interprï¿½tation d'une position healpix donnï¿½e par norder/npix */
    protected boolean execHpxCmd(String param) {
       try {
          int offset = param.indexOf('/');
@@ -2276,10 +2276,10 @@ public final class Command implements Runnable {
       return false;
    }
 
-   /** Exécution de la commande select */
+   /** Exï¿½cution de la commande select */
    protected void execSelectCmd(String param) {
 
-      // Sélection des sources taguées
+      // Sï¿½lection des sources taguï¿½es
       if( param.trim().equals("-tag") ) {
          a.selecttag();
          return;
@@ -2296,13 +2296,13 @@ public final class Command implements Runnable {
       while( st.hasMoreTokens() ) {
          String x = st.nextToken();
 
-         // Indication d'une frame particulière dans le cas d'un cube
+         // Indication d'une frame particuliï¿½re dans le cas d'un cube
          if( Util.indexOfIgnoreCase(x, "frame=") == 0 ) {
             try {
-               // Récupération du numéro de frame (peut être un nombre non-entier
+               // Rï¿½cupï¿½ration du numï¿½ro de frame (peut ï¿½tre un nombre non-entier
                double frame = Double.parseDouble(x.substring(6)) - 1;
 
-               // Un plan particulier => toutes les vues dont c'est la référence
+               // Un plan particulier => toutes les vues dont c'est la rï¿½fï¿½rence
                if( n >= 0 ) {
                   int np[] = a.view.getNumView(a.calque.getPlan(n));
                   for( int i = 0; i < np.length; i++ ) {
@@ -2311,13 +2311,13 @@ public final class Command implements Runnable {
                      a.view.viewSimple[np[i]].repaint();
                   }
 
-                  // Une vue particulière
+                  // Une vue particuliï¿½re
                } else if( nview >= 0 ) {
                   if( a.view.viewSimple[nview].cubeControl == null ) continue;
                   a.view.viewSimple[nview].cubeControl.setFrameLevel(frame);
                   a.view.viewSimple[nview].repaint();
 
-                  // Toutes les vues sélectionnées
+                  // Toutes les vues sï¿½lectionnï¿½es
                } else {
                   ViewSimple v[] = a.view.getSelectedView();
                   for( int i = 0; i < v.length; i++ ) {
@@ -2331,8 +2331,8 @@ public final class Command implements Runnable {
             }
             return;
 
-            // On ne le fait que maintenant dans le cas d'une sélection d'une frame particulière
-            // pour l'ensemble des vues précédemment sélectionnées
+            // On ne le fait que maintenant dans le cas d'une sï¿½lection d'une frame particuliï¿½re
+            // pour l'ensemble des vues prï¿½cï¿½demment sï¿½lectionnï¿½es
          } else {
             if( first ) {
                first = false;
@@ -2363,7 +2363,7 @@ public final class Command implements Runnable {
             }
          }
       }
-      // Si aucune view sélectionnée, on remet la dernière
+      // Si aucune view sï¿½lectionnï¿½e, on remet la derniï¿½re
       if( defaultView >= 0 ) {
          a.view.selectView(defaultView);
          a.view.setCurrentNumView(defaultView);
@@ -2371,14 +2371,14 @@ public final class Command implements Runnable {
       a.calque.repaintAll();
    }
 
-   /** Exécution d'un flipflop = Symétrie verticale ou horizontale */
+   /** Exï¿½cution d'un flipflop = Symï¿½trie verticale ou horizontale */
    protected void execFlipFlop(String param, String label) {
       char a[] = param.toCharArray();
       int i = 0, j;
       String arg = null;
       int methode = 0;
 
-      // Récup de l'argument éventuel (H ou V ou HV)
+      // Rï¿½cup de l'argument ï¿½ventuel (H ou V ou HV)
       if( a.length > 0 ) {
          for( i = a.length - 1; i > 0 && Character.isSpaceChar(a[i]); i-- )
             ;
@@ -2392,9 +2392,9 @@ public final class Command implements Runnable {
       if( arg != null && arg.length() != 0 ) {
          if( arg.equalsIgnoreCase("H") ) methode = 1;
          else if( arg.equalsIgnoreCase("VH") || arg.equalsIgnoreCase("HV") ) methode = 2;
-      } else i = a.length; // pas d'argument mentionné
+      } else i = a.length; // pas d'argument mentionnï¿½
 
-      // Détermination du plan concerné
+      // Dï¿½termination du plan concernï¿½
       Plan[] p = getPlan(param.substring(0, i).trim(), 1);
       if( p.length == 0 ) p = new Plan[] { this.a.calque.getPlanBase() };
 
@@ -2443,8 +2443,8 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Execution de la commande "ccat" pour la création d'un catalogue à partir 1) des sources sélectionnés => cat 2) ou des
-    * catalogues spécifiés => cat p1 p2 ... 3) filtré ou non par un plan MOC => cat pmoc p1 p2 ...
+    * Execution de la commande "ccat" pour la crï¿½ation d'un catalogue ï¿½ partir 1) des sources sï¿½lectionnï¿½s => cat 2) ou des
+    * catalogues spï¿½cifiï¿½s => cat p1 p2 ... 3) filtrï¿½ ou non par un plan MOC => cat pmoc p1 p2 ...
     */
    protected void execCcatCmd(String cmd, String param, String label) {
 
@@ -2458,20 +2458,20 @@ public final class Command implements Runnable {
       boolean lookIn = i < 0;
       if( !lookIn ) param = param.replace("-out", "").trim();
 
-      // Pour compatibilité avec l'ancienne commande: "cplane [plan_target]"
+      // Pour compatibilitï¿½ avec l'ancienne commande: "cplane [plan_target]"
       if( cmd.equalsIgnoreCase("cplane") && param.trim().length() > 0 ) {
          label = "=" + param;
          param = "";
       }
 
-      // Génération d'un plan catalogue à partir des sources sélectionnées
+      // Gï¿½nï¿½ration d'un plan catalogue ï¿½ partir des sources sï¿½lectionnï¿½es
       if( param.length() == 0 ) {
          a.calque.newPlanCatalogBySelectedObjet(label, uniqTable);
          a.calque.repaintAll();
          return;
       }
 
-      // Récupération de la liste des plans concernés
+      // Rï¿½cupï¿½ration de la liste des plans concernï¿½s
       Plan[] plans = getPlan(param, 2);
       PlanMoc pMoc = null;
       ArrayList<Plan> pcats = new ArrayList<>();
@@ -2490,7 +2490,7 @@ public final class Command implements Runnable {
       plans = new Plan[pcats.size()];
       pcats.toArray(plans);
 
-      // Simple concaténation
+      // Simple concatï¿½nation
       if( pMoc == null ) {
          try {
             a.calque.newPlanCatalogByCatalogs(plans, uniqTable, label);
@@ -2502,7 +2502,7 @@ public final class Command implements Runnable {
          // Filtrage par Moc
       } else {
 
-         // Aucun plan catalogue => donc sur les objets sélectionnés => il faut créer un plan catalogue temporaire
+         // Aucun plan catalogue => donc sur les objets sï¿½lectionnï¿½s => il faut crï¿½er un plan catalogue temporaire
          if( plans.length == 0 ) {
             PlanCatalog pcat = a.calque.newPlanCatalogBySources(a.view.getSelectedObjet(), null, uniqTable);
             plans = new Plan[] { pcat };
@@ -2512,7 +2512,7 @@ public final class Command implements Runnable {
          try {
             PlanCatalog pcat = a.frameMocFiltering.createPlane(label, pMoc, plans, lookIn);
 
-            // Il faut éventuellement en faire une table unique
+            // Il faut ï¿½ventuellement en faire une table unique
             if( uniqTable && plans.length > 1 ) {
                plans = new Plan[] { pcat };
                a.calque.newPlanCatalogByCatalogs(plans, uniqTable, label);
@@ -2526,12 +2526,12 @@ public final class Command implements Runnable {
       a.calque.repaintAll();
    }
 
-   /** Execution de la commande "cmoc" pour la création d'un MOC */
+   /** Execution de la commande "cmoc" pour la crï¿½ation d'un MOC */
    protected String execCmocCmd(String param, String label) {
       try {
 
-         int firstOrder = -2;    // -2 = Non spécifié  , -1 = disparition de la dimension physique
-         int secondOrder = -2;   // -2 = Non spécifié  , -1 = disparition de la dimension physique
+         int firstOrder = -2;    // -2 = Non spï¿½cifiï¿½  , -1 = disparition de la dimension physique
+         int secondOrder = -2;   // -2 = Non spï¿½cifiï¿½  , -1 = disparition de la dimension physique
          double radius = 0;
          double duration=0;
          boolean fov = false;
@@ -2545,7 +2545,7 @@ public final class Command implements Runnable {
          String maxPriority=null;
          
          int command = -1;
-         int posParam=0;  // Position du paramètre (voir commentaire sur OPERATION
+         int posParam=0;  // Position du paramï¿½tre (voir commentaire sur OPERATION
 //         String s;
          
          Moc moc=null;
@@ -2555,7 +2555,7 @@ public final class Command implements Runnable {
             return "";
          }
          
-         // Découpage des paramètres
+         // Dï¿½coupage des paramï¿½tres
          Tok tok = new Tok(param);
          while( tok.hasMoreTokens() ) {
             posParam++;
@@ -2592,14 +2592,14 @@ public final class Command implements Runnable {
             else if( cle.equalsIgnoreCase("-fov") ) fov=true;
             else if( cle.equalsIgnoreCase("-time") || cle.equals("-t")) mode=1;
             else if( cle.equalsIgnoreCase("-spacetime") || cle.equals("-st")) mode=2;
-            else if( posParam==1 ) {   // on vérifie que ce serait l'unique param pour éviter de considérer 
-               found=false;           // un nom de plan ayant le même label qu'une opération
+            else if( posParam==1 ) {   // on vï¿½rifie que ce serait l'unique param pour ï¿½viter de considï¿½rer 
+               found=false;           // un nom de plan ayant le mï¿½me label qu'une opï¿½ration
                for( String opName: PlanMocAlgo.OPERATION ) {
                   if( cle.equalsIgnoreCase("-"+opName) ) { command = PlanMocAlgo.getOp(opName); found=true; }
                }
             } else found=false;
 
-            // On tombe sur un paramètre inconnu, on suppose que c'est la suite de l'instruction
+            // On tombe sur un paramï¿½tre inconnu, on suppose que c'est la suite de l'instruction
             if( !found ) {
                if( cle.charAt(0)=='-' ) throw new Exception("Unknown cmoc param ["+cle+"]"); 
                param = param.substring( tok.getPreviousPos() ); 
@@ -2607,14 +2607,14 @@ public final class Command implements Runnable {
             }
          }
 
-         // Récupération des plans concernés
+         // Rï¿½cupï¿½ration des plans concernï¿½s
          Plan[] p = getPlan(param, 2);
 
          int type = -1;
          if( p.length > 0 ) {
             a.view.deSelect();
             for( Plan p1 : p ) {
-               if( type == -1 ) type = p1.type; // Initialisation du type de plan pris en compte (TOOL, CATALOG ou IMAGE, mais séparémment)
+               if( type == -1 ) type = p1.type; // Initialisation du type de plan pris en compte (TOOL, CATALOG ou IMAGE, mais sï¿½parï¿½mment)
                if( p1.type != type ) throw new Exception("Mixed source plane types are not authorized");
                if( p1.type == Plan.TOOL ) a.view.selectAllInPlanWithoutFree(p1, 0);
             }
@@ -2641,7 +2641,7 @@ public final class Command implements Runnable {
                a.calque.repaintAll();
                return "";
                
-            // Ajout d'un range temporel à un ou plusieurs MOC spatiaux pour produire un STMOC à un intervalle temporel
+            // Ajout d'un range temporel ï¿½ un ou plusieurs MOC spatiaux pour produire un STMOC ï¿½ un intervalle temporel
             } else if( type==Plan.ALLSKYMOC ) {
                a.calque.newPlanSTMoc(label, p, firstOrder, secondOrder, jdmin, jdmax);
                a.calque.repaintAll();
@@ -2660,7 +2660,7 @@ public final class Command implements Runnable {
 
          } else if( type == Plan.ALLSKYMOC || type == Plan.ALLSKYTMOC || type == Plan.ALLSKYSTMOC) {
             
-            // Opérations sur les MOCs
+            // Opï¿½rations sur les MOCs
             if( command!=-1 ) {
                boolean flagCheckSpaceOrder = firstOrder == -2;
                boolean flagCheckTimeOrder = secondOrder == -2;
@@ -2687,7 +2687,7 @@ public final class Command implements Runnable {
                }
             }
 
-            // Pour les cartes de probabilités
+            // Pour les cartes de probabilitï¿½s
          } else if( !Double.isNaN(thresHold) && type == Plan.ALLSKYIMG ) {
             a.calque.newPlanMoc(label, p, firstOrder, 0, Double.NaN, Double.NaN, thresHold, fov);
 
@@ -2706,13 +2706,13 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Browse des sources sélectionnées, ou éventuellement celles indiquées par le nom du plan catalogue passé en paramètre. charge
-    * le survey par défaut s'il s'agit d'un HiPS et qu'il n'y a aucun autre HiPS image/cubes déja chargé, et zoome sur la première
+    * Browse des sources sï¿½lectionnï¿½es, ou ï¿½ventuellement celles indiquï¿½es par le nom du plan catalogue passï¿½ en paramï¿½tre. charge
+    * le survey par dï¿½faut s'il s'agit d'un HiPS et qu'il n'y a aucun autre HiPS image/cubes dï¿½ja chargï¿½, et zoome sur la premiï¿½re
     * source
     */
    protected void browse(String param) {
 
-      // Sélection des sources d'un catalogue spécifique
+      // Sï¿½lection des sources d'un catalogue spï¿½cifique
       if( param != null && param.trim().length() > 0 ) {
          Plan p = getNumber(param);
          if( p == null || !p.isCatalog() ) {
@@ -2721,17 +2721,17 @@ public final class Command implements Runnable {
          }
          a.view.selectAllInPlan(p);
 
-         // Sinon, simple browse des sources déjà sélectionnées
+         // Sinon, simple browse des sources dï¿½jï¿½ sï¿½lectionnï¿½es
       }
 
-      // Récupération de la première source
+      // Rï¿½cupï¿½ration de la premiï¿½re source
       final Source objSelect = a.view.getFirstSelectedSource();
       if( objSelect == null ) {
          printConsole("!!! browse error => no selected sources");
          return;
       }
 
-      // Chargement d'un HiPS en arrière plan si nécessaire
+      // Chargement d'un HiPS en arriï¿½re plan si nï¿½cessaire
       Plan base = a.calque.getPlanBase();
       if( base == null || !(base instanceof PlanBG) ) {
          String survey = a.configuration.getSurvey();
@@ -2739,7 +2739,7 @@ public final class Command implements Runnable {
          syncServer();
       }
 
-      // Zoom sur la première source, et la montre en surbrillance dans la table
+      // Zoom sur la premiï¿½re source, et la montre en surbrillance dans la table
       a.view.gotoThere(objSelect);
       a.view.zoomOnSource(objSelect);
 
@@ -2767,7 +2767,7 @@ public final class Command implements Runnable {
    }
 
    /**
-    * réduction à une portion de l'image Dans le cas d'une copie préalable, retourne le nouveau Plan
+    * rï¿½duction ï¿½ une portion de l'image Dans le cas d'une copie prï¿½alable, retourne le nouveau Plan
     */
    protected Plan execCropCmd(String param, String label) {
       char b[] = param.toCharArray();
@@ -2812,8 +2812,8 @@ public final class Command implements Runnable {
          j = i;
       }
 
-      // Récupération du plan concerné (on ne supporte plus la possibilité de mentionner plusieurs plans)
-      // Attention, cette possibilité n'est pas offerte dans le cas d'un PlanBG (allsky) non visible
+      // Rï¿½cupï¿½ration du plan concernï¿½ (on ne supporte plus la possibilitï¿½ de mentionner plusieurs plans)
+      // Attention, cette possibilitï¿½ n'est pas offerte dans le cas d'un PlanBG (allsky) non visible
       PlanImage pi = null;
       try {
          pi = (PlanImage) getPlan(param.substring(0, j), 1)[0];
@@ -2828,7 +2828,7 @@ public final class Command implements Runnable {
          return null;
       }
 
-      // On détermine la taille si non précisée ?
+      // On dï¿½termine la taille si non prï¿½cisï¿½e ?
       if( !flagDim ) {
          try {
             if( pi instanceof PlanBG ) {
@@ -2847,7 +2847,7 @@ public final class Command implements Runnable {
          h /= v.zoom;
       }
 
-      // On essaye la position du repere, sinon le centre de la vue, si nécessaire
+      // On essaye la position du repere, sinon le centre de la vue, si nï¿½cessaire
       if( !flagPos ) {
          try {
             c1 = pi instanceof PlanBG ? v.getCooCentre() : new Coord(a.view.repere.raj, a.view.repere.dej);
@@ -2882,10 +2882,10 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Recupération d'une couleur spécifique, et recalage du Tok si nécessaire dans le cas d'un rgb(r,g,b) qui nécessite de lire 3
-    * paramètres
+    * Recupï¿½ration d'une couleur spï¿½cifique, et recalage du Tok si nï¿½cessaire dans le cas d'un rgb(r,g,b) qui nï¿½cessite de lire 3
+    * paramï¿½tres
     * @param s le nom de la couleur ou de la fonction de couleur
-    * @param tok le parser des paramètres calés sur le prochain
+    * @param tok le parser des paramï¿½tres calï¿½s sur le prochain
     * @return la couleur, ou null s'il ne s'agit pas d'un nom de couleur ou d'une fonction de couleur
     */
    private Color getSpecifColor(String s, Tok tok) {
@@ -2900,14 +2900,14 @@ public final class Command implements Runnable {
       return c;
    }
 
-   private boolean flagFoV = false; // Une commande de création de FoV a été passée au préalable
+   private boolean flagFoV = false; // Une commande de crï¿½ation de FoV a ï¿½tï¿½ passï¿½e au prï¿½alable
 
-   private Color globalColor = null; // Dernière couleur demandée
+   private Color globalColor = null; // Derniï¿½re couleur demandï¿½e
 
-   private Plan oPlan = null; // Dernier plan Tool ou FoV utilisé
+   private Plan oPlan = null; // Dernier plan Tool ou FoV utilisï¿½
 
    /**
-    * Inhibe le fait qu'une commande draw va être dessiné dans le précédent plan Drawing utilisé
+    * Inhibe le fait qu'une commande draw va ï¿½tre dessinï¿½ dans le prï¿½cï¿½dent plan Drawing utilisï¿½
     */
    public void resetPreviousDrawing() {
       oPlan = null;
@@ -2916,11 +2916,11 @@ public final class Command implements Runnable {
    /** Execution d'une commande get */
    protected boolean execDrawCmd(String cmd, String param) {
       Plan plan = null; // Plan ou il faudra dessiner
-      int height; // On va compter XY à partir du bas
+      int height; // On va compter XY ï¿½ partir du bas
       Obj newobj = null; // Nouvelle objet a inserer
       Coord c = null; // Position de l'objet si drawMode==DRAWRADEC;
       double x = 0, y = 0; // Position de l'objet si drawMode==DRAWXY;
-      Color specifColor = null; // Couleur spécifique à l'objet
+      Color specifColor = null; // Couleur spï¿½cifique ï¿½ l'objet
 
       // StringTokenizer st = new StringTokenizer(param,"(");
       // String fct = st.nextToken();
@@ -2930,7 +2930,7 @@ public final class Command implements Runnable {
       Tok tok = new Tok(param, "(, )");
       String fct = tok.nextToken();
 
-      // Couleur spécifique ? => on la traite, et on se recale
+      // Couleur spï¿½cifique ? => on la traite, et on se recale
       specifColor = getSpecifColor(fct, tok);
       if( specifColor != null ) fct = tok.nextToken();
 
@@ -2955,13 +2955,13 @@ public final class Command implements Runnable {
          }
       }
 
-      // Recupération des paramètres de la fonction
+      // Recupï¿½ration des paramï¿½tres de la fonction
       String p[] = new String[tok.countTokens()];
       for( int i = 0; i < p.length; i++ )
          p[i] = tok.nextToken();
 
-      // Détermination de la hauteur de l'image de base,
-      // sinon on prendra 500 par défaut
+      // Dï¿½termination de la hauteur de l'image de base,
+      // sinon on prendra 500 par dï¿½faut
       height = 500;
       PlanImage pi = (PlanImage) a.calque.getPlanBase();
       if( pi != null ) height = pi.naxis2;
@@ -2985,7 +2985,7 @@ public final class Command implements Runnable {
          return true;
       }
 
-      // Création d'un plan tool => draw newtool(mytool)
+      // Crï¿½ation d'un plan tool => draw newtool(mytool)
       if( fct.equalsIgnoreCase("newtool") ) {
          String name = null;
          if( p.length > 0 ) name = p[0];
@@ -2994,7 +2994,7 @@ public final class Command implements Runnable {
          return true;
       }
 
-      // Création d'un plan FoV => draw newFOV(xc,yc[,angle,mytool])
+      // Crï¿½ation d'un plan FoV => draw newFOV(xc,yc[,angle,mytool])
       try {
          if( fct.equalsIgnoreCase("newfov") ) {
             if( drawMode == DRAWRADEC ) {
@@ -3020,15 +3020,15 @@ public final class Command implements Runnable {
       }
 
       // Determination du plan TOOL, ou creation si necessaire
-      // On essaye de reprendre le précédent si possible
-      if( oPlan != null && oPlan.type != Plan.APERTURE && flagFoV ) oPlan = null; // Il faut passer à un plan FoV
-      if( oPlan != null && a.calque.planToolOk(oPlan, flagFoV) ) plan = oPlan; // On reprend le précédent
+      // On essaye de reprendre le prï¿½cï¿½dent si possible
+      if( oPlan != null && oPlan.type != Plan.APERTURE && flagFoV ) oPlan = null; // Il faut passer ï¿½ un plan FoV
+      if( oPlan != null && a.calque.planToolOk(oPlan, flagFoV) ) plan = oPlan; // On reprend le prï¿½cï¿½dent
       else plan = flagFoV ? a.calque.selectPlanToolOrFoV() : a.calque.selectPlanTool();
       oPlan = plan;
 
       // Positionnement des variables globales au plan
       if( globalColor != null ) {
-         if( globalColor != plan.c && plan.type == Plan.TOOL && plan.getCounts() > 0 ) plan = a.calque.createPlanTool(null); // Création
+         if( globalColor != plan.c && plan.type == Plan.TOOL && plan.getCounts() > 0 ) plan = a.calque.createPlanTool(null); // Crï¿½ation
          plan.c = globalColor;
       }
       if( drawMode == DRAWRADEC ) plan.setXYorig(false);
@@ -3185,7 +3185,7 @@ public final class Command implements Runnable {
             newobj = null;
             Ligne p1, op1 = null;
             ViewSimple v = a.view.getCurrentView();
-            // Y a-t-il un label en dernier paramètre ?
+            // Y a-t-il un label en dernier paramï¿½tre ?
             String id = null;
             int n = p.length;
             if( n % 2 == 1 ) {
@@ -3243,7 +3243,7 @@ public final class Command implements Runnable {
          return false;
       }
 
-      // Couleur spécifique + Tracage
+      // Couleur spï¿½cifique + Tracage
       if( newobj != null ) {
          if( specifColor != null ) newobj.setColor(specifColor);
          addObj(plan, newobj);
@@ -3254,9 +3254,9 @@ public final class Command implements Runnable {
       return true;
    }
 
-   // Parsing d'un double avec prise en compte d'un éventuel format
-   // en suffixe (à la IRAF, ex: 23.7686d)
-   // prend également en compte le signe '+' en préfixe
+   // Parsing d'un double avec prise en compte d'un ï¿½ventuel format
+   // en suffixe (ï¿½ la IRAF, ex: 23.7686d)
+   // prend ï¿½galement en compte le signe '+' en prï¿½fixe
    private double parseDouble(String s) throws Exception {
       s = s.trim();
       int fin;
@@ -3268,7 +3268,7 @@ public final class Command implements Runnable {
    }
 
    // Ajout d'un objet graphique => dans le cas d'un ajout dans un plan FoV (PlanField)
-   // Il est nécessaire de calculer également les (x,y) tangentiels
+   // Il est nï¿½cessaire de calculer ï¿½galement les (x,y) tangentiels
    private void addObj(Plan plan, Obj newobj) {
       plan.pcat.setObjetFast(newobj);
 
@@ -3296,7 +3296,7 @@ public final class Command implements Runnable {
 
    /**
     * Execute une chaine contenant un script comme un flux afin de garantir l'ordre des commandes lorsqu'il y a des "load" ou
-    * "get" de scripts et filtres "emboités"
+    * "get" de scripts et filtres "emboitï¿½s"
     */
    protected void execScriptAsStream(String s) {
       MyByteArrayStream bis = null;
@@ -3325,7 +3325,7 @@ public final class Command implements Runnable {
    synchronized public String execScript(String s, boolean verbose, boolean flagOnlyFunction, boolean flagUrgent) {
 
       // StringTokenizer st = new StringTokenizer(s,";\n\r");
-      // thomas, 16/11/06 : permet de ne pas couper la déf. des filtres (pb des ';' dans les UCD !)
+      // thomas, 16/11/06 : permet de ne pas couper la dï¿½f. des filtres (pb des ';' dans les UCD !)
       String[] commands = Util.split(s, ";\n\r", '[', ']');
       int i = 0; // Compteur de commandes
       StringBuffer rep = new StringBuffer();
@@ -3353,12 +3353,12 @@ public final class Command implements Runnable {
       return rep.toString();
    }
 
-   /** Retourne la dernière commande exécutée */
+   /** Retourne la derniï¿½re commande exï¿½cutï¿½e */
    protected String getLastCmd() {
       return lastCmd;
    }
 
-   /** Retourne le code du calcul algébrique ou -1 si non trouvé */
+   /** Retourne le code du calcul algï¿½brique ou -1 si non trouvï¿½ */
    private int findAlgebre(String s) {
       int rep = -1;
 
@@ -3367,7 +3367,7 @@ public final class Command implements Runnable {
       else if( s.startsWith("*") ) rep = PlanImageAlgo.MUL;
       else if( s.startsWith("/") ) rep = PlanImageAlgo.DIV;
 
-      // On vérifie que le paramètre est soit un scalaire, soit un nom de plan
+      // On vï¿½rifie que le paramï¿½tre est soit un scalaire, soit un nom de plan
       // Si ce n'est pas le cas, il peut s'agit d'un identificateur d'objet astro
       if( rep != -1 ) {
          String param = s.substring(1).trim();
@@ -3390,12 +3390,12 @@ public final class Command implements Runnable {
 
    /**
     * Retourne true si la chaine est un MOC suivant la syntaxe du genre 3/123-124 156 ...
-    * éventuellement préfixée par 's' et/ou 't' */
+    * ï¿½ventuellement prï¿½fixï¿½e par 's' et/ou 't' */
    
    private boolean findMoc(String s) {
       boolean slash=false;
       
-      // On teste l'absence de caractères incompatibles avec un MOC
+      // On teste l'absence de caractï¿½res incompatibles avec un MOC
       boolean space=false;
       boolean dash=false;      
       for( char c : s.toCharArray() ) {
@@ -3420,7 +3420,7 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Traitement d'une commande aladin en mode immédiat (pas d'attente de synchronization)
+    * Traitement d'une commande aladin en mode immï¿½diat (pas d'attente de synchronization)
     * @param s la commande a traiter
     */
    protected void execNow(String s) {
@@ -3437,7 +3437,7 @@ public final class Command implements Runnable {
    private String exec(String s1, boolean verbose, boolean flagOnlyFunction, boolean flagUrgent) {
       if( a.isFullScreen() && !a.fullScreen.isVisible() ) a.fullScreen.setVisible(true);
 
-      // mémorisation du dernier commentaire pour une éventuelle définition de fonction
+      // mï¿½morisation du dernier commentaire pour une ï¿½ventuelle dï¿½finition de fonction
       if( s1.trim().charAt(0) == '#' ) {
          if( comment == null ) comment = new StringBuffer(s1.trim().substring(1));
          else comment.append(" " + s1.trim().substring(1));
@@ -3448,18 +3448,18 @@ public final class Command implements Runnable {
       syncServer();
 
       if( !filterMode && fonct == null ) {
-         // Petit ajustement éventuelle pour une commande "=expression" ou "expression="
+         // Petit ajustement ï¿½ventuelle pour une commande "=expression" ou "expression="
          s1 = evalAdjust(s1.trim());
 
-         // Petit adjustement éventuelle pour une commande " val Unit1 in Unit2"
+         // Petit adjustement ï¿½ventuelle pour une commande " val Unit1 in Unit2"
          s1 = convertAdjust(s1);
       }
 
-      // Compatibilité pour les commandes "region" de DS9
+      // Compatibilitï¿½ pour les commandes "region" de DS9
       try {
          String s2 = ds9.translate(s1);
          if( s2 != null ) {
-            if( s2.length() == 0 ) return ""; // Commande jugée inutile (par exemple changement de frame)
+            if( s2.length() == 0 ) return ""; // Commande jugï¿½e inutile (par exemple changement de frame)
             return execScript(s2, verbose, flagOnlyFunction, flagUrgent);
          }
       } catch( Exception e ) {
@@ -3467,7 +3467,7 @@ public final class Command implements Runnable {
          return "";
       }
 
-      // Extraction d'un éventuel préfixe désignant le plan target
+      // Extraction d'un ï¿½ventuel prï¿½fixe dï¿½signant le plan target
       // ex: toto = get Simbad m1
       StringBuffer tp = new StringBuffer();
       String s = getTargetPlane(tp, s1);
@@ -3485,19 +3485,19 @@ public final class Command implements Runnable {
          cmd = "copy";
       }
 
-      // Sinon, simple récupération des paramètres
+      // Sinon, simple rï¿½cupï¿½ration des paramï¿½tres
       else param = s.substring(cmd.length()).trim();
       int n, fct;
 
       lastCmd = cmd;
 
-      // Faut-il faire écho de la commande ?
+      // Faut-il faire ï¿½cho de la commande ?
       boolean echo = verbose && (a.getInstanceId() > 0 || a.getInstanceId() == 0 && !a.flagLaunch);
 
       // Echo sur la sortie standard
       if( echo || Aladin.NOGUI ) println("[" + s1 + "]...");
 
-      // sync automatique pour les commandes concernées
+      // sync automatique pour les commandes concernï¿½es
       if( !flagUrgent && syncMode == SYNCON && needSync(cmd) ) {
          if( !isSync() ) a.trace(4, "Command.exec() : command \"" + cmd + "\" needs sync...");
          sync();
@@ -3670,7 +3670,7 @@ public final class Command implements Runnable {
             m = 1;
          }
          Util.pause((int) (Math.round(m * 1000)));
-      } else if( cmd.equalsIgnoreCase("timeout") ) { // pour compatibilité
+      } else if( cmd.equalsIgnoreCase("timeout") ) { // pour compatibilitï¿½
          return execSetconfCmd("timeout=" + param);
       } else if( cmd.equalsIgnoreCase("reticle") ) {
          int mode = param.equals("off") ? 0 : param.equals("large") ? 2 : 1;
@@ -3686,7 +3686,7 @@ public final class Command implements Runnable {
          a.calque.repaintAll();
       } else if( cmd.equalsIgnoreCase("flipflop") ) {
          execFlipFlop(param, label);
-      } else if( cmd.equalsIgnoreCase("reverse") ) { // Pour compatibilité
+      } else if( cmd.equalsIgnoreCase("reverse") ) { // Pour compatibilitï¿½
          boolean flag = !param.equals("off");
          execCM(flag ? "reverse" : "noreverse");
       } else if( cmd.equalsIgnoreCase("blink") ) {
@@ -3784,13 +3784,13 @@ public final class Command implements Runnable {
       } else if( cmd.equalsIgnoreCase("kernel") ) {
          String s2 = "";
 
-         // Pas de paramètre => retourne la liste des noms de kernels
+         // Pas de paramï¿½tre => retourne la liste des noms de kernels
          if( param.trim().length() == 0 ) s2 = a.kernelList.getKernelList();
 
          else {
-            // tente d'ajouter une définition suivant la syntaxe toto=1 1 1 1 1 1 1 1 1
+            // tente d'ajouter une dï¿½finition suivant la syntaxe toto=1 1 1 1 1 1 1 1 1
             if( param.indexOf('=') > 0 ) {
-               double pixRes = 1 / 3600.; // par défaut 1" par pixel
+               double pixRes = 1 / 3600.; // par dï¿½faut 1" par pixel
                try {
                   pixRes = a.view.getCurrentView().pref.projd.getPixResDelta();
                } catch( Exception e ) {
@@ -3801,7 +3801,7 @@ public final class Command implements Runnable {
                   printConsole("!!! conv error: kernel definition error");
                   return "error";
                }
-               // Affichage les kernels qui correspondent au masque passé en paramètre
+               // Affichage les kernels qui correspondent au masque passï¿½ en paramï¿½tre
             } else s2 = a.kernelList.getKernelDef(param);
          }
          print(s2);
@@ -3900,7 +3900,7 @@ public final class Command implements Runnable {
          else {
             Plan p = null;
             Plan plan = getNumber(p1, 1, false, false);
-            if( plan == null && p2.length() == 0 ) { // plan par défaut (
+            if( plan == null && p2.length() == 0 ) { // plan par dï¿½faut (
                p2 = p1;
                p = a.calque.getFirstSelectedPlan();
             } else p = plan;
@@ -3948,13 +3948,13 @@ public final class Command implements Runnable {
          if( param.equals("lock") || param.equals("-lock") || param.equals("ROI") || param.equals("-ROI") ) a.view.freeLock();
          else if( param.equals("all") || param.equals("-all") ) a.calque.FreeAll();
 
-         // Suppression par la sélection
+         // Suppression par la sï¿½lection
          else if( param.length() == 0 ) {
             a.delete();
 
-            // Suppression par les paramètres
+            // Suppression par les paramï¿½tres
          } else {
-            // Les vues éventuelles
+            // Les vues ï¿½ventuelles
             ViewSimple v[] = getViews(param);
             if( v.length > 0 ) a.view.free(v);
 
@@ -4076,7 +4076,7 @@ public final class Command implements Runnable {
                   tmp = st.nextToken();
                }
 
-               // Un format indiqué ?
+               // Un format indiquï¿½ ?
                if( tmp.startsWith("-jpeg") || tmp.startsWith("-jpg") ) {
                   mode = Save.JPEG;
                   try {
@@ -4154,7 +4154,7 @@ public final class Command implements Runnable {
                return tmp;
             } else file = Tok.unQuote(file);
 
-            // Ajustement de la taille dans le mode NOGUI & attente en conséquence (PlanBG)
+            // Ajustement de la taille dans le mode NOGUI & attente en consï¿½quence (PlanBG)
             if( a.NOGUI ) {
                ViewSimple v = a.view.getCurrentView();
                if( w == -1 || h == -1 ) {
@@ -4164,7 +4164,7 @@ public final class Command implements Runnable {
                v.paintComponent(null);
             }
 
-            // Mode Image non précisé ?
+            // Mode Image non prï¿½cisï¿½ ?
             if( mode == 0 || mode == Save.LK || mode == Save.LK_FLEX ) {
                if( file != null && (file.endsWith(".jpg") || file.endsWith(".jpeg")) ) mode |= Save.JPEG;
                else if( file != null && file.endsWith(".eps") ) mode |= Save.EPS;
@@ -4210,7 +4210,7 @@ public final class Command implements Runnable {
                String planID = st.nextToken();
 
                boolean addXY = false;
-               // Paramètre -votable ou -fits ?
+               // Paramï¿½tre -votable ou -fits ?
                if( planID.charAt(0) == '-' ) {
                   if( planID.indexOf("votable") > 0 ) {
                      vot = true;
@@ -4233,7 +4233,7 @@ public final class Command implements Runnable {
                   return tmp;
                }
 
-               // Pour compatibilité ou format par l'extension
+               // Pour compatibilitï¿½ ou format par l'extension
                if( param.endsWith(" votable") || param.endsWith(" VOTABLE") || param.endsWith(".xml")
                      || param.endsWith(".XML") ) {
                   vot = true;
@@ -4358,7 +4358,7 @@ public final class Command implements Runnable {
          return "";
       }
 
-      // thomas : cross-match (les colonnes de coordonnées sont automatiquement reconnues grace aux UCDs)
+      // thomas : cross-match (les colonnes de coordonnï¿½es sont automatiquement reconnues grace aux UCDs)
       else if( cmd.equals("xmatch") ) return execXMatchCmd(s, label);
 
       // thomas
@@ -4465,7 +4465,7 @@ public final class Command implements Runnable {
          }
       }
 
-      // Peut être une commande associée à un plugin ?
+      // Peut ï¿½tre une commande associï¿½e ï¿½ un plugin ?
       else if( a.plugins != null && a.plugins.findScript(cmd) != null ) {
          st = new Tok(param);
          String p[] = st.getStrings();
@@ -4475,7 +4475,7 @@ public final class Command implements Runnable {
       // S'agit-il d'un traitement d'une variable
       else if( execVar(s) ) return "";
 
-      // Bon on va donc simplement activer Sesame et déplacer le repere
+      // Bon on va donc simplement activer Sesame et dï¿½placer le repere
       else {
          return execGetCmd(s, label, false);
       }
@@ -4489,7 +4489,7 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Retourne un tableau de ViewSimple correspondant aux identificateurs de vues passés en paramètre (ex: A2 B3 C1...).
+    * Retourne un tableau de ViewSimple correspondant aux identificateurs de vues passï¿½s en paramï¿½tre (ex: A2 B3 C1...).
     * (Uniquement les vues visibles)
     */
    private ViewSimple[] getViews(String param) {
@@ -4516,8 +4516,8 @@ public final class Command implements Runnable {
    static final private int UNNORTHUP = 5;
 
    /**
-    * Gestion des commandes traitant plusieurs vues simultanément ou toutes les vues sélectionnées.
-    * @param param la liste des identificateurs de vues ou "" si les vues sélectionnées
+    * Gestion des commandes traitant plusieurs vues simultanï¿½ment ou toutes les vues sï¿½lectionnï¿½es.
+    * @param param la liste des identificateurs de vues ou "" si les vues sï¿½lectionnï¿½es
     * @param cmd LOCKVIEW,UNLOCKVIEW,ATTACHVIEW,DETACHVIEW
     */
    private void execViewCmd(String param, int cmd) {
@@ -4555,7 +4555,7 @@ public final class Command implements Runnable {
    /**
     * Cree un nouveau filtre en se basant sur la definition contenue dans def
     * @param def - definition complete du filtre a creer
-    * @return retourne le planFilter ou null si problème
+    * @return retourne le planFilter ou null si problï¿½me
     */
    protected PlanFilter createFilter(String def) {
 
@@ -4578,7 +4578,7 @@ public final class Command implements Runnable {
 
    /**
     * Traitement de la commande "addcol"
-    * @param s commande complète
+    * @param s commande complï¿½te
     */
    private void execAddCol(String s) {
       s = s.trim();
@@ -4636,7 +4636,7 @@ public final class Command implements Runnable {
 
       PlanCatalog pc = (PlanCatalog) plan;
 
-      // on vérifie que le nom de la nouvelle colonne n'est pas déja utilisé !
+      // on vï¿½rifie que le nom de la nouvelle colonne n'est pas dï¿½ja utilisï¿½ !
       if( FrameColumnCalculator.colExist(name, pc) ) {
          printConsole("!!! addcol error : A column with label \"" + name + "\"already exists in this plane !");
          println(syntax);
@@ -4683,13 +4683,13 @@ public final class Command implements Runnable {
       return function.size();
    }
 
-   /** Retourne la fonction à l'indice indiqué */
+   /** Retourne la fonction ï¿½ l'indice indiquï¿½ */
    public Function getFunction(int i) {
       if( function == null || i < 0 || i >= function.size() ) return null;
       return function.get(i);
    }
 
-   /** Retourne la fonction repérée par son nom, ou null si introuvable */
+   /** Retourne la fonction repï¿½rï¿½e par son nom, ou null si introuvable */
    public Function getFunction(String name) {
       int i = findFunction(name);
       return i < 0 ? null : getFunction(i);
@@ -4741,8 +4741,8 @@ public final class Command implements Runnable {
       return false;
    }
 
-   // Ajustement d'une syntaxe partielle d'une commande convto où seul
-   // le mot clé " to " est repéré => insertion de la commande "convert" en préfixe
+   // Ajustement d'une syntaxe partielle d'une commande convto oï¿½ seul
+   // le mot clï¿½ " to " est repï¿½rï¿½ => insertion de la commande "convert" en prï¿½fixe
    private String convertAdjust(String s) {
       if( s.indexOf("convert") == 0 ) return s;
       int n = s.indexOf(" into ");
@@ -4751,7 +4751,7 @@ public final class Command implements Runnable {
       return "convert " + s.substring(0, n) + " into " + s.substring(n + 4);
    }
 
-   // Traitement d'une commande de conversion d'unité
+   // Traitement d'une commande de conversion d'unitï¿½
    private String execConvert(String s) {
       String res;
       if( s.trim().length() == 0 ) {
@@ -4795,7 +4795,7 @@ public final class Command implements Runnable {
       return res;
    }
    
-   // Conversion d'une valeur pour une conversion, uniquement si c'est nécessaire,
+   // Conversion d'une valeur pour une conversion, uniquement si c'est nï¿½cessaire,
    // S'il n'y a qu'une suite de chiffre, on laisse tel que
    static private String computeConvert( String s ) throws Exception {
       for( char c : s.toCharArray() ) {
@@ -4804,7 +4804,7 @@ public final class Command implements Runnable {
       return s;
    }
    
-   // Traitement de l'évaluation d'une expression arithmétique
+   // Traitement de l'ï¿½valuation d'une expression arithmï¿½tique
    private String execEval(String p) {
       String res;
       if( p.trim().length() == 0 ) {
@@ -4824,7 +4824,7 @@ public final class Command implements Runnable {
       return res;
    }
 
-   // Petit ajustement éventuel pour une commande "=expression" ou "expression="
+   // Petit ajustement ï¿½ventuel pour une commande "=expression" ou "expression="
    // afin de retourner la chaine "= expression"
    private String evalAdjust(String s) {
       int n = s.length();
@@ -4841,14 +4841,14 @@ public final class Command implements Runnable {
          
          boolean flagLot = false;
          
-         // Exécution en lot ?
+         // Exï¿½cution en lot ?
          int i = p.indexOf(BATCH);
          if( i==0 ) {
             flagLot=true;
             p = p.substring(BATCH.length());
          }
 
-         // Nom de la fonction et paramètres éventuels ?
+         // Nom de la fonction et paramï¿½tres ï¿½ventuels ?
          String name = p;
          String param = "";
          i = p.indexOf('(');
@@ -4907,8 +4907,8 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Récupération d'une liste de fonctions
-    * @param mode 0 - les fonctions bookmarkées, 1- Les fonctions locales
+    * Rï¿½cupï¿½ration d'une liste de fonctions
+    * @param mode 0 - les fonctions bookmarkï¿½es, 1- Les fonctions locales
     */
    private Vector<Function> getFunctions(int mode) {
       Vector<Function> v = new Vector<>(10);
@@ -4922,7 +4922,7 @@ public final class Command implements Runnable {
       return v;
    }
 
-   /************************************** Test de non régression du code **************************************/
+   /************************************** Test de non rï¿½gression du code **************************************/
 
 //   protected String TEST = "info Aladin test script in progress...;" + "reset;" + "setconf frame=ICRS;" + "setconf timeout=1;"
 //         + "mview 4;" + "get ESO(dss1,25,25),Aladin(DSS2) M1;" + "get skyview(Surveys=2MASS,400,Sin) m1;" + "cview DSS* A1;"
@@ -4942,10 +4942,10 @@ public final class Command implements Runnable {
 //         + "rm XMatch;" + "get Fov(HST);" + "mv HST Fold;" + "export CDS/Simbad Cat.xml;" + "export NED Cat1.tsv;"
 //         + "export Crop Img.jpg;" + "rm CDS/Simbad NED Crop;" + "load Img.jpg;" + "grey Img.jpg;" + "rm A2;" + "load Cat.xml;"
 //         + "load Cat1.tsv;" + "mv Img.jpg Fold;" + "mv Cat.xml Fold;" + "mv Cat1.tsv Fold;" + "set Img.jpg opacity=20;"
-//         + "collapse Fold;" + "get hips(SHASSA);" + "set proj=AITOFF;" + "zoom 180°;" + "rm B1;" + "get hips(Mellinger);" + "m1;"
+//         + "collapse Fold;" + "get hips(SHASSA);" + "set proj=AITOFF;" + "zoom 180ï¿½;" + "rm B1;" + "get hips(Mellinger);" + "m1;"
 //         + "zoom 15';" + "rm B1;" + "set Melling* opacity=30;" +
 //         // "get hips(\"Simbad density\");" +
-//         "set proj=CARTESIAN;" + "cm eosb reverse log;" + "M1;" + "zoom 30°;" + "set opacity=30;" + "rm B1;"
+//         "set proj=CARTESIAN;" + "cm eosb reverse log;" + "M1;" + "zoom 30ï¿½;" + "set opacity=30;" + "rm B1;"
 //         + "cview -plot I/252(Imag,R2mag) B1;" + "sync;" + "select B-V;" + "grid on;" + "setconf overlays=-label;"
 //         + "info The end !;";
 
@@ -5046,11 +5046,11 @@ public final class Command implements Runnable {
       + "collapse Fold;"
       + "get hips(SHASSA);"
       + "set proj=AITOFF;"
-      + "zoom 180°;"
+      + "zoom 180ï¿½;"
       + "Moc = get MOC(*SHASSA);"
       + "draw newtool(DrawPlan);"
       + "select DrawPlan;"
-      + "draw circle(216.64216290,-06.68295022,30°);"
+      + "draw circle(216.64216290,-06.68295022,30ï¿½);"
       + "MocCircle = cmoc;"
       + "rm DrawPlan;"
       + "Moc = cmoc -sub Moc MocCircle;"
@@ -5065,7 +5065,7 @@ public final class Command implements Runnable {
       + "set proj=CARTESIAN;"
       + "cm eosb reverse log;"
       + "M1;"
-      + "zoom 30°;"
+      + "zoom 30ï¿½;"
       + "#set opacity=30;"
       + "rm B1;"
       + "cview -plot I/284(Imag,R2mag) B1;"
@@ -5076,7 +5076,7 @@ public final class Command implements Runnable {
       + "info The end !;";
       
    /**
-    * Test des vues et des opérations arithmétiques sur les images 1) Je crée une image test
+    * Test des vues et des opï¿½rations arithmï¿½tiques sur les images 1) Je crï¿½e une image test
     */
    protected void testscript(String param) {
       a.console.setVisible(true);
@@ -5087,7 +5087,7 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Test la qualité du serveur et du réseau pour le HiPS courant Les résultats s'affiche dans la console/pad
+    * Test la qualitï¿½ du serveur et du rï¿½seau pour le HiPS courant Les rï¿½sultats s'affiche dans la console/pad
     */
    protected void testnet(String param) {
       boolean flagUniq=true;
@@ -5152,7 +5152,7 @@ public final class Command implements Runnable {
       System.out.println(res);
    }
    
-   /** Test de lecture et d'écriture du disque */
+   /** Test de lecture et d'ï¿½criture du disque */
    private void testperf(final String param) {
       final long GB = 1024 * 1024 * 1024;
       (new Thread() {
@@ -5259,7 +5259,7 @@ public final class Command implements Runnable {
       }).start();
    }
 
-   /** Méthode pour saturer les caches mémoires systèmes en lisant le début de l'arborescence du disque */
+   /** Mï¿½thode pour saturer les caches mï¿½moires systï¿½mes en lisant le dï¿½but de l'arborescence du disque */
    private long testDiskFlush(File dir, long size) {
       if( size <= 0 ) return size;
 
@@ -5291,7 +5291,7 @@ public final class Command implements Runnable {
 
    /**
     * Test format et calibration des images et des catalogues
-    * @param le nom des plans créés
+    * @param le nom des plans crï¿½ï¿½s
     * @param param WIDTH HEIGHT RAJ DEJ PIXELSIXE SIN|TAN|... BITPIX
     * @param mode 0:image, 1:catalogue, 2:les deux
     */
@@ -5343,7 +5343,7 @@ public final class Command implements Runnable {
       }
    }
 
-   // // Juste pour montrer à Anaïs
+   // // Juste pour montrer ï¿½ Anaï¿½s
    // private void testCreateRGB(String param) {
    // try {
    // StringTokenizer st = new StringTokenizer(param);
@@ -5356,7 +5356,7 @@ public final class Command implements Runnable {
    // }
 
    /**
-    * Création d'un fichier TSV de test
+    * Crï¿½ation d'un fichier TSV de test
     */
    protected void createTSVTest(String file, int width, int height, double raj, double dej, double pxSize) {
       try {
@@ -5416,7 +5416,7 @@ public final class Command implements Runnable {
       gf.write(b);
    }
 
-   /** Création d'une image de test */
+   /** Crï¿½ation d'une image de test */
    protected void createFitsTest(String file, int width, int height, int bitpix, double raj, double dej, double pxSize,
          int type) {
       try {
@@ -5474,19 +5474,19 @@ public final class Command implements Runnable {
          gf.write(bb);
 
          // Si image HUGE, on travaille ligne par ligne
-         // sinon d'un bloc avec génération des étoiles tests
+         // sinon d'un bloc avec gï¿½nï¿½ration des ï¿½toiles tests
          int n = Math.abs(bitpix) / 8;
          boolean flagHuge = width * height * n > Aladin.LIMIT_HUGEFILE;
 
-         // Générations des pixels
+         // Gï¿½nï¿½rations des pixels
          byte out[] = new byte[width * n * (flagHuge ? 1 : height)];
          cx--;
-         cy--; // on compte à partir de 0 et non de 1 comme en FITS
+         cy--; // on compte ï¿½ partir de 0 et non de 1 comme en FITS
 
          double fct = (width + height) / 1600.;
          int pos = 0;
 
-         // Génération d'une grille de coordonnées
+         // Gï¿½nï¿½ration d'une grille de coordonnï¿½es
          for( int lig = 0; lig < height; lig++ ) {
             for( int col = 0; col < width; col++ ) {
                double c = lig == cy && col == cx ? 900
@@ -5506,7 +5506,7 @@ public final class Command implements Runnable {
             }
          }
 
-         // Génération d'étoiles gaussiennes
+         // Gï¿½nï¿½ration d'ï¿½toiles gaussiennes
          if( !flagHuge ) {
             int sens = 1;
             int ik = 1;
@@ -5629,7 +5629,7 @@ public final class Command implements Runnable {
       System.out.println(" => "+(t1-t)+"ms");
    }
    
-   // Nettoyage du cache par suppression du fichier (après copie)
+   // Nettoyage du cache par suppression du fichier (aprï¿½s copie)
    private void bigFileClean1(int nb,String name)  throws Exception {
       System.out.print("Cleaning OS pages for "+name);
       long t = System.currentTimeMillis();
@@ -5677,7 +5677,7 @@ public final class Command implements Runnable {
       if( verbose ) System.out.println(" => "+(t1-t)+"ms");
    }
    
-   // lecture séquentielle
+   // lecture sï¿½quentielle
    private void bigFileReadSeq(int nb, String name) throws Exception { bigFileReadSeq(nb,name,true); }
    private void bigFileReadSeq(int nb, String name,boolean verbose) throws Exception {
       long t = System.currentTimeMillis();
@@ -5699,7 +5699,7 @@ public final class Command implements Runnable {
       if( verbose ) System.out.println(" => "+(t1-t)+"ms for "+i+" slices (tot="+tot+")");
   }
 
-   // lecture aléatoire
+   // lecture alï¿½atoire
    private void bigFileReadRand(int nb, String name) throws Exception {
       long t = System.currentTimeMillis();
       byte buf[] = new byte[BUF];

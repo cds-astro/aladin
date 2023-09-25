@@ -148,7 +148,7 @@ public class ServerFile extends Server implements XMLConsumer {
       sc.setBounds(XTAB1,y,XWIDTH-XTAB1*2,230); y+=230;
       add(sc);
 
-      // Indication du component à maximiser
+      // Indication du component ï¿½ maximiser
       setMaxComp(sc);
    }
 
@@ -205,8 +205,8 @@ public class ServerFile extends Server implements XMLConsumer {
    //    	return creatLocalPlane(null,label,origin,null,null,is);
    //    }
 
-   /** Retourne le nom du fichier ou de l'url en enlevant un éventuel suffixe
-    * [nnn] indiquant une extension particulière d'un MEF */
+   /** Retourne le nom du fichier ou de l'url en enlevant un ï¿½ventuel suffixe
+    * [nnn] indiquant une extension particuliï¿½re d'un MEF */
    private String getNameWithoutBrackets(String s) {
       if( s==null ) return null;
       int n = s.length();
@@ -227,7 +227,7 @@ public class ServerFile extends Server implements XMLConsumer {
             : Util.FS);
       label=(i>=0)?f.substring(i+1):f;
 
-      // Suppression d'une extension éventuelle
+      // Suppression d'une extension ï¿½ventuelle
       i = label.lastIndexOf('.');
       if( i>0 && label.length()-i<=5 ) label = label.substring(0,i);
       
@@ -236,7 +236,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
    /** Creation d'un plan issu d'un chargement d'un fichier AJ, fits ou autre
     * @param f path du fichier
-    * @param resNode noeud décrivant le fichier à charger, peut être <i>null</i>
+    * @param resNode noeud dï¿½crivant le fichier ï¿½ charger, peut ï¿½tre <i>null</i>
     */
    protected int creatLocalPlane(String f, String label, String origin, Obj o, ResourceNode resNode, InputStream is,
 			Server server, String target, String radius) {
@@ -258,7 +258,7 @@ public class ServerFile extends Server implements XMLConsumer {
          try {
             label = getDefaultLabelIfRequired( label, getLabelFromFile(f) );
 
-            // Analyse du contenu d'un répertoire local
+            // Analyse du contenu d'un rï¿½pertoire local
             if( is==null && !(f.startsWith("http:") || f.startsWith("https:"))) {
                try {
                   final File x = new File(f);
@@ -266,15 +266,15 @@ public class ServerFile extends Server implements XMLConsumer {
                      //                     setSync(true);
                      Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
 
-                     // recherche des propriétés d'un éventuel HiPS
+                     // recherche des propriï¿½tï¿½s d'un ï¿½ventuel HiPS
                      TreeObjDir gSky=null;
                      try { gSky = new TreeObjDir(aladin, f, true); } catch( Exception e ) { }
 
-                     // HiPS trouvé => on le charge
+                     // HiPS trouvï¿½ => on le charge
                      if( gSky!=null ) {
                         n=aladin.calque.newPlanBG(gSky,label,target,radius);
 
-                     // Ce n'est pas un Hips => exploration du répertoire
+                     // Ce n'est pas un Hips => exploration du rï¿½pertoire
                      } else {
 
                         final ServerFile th = this;
@@ -318,7 +318,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
             TreeObjDir gSky=null;
 
-            //Pas de stream, juste une URL en HTTP => découverte du contenu et/ou création du stream
+            //Pas de stream, juste une URL en HTTP => dï¿½couverte du contenu et/ou crï¿½ation du stream
             if( is==null && (f.startsWith("http:")||f.startsWith("https:")) ) {
 
                // S'agirait-il d'un HiPS distant ?
@@ -353,7 +353,7 @@ public class ServerFile extends Server implements XMLConsumer {
                }
             }
 
-            // support FTP --> ça fonctionne avec par exemple une URL du type ftp://user:passwd@server/....
+            // support FTP --> ï¿½a fonctionne avec par exemple une URL du type ftp://user:passwd@server/....
             else if( is==null && f.indexOf("ftp://")>=0  ) {
                u = new URL(getNameWithoutBrackets(f));
                in = Util.openStream(u);
@@ -400,7 +400,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
                String ustr = u==null ? null : u.toString();
 
-               // Dans le cas d'un chargement d'une région ou d'un ancien contour, on va forcer la création d'un nouveau plan
+               // Dans le cas d'un chargement d'une rï¿½gion ou d'un ancien contour, on va forcer la crï¿½ation d'un nouveau plan
                if( (type & (MyInputStream.DS9REG /* |MyInputStream.AJTOOL */))!=0 ) {
                   //               aladin.command.resetPreviousDrawing();
                   aladin.calque.newPlanTool(null);
@@ -440,17 +440,32 @@ public class ServerFile extends Server implements XMLConsumer {
                   } else n=aladin.calque.newPlanImage(f,in,label,origin,o,resNode);
                }
                else if( (type & MyInputStream.FOV_ONLY) != 0 ) {
-                  // un nouveau plan sera créé sur la pile si la description contient les PARAM de position
+                  // un nouveau plan sera crï¿½ï¿½ sur la pile si la description contient les PARAM de position
                   boolean newPlane = (n=aladin.processFovVOTable(in,null,true))>=0;
-                  // si on a juste ajouté un FOV à la liste des FOV chargés,
-                  // on se place sur cet onglet et on sélectionne le FOV en question
+                  // si on a juste ajoutï¿½ un FOV ï¿½ la liste des FOV chargï¿½s,
+                  // on se place sur cet onglet et on sï¿½lectionne le FOV en question
                   if( !newPlane ) {
-                     n=-2;  // Pour éviter une erreur via VOAPP (--> c'est du propre !)
+                     n=-2;  // Pour ï¿½viter une erreur via VOAPP (--> c'est du propre !)
                      aladin.dialog.setCurrent(ServerDialog.FIELD);
                      ((ServerFoV)aladin.dialog.server[ServerDialog.FIELD]).selectFOV(ServerFoV.idLastRegistered);
                   }
                } else if( (type & MyInputStream.DATALINK) != 0 && aladin.mesure.activeDataLinkWord != null) {
-                  aladin.mesure.showAssociatedDatalinks(f, o);
+            	   
+            	   if( aladin.confirmation("Popup Menu ?") ) {
+            		   aladin.mesure.showAssociatedDatalinks(f, o); 
+            		   
+         	      }
+            	   else
+            	   {
+         	      
+            	   aladin.mesure.activeDataLinkWord = null ;
+            	   aladin.mesure.activeDataLinkSource = (Source) o ;
+            	    //aladin.calque.newPlanCatalog(f,in); 
+            	    //System.out.println();
+            	    //aladin.execAsyncCommand("select "+f);
+            		 aladin.execAsyncCommand("DataLink=load "+f+"; select DataLink");  
+            	   }    
+            		  
                }
                else if( (type & (MyInputStream.ASTRORES|MyInputStream.VOTABLE|
                      MyInputStream.CSV|MyInputStream.BSV|MyInputStream.IPAC))!=0 ) {
@@ -458,7 +473,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   else if( f!=null) n=aladin.calque.newPlanCatalog(f,in);
                   else n=aladin.calque.newPlanCatalog(in,label,origin, server, url, query, requestId);
 
-                  // C'est peut être une image native ?
+                  // C'est peut ï¿½tre une image native ?
                } else if( (type & MyInputStream.NativeImage())!=0 ) {
                   if( u!=null ) {
                      n=aladin.calque.newPlanImageColor(u,in,PlanImage.OTHER,
@@ -467,18 +482,18 @@ public class ServerFile extends Server implements XMLConsumer {
                            o,resNode);
                   } else n=aladin.calque.newPlanImageColor(f,null,in,resNode);
 
-                  // C'est peut être un dico GLU ?
+                  // C'est peut ï¿½tre un dico GLU ?
                } else if( (type & MyInputStream.GLU)!=0 ) {
                   if( aladin.glu.loadGluDic(new DataInputStream(in), false,localFile) ) {
                      aladin.glu.reload(false,true);
                      n=1;
                   }
 
-                  // C'est peut être un fichier de properties ?
+                  // C'est peut ï¿½tre un fichier de properties ?
                } else if( (type & MyInputStream.PROP)!=0 ) {
 
                   // Dans le cas d'un fichier properties, on passe le path ou l'url pour 
-                  // fournir l'accès au HiPS associé dans le cas où il n'est pas décrit
+                  // fournir l'accï¿½s au HiPS associï¿½ dans le cas oï¿½ il n'est pas dï¿½crit
                   // par un hips_service_url
                   String path = null;
                   int i = (f==null /* || !mode.equals("file")*/ ) ? -1 : f.lastIndexOf("properties");
@@ -488,7 +503,7 @@ public class ServerFile extends Server implements XMLConsumer {
                      n=1;
                   }
 
-                  // C'est peut être un planBG via HTTP
+                  // C'est peut ï¿½tre un planBG via HTTP
                } else /* if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
 
                // Cubes ?
@@ -631,7 +646,7 @@ public class ServerFile extends Server implements XMLConsumer {
       super.actionPerformed(e);
    }
 
-   /** Ouverture de la fenêtre de sélection d'un fichier */
+   /** Ouverture de la fenï¿½tre de sï¿½lection d'un fichier */
    protected void browseFile() {
       String path = Util.dirBrowser(description, aladin.getDefaultDirectory(),file,2);
       if( path==null ) return;
@@ -649,7 +664,7 @@ public class ServerFile extends Server implements XMLConsumer {
       submit();
    }
 
-   //   /** Ouverture de la fenêtre de sélection d'un fichier */
+   //   /** Ouverture de la fenï¿½tre de sï¿½lection d'un fichier */
    //   protected void browseFile() {
    //      FileDialog fd = new FileDialog(aladin.dialog,description);
    //      aladin.setDefaultDirectory(fd);
@@ -661,7 +676,7 @@ public class ServerFile extends Server implements XMLConsumer {
    //      aladin.memoDefaultDirectory(fd);
    //      String dir = fd.getDirectory();
    //      String name =  fd.getFile();
-   //      // si on n'a pas changé le nom, on a selectionne un repertoire
+   //      // si on n'a pas changï¿½ le nom, on a selectionne un repertoire
    //      boolean isDir = false;
    //      if( name!=null && name.equals(DEFAULT_FILENAME) ) {
    //         name = "";
@@ -719,15 +734,15 @@ public class ServerFile extends Server implements XMLConsumer {
    private Vector vField;	// Vecteur contenant les FIELDS de la table courante
    private Legende leg=null;	// Legende de la table courante
    private Plan plan=null;	// Plan courant
-   private int footprintIdx=-1; // Indice de colonne d'un éventuel footprint associé à chaque source
+   private int footprintIdx=-1; // Indice de colonne d'un ï¿½ventuel footprint associï¿½ ï¿½ chaque source
    private ViewMemoItem vmi;  // ViewMemoItem courant
-   private int firstView;   //indice de la première vue à afficher
+   private int firstView;   //indice de la premiï¿½re vue ï¿½ afficher
    private double ra=0;		// RA du centre du plan courant
    private double de=0;		// DE du centre du plan courant
    private double rm=0;		// SIZE du plan courant
    private int proj=0;		// Type de la projection courante (cf Projection.NAME[])
    private int typePlan=-1;	// Type du plan courant (cf Plan.Type)
-   private boolean flagCatalogSource=false; // true si le plan courant est TOOL et que celui-ci contient également un catalogue de sources
+   private boolean flagCatalogSource=false; // true si le plan courant est TOOL et que celui-ci contient ï¿½galement un catalogue de sources
    private String rec;		// Enregistrement courant dans l'analyse des lignes d'une table
    private Obj prevO=null;			// Dernier objet tool inserer dans la table courante
    private boolean prevFlagSuite=false;		// Dernier flag de suivi de ligne
@@ -851,7 +866,7 @@ public class ServerFile extends Server implements XMLConsumer {
                if( (s=(String)atts.get("hipsinPNG"))!=null )     pbg.inPNG = (new Boolean(s)).booleanValue();
                if( (s=(String)atts.get("hipshasMoc"))!=null )    pbg.hasMoc = (new Boolean(s)).booleanValue();
                if( (s=(String)atts.get("hipshasHpxFinder"))!=null )   pbg.hasHpxFinder = (new Boolean(s)).booleanValue();
-               if( (s=(String)atts.get("hipsbody"))!=null )      pbg.body = s;  // Pour compatibilité - à virer quand on veut
+               if( (s=(String)atts.get("hipsbody"))!=null )      pbg.body = s;  // Pour compatibilitï¿½ - ï¿½ virer quand on veut
                if( (s=(String)atts.get("hipsframeOrigin"))!=null )   pbg.frameOrigin = Integer.parseInt(s);
                if( (s=(String)atts.get("hipsframeDrawing"))!=null )  pbg.frameDrawing = Integer.parseInt(s);
                if( (s=(String)atts.get("hipslive"))!=null )      pbg.live = (new Boolean(s)).booleanValue();
@@ -920,7 +935,7 @@ public class ServerFile extends Server implements XMLConsumer {
             break;
          default: plan=null;
       }
-      // Traitements génériques
+      // Traitements gï¿½nï¿½riques
       if( plan!=null ) {
          if( (s=(String)atts.get("label"))!=null )      plan.label = s;
          if( (s=(String)atts.get("body"))!=null )       plan.body = s;
@@ -1061,7 +1076,7 @@ public class ServerFile extends Server implements XMLConsumer {
             if( (s=(String)atts.get("mode"))!=null )     aladin.view.setModeView(Integer.parseInt(s));
             if( (s=(String)atts.get("position"))!=null ) firstView=Integer.parseInt(s);
 
-            // Pour compatibilité version <7
+            // Pour compatibilitï¿½ version <7
             if( (s=(String)atts.get("grid"))!=null )     aladin.calque.setOverlayFlag("grid", (new Boolean(s)).booleanValue() );
             if( (s=(String)atts.get("target"))!=null )   aladin.calque.setOverlayFlag("target", (new Boolean(s)).booleanValue() );
 
@@ -1104,7 +1119,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
          if( plan!=null ) {
 
-            // pour prendre en compte pas la suite les filtres dédiés
+            // pour prendre en compte pas la suite les filtres dï¿½diï¿½s
             if( plan.filters!=null && plan.filterIndex>=0 ) {
                if( pdf==null ) pdf = new Vector();
                pdf.addElement(plan);
@@ -1153,7 +1168,7 @@ public class ServerFile extends Server implements XMLConsumer {
          }
       } else if( name.equals("ALADINJAVA") ) {
 
-         // mise à jour des différents filtres mémorisés
+         // mise ï¿½ jour des diffï¿½rents filtres mï¿½morisï¿½s
          if( pFilter!= null ) {
             Enumeration<PlanFilter> filters = pFilter.keys();
             PlanFilter pf;
@@ -1163,7 +1178,7 @@ public class ServerFile extends Server implements XMLConsumer {
                pf.updateState();
             }
 
-            // un peu bourrin, mais c'était le plus facile
+            // un peu bourrin, mais c'ï¿½tait le plus facile
             new Thread("AladinFilterUpdate") {
                @Override
                public void run() {
@@ -1183,7 +1198,7 @@ public class ServerFile extends Server implements XMLConsumer {
             }.start();
          }
 
-         // mise à jour des différents filtres dédiés mémorisés
+         // mise ï¿½ jour des diffï¿½rents filtres dï¿½diï¿½s mï¿½morisï¿½s
          if( pdf!=null ) {
             new Thread("AladinFilterUpdate2") {
                @Override
@@ -1243,17 +1258,17 @@ public class ServerFile extends Server implements XMLConsumer {
       // Recuperation des infos
       int start=cur;
       while( cur<end && ch[cur]!='\n'  ) cur++;
-      // modif Thomas (le trim() supprimait la valeur de certains champs "blancs" situés en bout de ligne)
+      // modif Thomas (le trim() supprimait la valeur de certains champs "blancs" situï¿½s en bout de ligne)
       rec = new String(ch,start,cur-start);
       //rec = new String(ch,start,cur-start).trim();
 
       // Ajout de l'objet dans le plan courant
       Source o = (leg!=null)?new Source(plan,ra,de,id,rec,leg): new Source(plan,ra,de,id,rec);
       
-      // Par défaut on active l'affichage du label des tags (du grand bricolage PF 5/9/2022)
+      // Par dï¿½faut on active l'affichage du label des tags (du grand bricolage PF 5/9/2022)
       if( typePlan==CATALOGTOOL && glu!=null && glu.endsWith("|Tags>")) o.setWithLabel(true);
       
-      // Génération d'un footprint associé à la source
+      // Gï¿½nï¿½ration d'un footprint associï¿½ ï¿½ la source
       if( footprintIdx!=-1 ) {
          String fov = o.getCodedValue(footprintIdx);
          o.setFootprint(fov);
@@ -1300,8 +1315,8 @@ public class ServerFile extends Server implements XMLConsumer {
 
       // Ajout de l'objet dans le plan courant
       Position o=null;
-      if( typeTool.equals("tag") )        o = ( new Repere(plan) );   // Pour compatibilité avec les versions <7
-      else if( typeTool.equals("text") )      o = ( new Tag(plan) );      // Pour compatibilité avec les versions <7
+      if( typeTool.equals("tag") )        o = ( new Repere(plan) );   // Pour compatibilitï¿½ avec les versions <7
+      else if( typeTool.equals("text") )      o = ( new Tag(plan) );      // Pour compatibilitï¿½ avec les versions <7
 
       else if( typeTool.equals("phot") )      o = ( new SourceStat(plan) );
       else if( typeTool.equals("source") )    o = ( new Repere(plan) );
@@ -1350,7 +1365,7 @@ public class ServerFile extends Server implements XMLConsumer {
    
    private MyByteArrayStream inMoc = null;  // Contenu du MOC courant
    
-   /** Lecture du MOC ASCII, et l'associe au plan courant. C'est procedure peut être appelee plusieurs
+   /** Lecture du MOC ASCII, et l'associe au plan courant. C'est procedure peut ï¿½tre appelee plusieurs
     * fois en sequence.
     * @param ch
     * @param cur
@@ -1420,11 +1435,11 @@ public class ServerFile extends Server implements XMLConsumer {
       pOffset=Save.get64(p.getBufPixels8(),pOffset,ch,start,length);
    }
 
-   // mémoire des PlanFilter à mettre à jour et des définitions correspondantes (clé : PlanFilter, value : définition)
+   // mï¿½moire des PlanFilter ï¿½ mettre ï¿½ jour et des dï¿½finitions correspondantes (clï¿½ : PlanFilter, value : dï¿½finition)
    Hashtable pFilter;
    /** Mise en place du script sur le plan filtre en cours de construction */
    private void setScript(String script) {
-      // décodage des entités spéciales
+      // dï¿½codage des entitï¿½s spï¿½ciales
       // PF SEPT 07 - JE COMMENTE PARCE QUE CELA A DEJA ETE APPLIQUE EN AMONT
       //   	  script = XMLParser.XMLDecode(script);
 
@@ -1434,12 +1449,12 @@ public class ServerFile extends Server implements XMLConsumer {
 
       plan.setActivated();
 
-      // mémorisation du PlanFilter et de la déf. associée
+      // mï¿½morisation du PlanFilter et de la dï¿½f. associï¿½e
       pFilter.put(plan, script);
 
    }
 
-   // Type de plan modifié pour prendre en compte les catalogues inclues dans les tools
+   // Type de plan modifiï¿½ pour prendre en compte les catalogues inclues dans les tools
    static final int CATALOGTOOL = 1000;
    static final int AJTOOL = 1001;
 
@@ -1488,8 +1503,8 @@ public class ServerFile extends Server implements XMLConsumer {
                break;
          }
       } else if( inFilterScript ) {
-         // thomas, 22/11/06 : les sauts de ligne ont été remplacés par un "\n" dans le .aj
-         //Il faut donc les décoder
+         // thomas, 22/11/06 : les sauts de ligne ont ï¿½tï¿½ remplacï¿½s par un "\n" dans le .aj
+         //Il faut donc les dï¿½coder
          setScript(new String(ch,start,length).replaceAll("\\\\n", "\n"));
       } else if( inFitsHeader ) {
          if( ((PlanImage)plan).headerFits==null ) {

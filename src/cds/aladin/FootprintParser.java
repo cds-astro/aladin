@@ -64,14 +64,15 @@ public class FootprintParser {
 	// variable de travail pour le parsing
 	private SavotVOTable votable;
 	private Hashtable<String, FootprintBean> hash;
+	private Hashtable<String, SavotResource> hash1 ;
 
-	// ensemble des resources à traiter
+	// ensemble des resources ï¿½ traiter
 	private SavotResource[] resources;
 
 	boolean sphericalCoordinates = false;
 
 
-	static private Hashtable<String, FootprintBean> footprintHash; // conserve la mémoire des footbeans créés
+	static private Hashtable<String, FootprintBean> footprintHash; // conserve la mï¿½moire des footbeans crï¿½ï¿½s
 
 	static {
 		footprintHash = new Hashtable<>();
@@ -79,7 +80,7 @@ public class FootprintParser {
 
 	/**
 	 *
-	 * @param mis stream partiellement entamé par le parsing des objets de base
+	 * @param mis stream partiellement entamï¿½ par le parsing des objets de base
 	 */
 	public FootprintParser(MyInputStream mis, byte[] beginStream) {
 		this.mis = mis;
@@ -88,7 +89,7 @@ public class FootprintParser {
 
 	/**
 	 *
-	 * @param resources tableau des RESOURCE à parser
+	 * @param resources tableau des RESOURCE ï¿½ parser
 	 */
 	public FootprintParser(SavotResource[] resources) {
 		this.resources = resources;
@@ -96,13 +97,13 @@ public class FootprintParser {
 
 	/**
 	 *
-	 * @return la Hashtable donnant un objet Footprint d'après son nom
+	 * @return la Hashtable donnant un objet Footprint d'aprï¿½s son nom
 	 */
 	public Hashtable<String, FootprintBean> getFooprintHash() {
 		InputStream is=null;
 		ResourceSet resSet = new ResourceSet();
 		try {
-			// cas où on a passé un inputstream comme constructeur
+			// cas oï¿½ on a passï¿½ un inputstream comme constructeur
 			if( mis!=null ) {
 				is = buildInputStream();
 				SavotPullParser parser = new SavotPullParser(is, SavotPullEngine.FULL,null,false);
@@ -110,7 +111,7 @@ public class FootprintParser {
 
 				resSet = votable.getResources();
 			}
-			// cas où on a passé un tableau de SavotResource
+			// cas oï¿½ on a passï¿½ un tableau de SavotResource
 			else {
 				for( int i=0; i<resources.length; i++ ) resSet.addItem(resources[i]);
 			}
@@ -123,17 +124,60 @@ public class FootprintParser {
 		finally{ if( is!=null ) try { is.close(); } catch( Exception e) {} };
 
 		int nbRes = resSet.getItemCount();
-//		System.out.println(nbRes);
+		System.out.println("nbRes "+nbRes);
 		hash = new Hashtable<>();
 
 		for( int i=0; i<nbRes; i++ ) {
 			Aladin.trace(3, "Footprint: Processing resource: "+i);
 			processFovResource(resSet.getItemAt(i));
+		//	SavotResource res = resSet.getItemAt(i) ;
+		//	System.out.println("res id "+res.getId());
 		}
 //		new Footprint(raOffset,deOffset,)
 
 		return hash;
 	}
+	public Hashtable<String, SavotResource> getSDHash() {
+		InputStream is=null;
+		ResourceSet resSet = new ResourceSet();
+		try {
+			// cas oï¿½ on a passï¿½ un inputstream comme constructeur
+			if( mis!=null ) {
+				is = buildInputStream();
+				SavotPullParser parser = new SavotPullParser(is, SavotPullEngine.FULL,null,false);
+				votable = parser.getVOTable();
+
+				resSet = votable.getResources();
+			}
+			// cas oï¿½ on a passï¿½ un tableau de SavotResource
+			else {
+				for( int i=0; i<resources.length; i++ ) resSet.addItem(resources[i]);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			Aladin.error("Problem during parsing of footprints !");
+			return null;
+		}
+		finally{ if( is!=null ) try { is.close(); } catch( Exception e) {} };
+
+		int nbRes = resSet.getItemCount();
+		System.out.println("nbRes "+nbRes);
+		hash1 = new Hashtable<>();
+
+		for( int i=0; i<nbRes; i++ ) {
+			Aladin.trace(3, "Footprint: Processing resource: "+i);
+		//	processFovResource(resSet.getItemAt(i));
+			SavotResource res = resSet.getItemAt(i) ;
+			String id = res.getId() ;
+			System.out.println("res id "+res.getId());
+			hash1.put(id, res);
+		}
+//		new Footprint(raOffset,deOffset,)
+
+		return hash1;
+	}
+
 
 	// conserve les correspondances ID-->objet VOTable
 	private Hashtable<String, MarkupComment> refMem;
@@ -142,7 +186,7 @@ public class FootprintParser {
 	int tabIndex = 0;
 
 	/**
-	 * construit le footprint associé à une RESOURCE
+	 * construit le footprint associï¿½ ï¿½ une RESOURCE
 	 *
 	 * @param res la RESOURCE "racine", pouvant contenir d'autres RESOURCE
 	 */
@@ -158,10 +202,10 @@ public class FootprintParser {
 //	    System.out.println("Processing resource "+res);
 		refMem = new Hashtable<>();
 		String id = res.getId();
-        // par défaut
+        // par dï¿½faut
         fpBean.setInstrumentName(id);
 
-		// dangereux, car c'est sur cet ID qu'on va référencer un FoV
+		// dangereux, car c'est sur cet ID qu'on va rï¿½fï¿½rencer un FoV
 //		if( id==null || id.length()==0 ) id = res.getName();
 
 
@@ -208,7 +252,7 @@ public class FootprintParser {
 				fpBean.setPosAngle(d);
 			}
 
-			// caractère "movable" du FoV
+			// caractï¿½re "movable" du FoV
 			else if( param.getName().equalsIgnoreCase("Movable") ) {
 				boolean b;
 				try {
@@ -218,7 +262,7 @@ public class FootprintParser {
 				fpBean.setMovable(b);
 			}
 
-			// caractère "rollable" du FoV
+			// caractï¿½re "rollable" du FoV
 			else if( param.getName().equalsIgnoreCase("Rollable") ) {
 				boolean b;
 				try {
@@ -228,19 +272,19 @@ public class FootprintParser {
 				fpBean.setRollable(b);
 			}
 
-            // convention interne à Aladin pour affichage dans JTable
+            // convention interne ï¿½ Aladin pour affichage dans JTable
             else if( param.getId().equals("InstrumentDescription") ) {
                 fpBean.setInstrumentDesc(param.getValue());
             }
-            // convention interne à Aladin pour affichage dans JTable
+            // convention interne ï¿½ Aladin pour affichage dans JTable
             else if( param.getId().equals("InstrumentName") ) {
                 fpBean.setInstrumentName(param.getValue());
             }
-            // convention interne à Aladin pour affichage dans JTable
+            // convention interne ï¿½ Aladin pour affichage dans JTable
             else if( param.getId().equals("TelescopeName") ) {
                 fpBean.setTelescopeName(param.getValue());
             }
-			// convention interne à Aladin pour affichage dans JTable
+			// convention interne ï¿½ Aladin pour affichage dans JTable
             else if( param.getId().equals("Origin") ) {
                 fpBean.setOrigin(param.getValue());
             }
@@ -263,13 +307,13 @@ public class FootprintParser {
 		    sub = processResource(resources.getItemAt(i));
 		    if( sub!=null ) {
 		    	fpBean.addSubFootprintBean(sub);
-		    	// on garde en mémoire les sous-parties d'un FoV --> on les place pour cela dans un container
+		    	// on garde en mï¿½moire les sous-parties d'un FoV --> on les place pour cela dans un container
 		    	String subfpId = resources.getItemAt(i).getId();
 		    	if (subfpId!=null && subfpId.length()>0) {
 		    	    FootprintBean container = new FootprintBean();
 		    	    container.addSubFootprintBean(sub);
 		    	    container.setDisplayInFovList(false);
-		    	    // on évite d'écraser un bean existant par un sub-bean
+		    	    // on ï¿½vite d'ï¿½craser un bean existant par un sub-bean
 		    	    if ( ! hash.contains(subfpId) ) {
 		    	        hash.put(subfpId, container);
 		    	    }
@@ -281,7 +325,7 @@ public class FootprintParser {
 		hash.put(id, fpBean);
 
 
-		// on ne vérifie plus l'existence d'un bean avec le meme nom, on écrase
+		// on ne vï¿½rifie plus l'existence d'un bean avec le meme nom, on ï¿½crase
 		if( footprintHash.get(id)!=null ) {
 			Aladin.trace(1, "Footprint with ID "+id +"already exists ...\n Existing definition will be erased");
 		}
@@ -290,7 +334,7 @@ public class FootprintParser {
 		footprintHash.put(id, fpBean);
 	}
 
-	/** traite une RESOURCE en la considérant comme sous-partie d'un FOV
+	/** traite une RESOURCE en la considï¿½rant comme sous-partie d'un FOV
 	 *
 	 * @param res
 	 */
@@ -303,7 +347,7 @@ public class FootprintParser {
 		SubFootprintBean sub;
 
 		for( int i=0; i<nbTab; i++ ) {
-			// TODO : prendre en compte couleur éventuelle au niveau de la TABLE (pour les types STRING notamment)
+			// TODO : prendre en compte couleur ï¿½ventuelle au niveau de la TABLE (pour les types STRING notamment)
 			sub = processTable(tables.getItemAt(i));
 			if( sub!=null ) {
 				subFpBean.addSubFootprintBean(sub);
@@ -401,7 +445,7 @@ public class FootprintParser {
 					deOff = Double.valueOf(tmp).doubleValue();
 				}
 				catch(NumberFormatException e) {e.printStackTrace();}
-				// TODO : vérifier unité et faire conversion en degrés
+				// TODO : vï¿½rifier unitï¿½ et faire conversion en degrï¿½s
 				raOffset[index][i] = raOff/3600.;
 				deOffset[index][i] = deOff/3600.;
 			}
@@ -471,7 +515,7 @@ public class FootprintParser {
 				signRA = (i==1||i==2)?1:-1;
 				signDE = (i==0||i==1)?1:-1;
 
-				// TODO : conversion en degrees en tenant compte des unités dans le VOTable!!
+				// TODO : conversion en degrees en tenant compte des unitï¿½s dans le VOTable!!
 				raOffset[index][i] = (ctrRAOffset+signRA*sizeRA*0.5)/3600.;
 				deOffset[index][i] = (ctrDEOffset+signDE*sizeDE*0.5)/3600.;
 			}
@@ -484,7 +528,7 @@ public class FootprintParser {
 	private SubFootprintBean processTable(SavotTable table) {
 		String type = getRegionType(table);
 
-		// si le type n'est pas un des types supportés ...
+		// si le type n'est pas un des types supportï¿½s ...
 		if( type==null ||  !( type.equals("Box") || type.equals("Polygon")
 			           || type.equals("Circle")  || type.equals("Pickle") || type.equals("String") )  ) {
 			return null;
@@ -548,7 +592,7 @@ public class FootprintParser {
 					deOff = Double.valueOf(tmp).doubleValue();
 				}
 				catch(NumberFormatException e) {e.printStackTrace();}
-				// TODO : vérifier unité et faire conversion en degrés
+				// TODO : vï¿½rifier unitï¿½ et faire conversion en degrï¿½s
 				raOffset[i] = raOff/3600.;
 				deOffset[i] = deOff/3600.;
 
@@ -623,7 +667,7 @@ public class FootprintParser {
 				signRA = (i==1||i==2)?1:-1;
 				signDE = (i==0||i==1)?1:-1;
 
-				// TODO : conversion en degrees en tenant compte des unités dans le VOTable!!
+				// TODO : conversion en degrees en tenant compte des unitï¿½s dans le VOTable!!
 				raOffset[i] = (ctrRAOffset+signRA*sizeRA*0.5)/3600.;
 				deOffset[i] = (ctrDEOffset+signDE*sizeDE*0.5)/3600.;
 			}
@@ -682,7 +726,7 @@ public class FootprintParser {
 			}
 			catch(Exception e) {e.printStackTrace();return null;}
 
-			// TODO : conversion selon l'unité indiqué dans les params!!
+			// TODO : conversion selon l'unitï¿½ indiquï¿½ dans les params!!
 			ctrXOffset = ctrXOffset/3600.0;
 			ctrYOffset = ctrYOffset/3600.0;
 			radius = radius/3600.0;
@@ -730,7 +774,7 @@ public class FootprintParser {
 
 					continue;
 				}
-				// petite subtilité, car on a le meme utype pour internalRad et externalRad !!
+				// petite subtilitï¿½, car on a le meme utype pour internalRad et externalRad !!
 				else if( utype.equals("stc:AstroCoordArea/Region/reg:Circle/radius") && internalRadParam==null ) {
 					internalRadParam = param;
 
@@ -760,14 +804,14 @@ public class FootprintParser {
 			}
 			catch(Exception e) {e.printStackTrace();return null;}
 
-			// petite subtilité pour que le rayon interne soit le plus petit
+			// petite subtilitï¿½ pour que le rayon interne soit le plus petit
 			double tmp = internalRad;
 			if( internalRad>externalRad ) {
 				internalRad = externalRad;
 				externalRad = tmp;
 			}
 
-			// TODO : conversion selon l'unité indiqué dans les params!!
+			// TODO : conversion selon l'unitï¿½ indiquï¿½ dans les params!!
 			ctrXOffset = ctrXOffset/3600.0;
 			ctrYOffset = ctrYOffset/3600.0;
 			double angle = endAngle-startAngle;
@@ -854,7 +898,7 @@ public class FootprintParser {
 	}
 
 	/**
-	 * Retourne le type de région, null si non trouvé
+	 * Retourne le type de rï¿½gion, null si non trouvï¿½
 	 * @return
 	 */
 	private String getRegionType(SavotTable table) {
@@ -892,12 +936,12 @@ public class FootprintParser {
 
 	private InputStream buildInputStream() throws IOException {
 		MyByteArrayStream is = new MyByteArrayStream();
-		// écriture préambule VOTable
+		// ï¿½criture prï¿½ambule VOTable
 //      is.write("<?xml version=\"1.0\" ?>\n<VOTABLE>".getBytes());
-		// on écrit d'abord le contenu du buffer qui correspond au début du stream à créer
+		// on ï¿½crit d'abord le contenu du buffer qui correspond au dï¿½but du stream ï¿½ crï¿½er
 		if( beginStream!=null ) is.write(beginStream);
 
-		// on écrit la suite
+		// on ï¿½crit la suite
 		byte[] buf = new byte[BUF_LENGTH];
 		int len;
 		while( mis.available()>0 ) {

@@ -53,7 +53,10 @@ public class SimpleData {
 	 */
 	public SimpleData(String[] parameters) {
 		super();
-	}
+
+		System.out.println("param0 "+parameters[0]);
+		System.out.println("param1 "+parameters[1]);
+			}
 	
 	public String getDisplayString() {
 		if (this.displayString==null || this.displayString.isEmpty()) {
@@ -64,9 +67,20 @@ public class SimpleData {
 	
 	public void setDisplayString() {
 		StringBuffer defaultLinkLabel = new StringBuffer();
+		System.out.println("entryset "+params.entrySet()) ;
+		System.out.println("values "+params.values()) ;
+		System.out.println("keys "+params.keySet()) ;
 		if (this.params.get(DESCRIPTION) != null && !this.params.get(DESCRIPTION).isEmpty()) {
+		
+			defaultLinkLabel.append("<html><b>description:</b><i> ");
 			defaultLinkLabel.append(this.params.get(DESCRIPTION));
-		} else {
+			defaultLinkLabel.append(" </i><b> | mediatype: </b><i> ");
+			defaultLinkLabel.append(this.params.get(CONTENTTYPE));
+			if (this.params.containsKey(CONTENTQUAL)) {
+			defaultLinkLabel.append(" </i><b> | qualifier:</b><i>");
+			defaultLinkLabel.append(this.params.get(CONTENTQUAL));
+			}
+			defaultLinkLabel.append(" </i><b> | semantics:</b><i>");
 			this.setType();
 			if (this.type == null) {
 				defaultLinkLabel.append(this.getParams().get(SEMANTICS));
@@ -90,8 +104,9 @@ public class SimpleData {
 			
 		}
 		if (this.params.containsKey(CONTENTLENGTH_DISPLAY)) {
-			defaultLinkLabel.append(" (size ").append(this.params.get(CONTENTLENGTH_DISPLAY)).append(")");
+			defaultLinkLabel.append("</i><b> | size:</b><i> ").append(this.params.get(CONTENTLENGTH_DISPLAY));
 		}
+		defaultLinkLabel.append("</i></html>");
 		this.displayString = defaultLinkLabel.toString();
 	}
 
