@@ -240,7 +240,7 @@ public static final String EDITUPLOADTABLENAMEACTION = "EDITUPLOADTABLENAMEACTIO
 public static final String STANDARD_TAPRESULTFORMAT = "votable";// "application/x-votable+xml";//TODO:: either
 public static final String TABLEGUINAME = "table";
 
-/** Liste des caract�re d�finissant une chaine de carac @author Mallory Marcot*/
+/** Liste des caractère définissant une chaine de carac @author Mallory Marcot*/
 public static final String LISTE_CARACTERE_STRING = "AZRTYUIOPQSDFGHJKLMWXCVBN%_[]^";
 
 	static {
