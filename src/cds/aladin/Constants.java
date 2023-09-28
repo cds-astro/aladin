@@ -104,7 +104,9 @@ public static final String SERVICE_DEF = "service_def";
 public static final String DESCRIPTION = "description";
 public static final String SEMANTICS = "semantics";
 public static final String CONTENTTYPE = "content_type";
+// Content qualifier and local semantics for DataLink1.1
 public static final String CONTENTQUAL = "content_qualifier";
+public static final String LOCALSEM = "local_semantics";
 public static final String CONTENTLENGTH = "content_length";
 public static final String CONTENTLENGTH_DISPLAY = "content_length_display";
 public static final String DEFAULT_CONTENTLENGTH_UNITS = "bytes";
