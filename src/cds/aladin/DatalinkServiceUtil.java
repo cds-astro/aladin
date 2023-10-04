@@ -167,7 +167,7 @@ public class DatalinkServiceUtil {
 							//System.out.println("ici");
 							data.setParams(params);
 							if (service_def!=null && !service_def.isEmpty()) {
-								System.out.println("isNotEmpty");
+							//	System.out.println("isNotEmpty");
 								data.setMetaResource(accessUrlResult.getResourceFromRef(service_def));
 								service_def = null;
 							}

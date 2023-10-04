@@ -1345,8 +1345,8 @@ public final class Command implements Runnable {
          String criteria = criteriaX.toString();
          Aladin.trace(4, "Command.execGetCmd(" + cmd + "," + label + ") => server=[" + server + "] criteria=[" + criteria
                + "] target=[" + target + "] radius=[" + radius + "])");
-         if( server.equalsIgnoreCase("VizierX") ) server = "VizieR"; // Pour charger tout un catalogue sans poser un probl�me de
-                                                                     // compatibilit�
+         if( server.equalsIgnoreCase("VizierX") ) server = "VizieR"; // Pour charger tout un catalogue sans poser un problème de
+                                                                     // compatibilité
 
          if( server.equalsIgnoreCase("hips") ) {
             int n = a.directory.createPlane(target, radius, criteria, label, null);
@@ -1379,7 +1379,7 @@ public final class Command implements Runnable {
    }
    
 
-   protected HipsGen hipsgen = null; // pour la g�n�ration des allskys via commande script
+   protected HipsGen hipsgen = null; // pour la génération des allskys via commande script
 
    /** Lancement via une commande script de la g�n�ration d'un allsky */
    // protected void execSkyGen(String param) {
@@ -1418,7 +1418,7 @@ public final class Command implements Runnable {
       try {
          Tok tok = new Tok(param);
 
-         // R�cup�ration des lignes de commandes de la macro
+         // Récupération des lignes de commandes de la macro
          String scriptFile = a.getFullFileName(tok.nextToken());
          scriptStream = (new MyInputStream(Util.openAnyStream(scriptFile))).startRead();
          String s;
@@ -1768,7 +1768,7 @@ public final class Command implements Runnable {
    // return s;
    // }
 
-   /** Supprime les marques de liens dans une chaine de caract�res */
+   /** Supprime les marques de liens dans une chaine de caractères */
    protected String removeLinks(String help) {
       if( help.indexOf('@') < 0 ) return help;
       StringBuffer s = new StringBuffer();
@@ -3395,7 +3395,7 @@ public final class Command implements Runnable {
    private boolean findMoc(String s) {
       boolean slash=false;
       
-      // On teste l'absence de caract�res incompatibles avec un MOC
+      // On teste l'absence de caractères incompatibles avec un MOC
       boolean space=false;
       boolean dash=false;      
       for( char c : s.toCharArray() ) {
