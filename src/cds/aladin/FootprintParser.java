@@ -124,7 +124,7 @@ public class FootprintParser {
 		finally{ if( is!=null ) try { is.close(); } catch( Exception e) {} };
 
 		int nbRes = resSet.getItemCount();
-		System.out.println("nbRes "+nbRes);
+//		System.out.println("nbRes "+nbRes);
 		hash = new Hashtable<>();
 
 		for( int i=0; i<nbRes; i++ ) {
@@ -168,7 +168,7 @@ public class FootprintParser {
 		finally{ if( is!=null ) try { is.close(); } catch( Exception e) {} };
 
 		int nbRes = resSet.getItemCount();
-		System.out.println("nbRes "+nbRes);
+//		System.out.println("nbRes "+nbRes);
 		hash1 = new Hashtable<>();
 
 		for( int i=0; i<nbRes; i++ ) {
@@ -192,7 +192,7 @@ public class FootprintParser {
 	int tabIndex = 0;
 
 	/**
-	 * construit le footprint associ� � une RESOURCE
+	 * construit le footprint associé à une RESOURCE
 	 *
 	 * @param res la RESOURCE "racine", pouvant contenir d'autres RESOURCE
 	 */
@@ -340,7 +340,7 @@ public class FootprintParser {
 		footprintHash.put(id, fpBean);
 	}
 
-	/** traite une RESOURCE en la consid�rant comme sous-partie d'un FOV
+	/** traite une RESOURCE en la considérant comme sous-partie d'un FOV
 	 *
 	 * @param res
 	 */
@@ -451,7 +451,7 @@ public class FootprintParser {
 					deOff = Double.valueOf(tmp).doubleValue();
 				}
 				catch(NumberFormatException e) {e.printStackTrace();}
-				// TODO : v�rifier unit� et faire conversion en degr�s
+				// TODO : vérifier unité et faire conversion en degrés
 				raOffset[index][i] = raOff/3600.;
 				deOffset[index][i] = deOff/3600.;
 			}
