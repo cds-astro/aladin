@@ -137,6 +137,12 @@ public class FootprintParser {
 
 		return hash;
 	}
+	
+       /**
+         *
+         * @return la Hashtable donnant un objet SavotResource de type Service Descriptor d'après son nom
+         */
+
 	public Hashtable<String, SavotResource> getSDHash() {
 		InputStream is=null;
 		ResourceSet resSet = new ResourceSet();
@@ -170,7 +176,7 @@ public class FootprintParser {
 		//	processFovResource(resSet.getItemAt(i));
 			SavotResource res = resSet.getItemAt(i) ;
 			String id = res.getId() ;
-			System.out.println("res id "+res.getId());
+               //		System.out.println("res id "+res.getId());
 			hash1.put(id, res);
 		}
 //		new Footprint(raOffset,deOffset,)
@@ -307,7 +313,7 @@ public class FootprintParser {
 		    sub = processResource(resources.getItemAt(i));
 		    if( sub!=null ) {
 		    	fpBean.addSubFootprintBean(sub);
-		    	// on garde en m�moire les sous-parties d'un FoV --> on les place pour cela dans un container
+		    	// on garde en mémoire les sous-parties d'un FoV --> on les place pour cela dans un container
 		    	String subfpId = resources.getItemAt(i).getId();
 		    	if (subfpId!=null && subfpId.length()>0) {
 		    	    FootprintBean container = new FootprintBean();
@@ -325,7 +331,7 @@ public class FootprintParser {
 		hash.put(id, fpBean);
 
 
-		// on ne v�rifie plus l'existence d'un bean avec le meme nom, on écrase
+		// on ne vérifie plus l'existence d'un bean avec le meme nom, on écrase
 		if( footprintHash.get(id)!=null ) {
 			Aladin.trace(1, "Footprint with ID "+id +"already exists ...\n Existing definition will be erased");
 		}
@@ -592,7 +598,7 @@ public class FootprintParser {
 					deOff = Double.valueOf(tmp).doubleValue();
 				}
 				catch(NumberFormatException e) {e.printStackTrace();}
-				// TODO : v�rifier unit� et faire conversion en degr�s
+				// TODO : v�rifier unité et faire conversion en degrés
 				raOffset[i] = raOff/3600.;
 				deOffset[i] = deOff/3600.;
 
