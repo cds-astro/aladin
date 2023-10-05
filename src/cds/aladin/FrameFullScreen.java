@@ -824,6 +824,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
                   rep=true;
                   if( !w.glu ) continue;
                   w.haspushed=true;
+		  /* Source o créée pour un callArchive surchargé */
+		  /* Est-ce encore utile ?*/
                   Source so = null ;
                   if( w.archive ) { end(); w.callArchive(aladin,o, so); }
                   else w.callGlu(aladin.glu,aladin.mesure.mcanvas);
