@@ -174,6 +174,7 @@ MouseWheelListener, Widget
    /* menuTag,menuUntag,*/menuTag1,menuUntag1,menuHelpTag,
    /*menuKeepTag,menuKeepUntag,*/menuCreateMulti,menuCreateUniq,
    /* menuLoadImg,menuLoadImgs,*/menuUnselect,
+   /* menuLauch utile ? */
    menuAddColumn,menuGoto,menuDel,menuTableInfo,menuEdit,menuCooToolbox,menuInfo,menuLaunch;
 
    // Cree le popup menu associe au View
@@ -240,6 +241,7 @@ MouseWheelListener, Widget
       j.addActionListener(this);
       popMenu.add( menuCooToolbox=j=new JMenuItem(aladin.COOTOOL));
       j.addActionListener(this);
+      /* menu Launch utile */
       popMenu.add( menuLaunch=j=new JMenuItem("Launch service"));
       j.addActionListener(this);
 
@@ -282,6 +284,7 @@ MouseWheelListener, Widget
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
       else if( src==menuAddColumn ) aladin.addCol(objSelect.plan);
       else if( src==menuCooToolbox ) openCooToolbox(objSelect);
+      /* pourquoi menuLaunch */
       else if( src==menuLaunch ) aladin.mesure.getCurObjLaunch();
 
       // envoi via SAMP
