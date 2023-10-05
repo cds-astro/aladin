@@ -2569,9 +2569,9 @@ try {      GetXY(Ctest) ; }  catch (Exception e36) {System.out.println("aaaaaaaa
              //   System.out.println("pos "+posx+" " +posy);
             }
  
-            System.out.println("cdel"+cdelz+" "+sdelz);
+//            System.out.println("cdel"+cdelz+" "+sdelz);
             
-            System.out.println("lonpole "+lonpole);
+//            System.out.println("lonpole "+lonpole);
             //                       double deno = FastMath.cos(deltai*Math.PI/180.)
             double deno = cdelz
                   //                                     -yy*FastMath.sin(deltai*Math.PI/180.);
@@ -2591,8 +2591,8 @@ try {      GetXY(Ctest) ; }  catch (Exception e36) {System.out.println("aaaaaaaa
             //                                +y_objr*FastMath.cos(deltai*Math.PI/180.))
             //                        c.al = alphai + d_al*180./Math.PI;
             c.al = alphai + d_al*rad_to_deg;
-            System.out.println("deno "+deno+" "+x_objr+" "+yy);
-            System.out.println("c al del  "+c.al+" "+c.del);
+//            System.out.println("deno "+deno+" "+x_objr+" "+yy);
+//            System.out.println("c al del  "+c.al+" "+c.del);
             
             // Pourquoi ï¿½ï¿½ ?
             //                        if((c.del * deltai< 0)&&(Math.abs(deltai) > 87.))

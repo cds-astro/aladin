@@ -56,18 +56,18 @@ import javax.swing.Timer;
 import cds.tools.Util;
 
 /**
- * Gestion d'un Frame pour l'affichage d'Aladin en mode plein �cran
+ * Gestion d'un Frame pour l'affichage d'Aladin en mode plein écran
  *
  * @author Pierre Fernique [CDS]
- * @version 1.1 : juin 08 preview + am�liorations diverses
- * @version 1.0 : mars 08 cr�ation
+ * @version 1.1 : juin 08 preview + améliorations diverses
+ * @version 1.0 : mars 08 création
  */
 public final class FrameFullScreen extends JFrame implements ActionListener {
    
-   static final int WINDOW = 0;             // en mode fen�tr� - 1 unique panel
-   static final int WINDOW_HIDDEN = 1;      // idem mais iconifi� au d�marrage
-   static final int FULL = 2;               // En mode plein �cran, mais avec gestion des fen�tres par l'OS
-   static final int CINEMA = 3;             // idem mais en mode exclusif (pas d'overlay de fen�tre/menu possible)
+   static final int WINDOW = 0;             // en mode fenêtré - 1 unique panel
+   static final int WINDOW_HIDDEN = 1;      // idem mais iconifié au démarrage
+   static final int FULL = 2;               // En mode plein écran, mais avec gestion des fenêtres par l'OS
+   static final int CINEMA = 3;             // idem mais en mode exclusif (pas d'overlay de fenêtre/menu possible)
    
    static private String [] MODE = { "Window","Window-hidden","Full","Cinema" };
    
@@ -76,11 +76,11 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    static DisplayMode display = device.getDisplayMode();
 
    private Aladin aladin=null;
-   protected ViewSimple viewSimple; // La vue affich�e en plein �cran
-   private Rectangle bounds;    // La taille pr�c�d�dente de la vue (pour pouvoir la redimensionner)
+   protected ViewSimple viewSimple; // La vue affichée en plein écran
+   private Rectangle bounds;    // La taille précédente de la vue (pour pouvoir la redimensionner)
    private Vector ligne=null;   // La ligne de mesure courante (null si aucune)
    private int ocursor=-1;      // Curseur courant (ex: Aladin.HAND)
-//   private boolean full;        // true si plein �cran, sinon une fen�tre simple
+//   private boolean full;        // true si plein écran, sinon une fenêtre simple
    private int mode;            // mode de fonctionnement (WINDOW, WINDOW_HIDDEN, FULL, CINEMA, ...)
    private Timer timer=null;    // Timer pour les choses qui clignotent
    private JPopupMenu popMenu;
@@ -97,17 +97,17 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    static final int XMARGE = 40;  // Marge en abs. depuis la droite jusqu'au premier logo
    static final int YGAP = 18;    // Distance entre les logos (checkboxes)
    static final int MAXCHECK=20;
-   private int nCheck=0;        // Nombre de checkbox utilis�s
-   private Check [] memoCheck = null;  // Permet la m�morisation de la position d'une checkbox associ�e � un plan
+   private int nCheck=0;        // Nombre de checkbox utilisés
+   private Check [] memoCheck = null;  // Permet la mémorisation de la position d'une checkbox associée à un plan
 
-   /** Object pour m�moriser le plan et la position d'une checkbox */
+   /** Object pour mémoriser le plan et la position d'une checkbox */
    class Check {
       int x,y;
       Plan p;
       boolean in(int a,int b) { return a>=x && a<=x+10 && b>=y && b<=y+10; }
    }
 
-   /** Cr�ation d'une fen�tre plein �cran contenant une unique vue */
+   /** Création d'une fenêtre plein écran contenant une unique vue */
    protected FrameFullScreen(Aladin aladin,ViewSimple v,/* boolean full,boolean startHidden,*/int mode) {
       super(env.getDefaultScreenDevice().getDefaultConfiguration());
       this.aladin=aladin;
@@ -272,10 +272,10 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       setJMenuBar(aladin.jBar);
       aladin.jBar.setVisible(false);
       
-      // On enl�ve l'icone FullScreen
+      // On enlève l'icone FullScreen
       aladin.jBar.remove( aladin.jBar.getMenuCount()-1 );  
       
-      // On ins�re le menu des Frames
+      // On insère le menu des Frames
       aladin.jBar.add( box1,aladin.jbarLastIndex );
       aladin.jBar.add( box1,aladin.jbarLastIndex );
       aladin.jBar.add( getFrameMenu(),aladin.jbarLastIndex );
@@ -285,7 +285,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    
    private void removeMenu() {
       if( mode==CINEMA ) return;
-      // On enl�ve le menu Frame
+      // On enlève le menu Frame
       aladin.jBar.remove(menuBookmark);
       aladin.jBar.remove(menuFrame);
       aladin.jBar.remove(box1);
@@ -366,7 +366,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    
    private int modeReticle=-1;
 
-   /**  Passage en plein �cran */
+   /**  Passage en plein écran */
    private void full() {
 
       setUndecorated(true);
@@ -391,8 +391,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       
    }
    
-   /** Passage en mode preview avec r�cup�ration de la position et de la
-    * taille ad�quate */
+   /** Passage en mode preview avec récupération de la position et de la
+    * taille adéquate */
    private void window() {
       if( modeReticle!=-1 ) aladin.calque.setReticle(modeReticle);
       Dimension d = aladin.f.getSize();
@@ -422,13 +422,13 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    }
 
 
-   /** Le premier ESC nettoie �ventuellement la commande en cours */
+   /** Le premier ESC nettoie éventuellement la commande en cours */
    private void end1() {
       if( hasCmd() && !aladin.view.isFree() ) Util.resetString(cmd);
       else end();
    }
 
-   /** Fin du mode plein �cran => r�int�gration de la vue dans son container originale */
+   /** Fin du mode plein écran => réintégration de la vue dans son container originale */
    protected void end() {
       
       viewSimple.aladin.fullScreen=null;
@@ -455,27 +455,27 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       aladin.view.findBestDefault();
    }
 
-   /** Passage � la prochaine image */
+   /** Passage é la prochaine image */
    private void next(int sens) { aladin.view.next(sens); }
 
-   //   /** Pr�c�dente position m�moris�e */
+   //   /** Précédente position mémorisée */
    //   private void undo() { aladin.view.undo(false); }
    //
-   //   /** Prochaine position m�moris�e */
+   //   /** Prochaine position mémorisée */
    //   private void redo() { aladin.view.redo(false); }
 
-   /** Activation/d�sactivation de la grille */
+   /** Activation/désactivation de la grille */
    private void grid() {
       aladin.calque.setGrid(!aladin.calque.hasGrid(),true);
    }
 
-   /** Activation/d�sactivation de la grille Healpix */
+   /** Activation/désactivation de la grille Healpix */
    private void hpxGrid() {
       aladin.calque.setOverlayFlag("hpxgrid", !aladin.calque.hasHpxGrid() );
       aladin.view.repaintAll();
    }
    
-   // Activation/d�sactivation des constellations
+   // Activation/désactivation des constellations
    private void constellation() {
       boolean flag = !aladin.calque.hasConst();
       aladin.calque.setOverlayFlag("const", flag);
@@ -494,13 +494,13 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       aladin.command.execNow("zoom "+(sens==1?'+':'-'));
    }
 
-   /** Initialisation de la m�morisation des checkboxes en superposition */
+   /** Initialisation de la mémorisation des checkboxes en superposition */
    protected void startMemo() {
       if( memoCheck==null ) memoCheck = new Check[MAXCHECK];
       nCheck=0;
    }
 
-   /** retourne le plan correspondant � la checkbox sous la position x,y,
+   /** retourne le plan correspondant à la checkbox sous la position x,y,
     * null si aucun */
    private Plan getCheckPlan(int x, int y) {
       if( memoCheck==null ) return null;
@@ -513,7 +513,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       return null;
    }
 
-   /** M�morisation des checkboxes en superposition */
+   /** Mémorisation des checkboxes en superposition */
    protected void setCheck(Plan p) {
       if( nCheck>=MAXCHECK ) return;
       Check c = memoCheck[nCheck];
@@ -618,8 +618,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    /** retourne true s'il y a une commande en cours de saisie */
    protected boolean hasCmd() { return cmd.length()>0; }
 
-   /** La commande en cours re�oit un nouveau caract�re
-    * @return true s'il faut reg�n�rer le imgBuf de la vue
+   /** La commande en cours reçoit un nouveau caractère
+    * @return true s'il faut regénérer le imgBuf de la vue
     */
    protected boolean sendKey(KeyEvent e) {
       boolean fullRepaint=false;
@@ -694,7 +694,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
          } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
       }
 
-      // Affichage du voyant d'�tat
+      // Affichage du voyant d'état
       WidgetControl voc = aladin.calque.select.getWidgetControl();
       if( blink && voc.isCollapsed() ) {
          XBLINK = voc.getX()+2;
@@ -720,7 +720,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       if( !Aladin.NOGUI ) repaint();
    }
 
-   /** Affichage en surimpression des mesures associ�es � la premi�re source s�lectionn�e */
+   /** Affichage en surimpression des mesures associées à la première source sélectionnée */
    protected void showMesures() {
       int nbSource = aladin.mesure.getNbSrc();
       if( nbSource==0 || aladin.mesure.frameMesure!=null && aladin.mesure.frameMesure.isVisible() ) return;
@@ -767,21 +767,21 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       popMenu.show(this,x,y);
    }
 
-   /** R�cup�ration d'une �v�nement mousePressed (issu de ViwSimple.mousePressed())
-    * @return true si l'�v�nement est pris en compte � ce niveau
+   /** Récupération d'une événement mousePressed (issu de ViwSimple.mousePressed())
+    * @return true si l'événement est pris en compte à ce niveau
     */
    protected boolean mousePressed(MouseEvent e1) {
       int x = e1.getX();
       int y = e1.getY();
       boolean rep=false;
 
-      // Passage en interface compl�te
+      // Passage en interface complète
       if( inIconOut(x,y) ) {
          end();
          return true;
       }
 
-      // Passage � l'image suivante (ou pr�c�dente avec SHIFT)
+      // Passage à l'image suivante (ou précédente avec SHIFT)
       if( inIconArrow(x,y) ) {
          next(e1.isShiftDown() ? 1 : -1);
          return true;
@@ -842,8 +842,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    }
    
 
-   /** R�cup�ration d'une �v�nement mouseMoved (issu de ViwSimple.mousePressed())
-    * @return true si l'�v�nement est pris en compte � ce niveau
+   /** Récupération d'une événement mouseMoved (issu de ViwSimple.mousePressed())
+    * @return true si l'événement est pris en compte à ce niveau
     */
    protected boolean mouseMoved(int x,int y) {
       boolean rep=false;
@@ -874,7 +874,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
          Util.toolTip(viewSimple,"Save currentview (PNG format)");
       }
 
-      // Dans le voyant d'�tat blink
+      // Dans le voyant d'état blink
       else if( XBLINK>0 && x>=XBLINK && x<=XBLINK+10 && y>=YBLINK && y<=YBLINK+10 ) {
          String s=aladin.calque.getBlinkingInfo();
          if( s.length()>0 ) s="Waiting "+s+"...";
@@ -896,7 +896,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
          Util.toolTip(viewSimple,p.getInfo());
       }
 
-      // Modification de l'apparence du curseur en fonction de la position �ventuelle
+      // Modification de l'apparence du curseur en fonction de la position éventuelle
       // de la souris sur une ancre ou sur un bouton d'une mesure
       else {
          Util.toolTip(viewSimple,"");
