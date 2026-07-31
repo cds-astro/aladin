@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Aladin</string>
+    <string name="search_hint">Search object (M31, NGC 224, coords…)</string>
+    <string name="surveys">Surveys</string>
+    <string name="catalogs">Catalogs</string>
+    <string name="layers">Layers</string>
+    <string name="measure">Measure</string>
+    <string name="marker">Marker</string>
+    <string name="settings">Settings</string>
+    <string name="crosshair">Center</string>
+    <string name="coord_ra">RA</string>
+    <string name="coord_dec">Dec</string>
+    <string name="fov">FoV</string>
+    <string name="loading">Loading…</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="retry">Retry</string>
+    <string name="clear_markers">Clear markers</string>
+    <string name="distance">Distance</string>
+    <string name="no_results">No results</string>
+</resources>

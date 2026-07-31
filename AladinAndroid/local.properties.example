@@ -1,0 +1,5 @@
+# Copia este fichero a local.properties y ajusta la ruta al Android SDK.
+# En Linux suele ser:
+sdk.dir=/usr/lib/android-sdk
+# En macOS (Android Studio):
+# sdk.dir=/home/USUARIO/Android/Sdk

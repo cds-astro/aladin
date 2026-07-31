@@ -1,0 +1,8 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.AladinAndroid" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/sky_dark</item>
+        <item name="android:statusBarColor">@color/sky_dark</item>
+        <item name="android:navigationBarColor">@color/sky_dark</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+</resources>

@@ -1,0 +1,8 @@
+<resources>
+    <color name="sky_dark">#FF05070D</color>
+    <color name="sky_night">#FF0B1020</color>
+    <color name="aladin_primary">#FF3F6FB0</color>
+    <color name="aladin_accent">#FFE8C547</color>
+    <color name="marker_red">#FFEF4444</color>
+    <color name="marker_green">#FF22C55E</color>
+</resources>
