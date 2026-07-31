@@ -257,38 +257,44 @@ fun SkyCanvas(
                         }
                         lastCentroid = centroid
                     }
-                    // Tap: quick touch with almost no movement.
-                    if (totalMove < 24f && System.currentTimeMillis() - downTime < 300) {
-                        val now = System.currentTimeMillis()
-                        val isDouble = (now - lastTapTime < 320) &&
-                            (firstPos - lastTapPos).getDistance() < 48f
-                        if (isDouble) {
-                            // Double tap: standard image-viewer zoom.
-                            // If we are already very close (<=1°), we zoom out; else zoom in 2.5x
-                            // towards the tapped point. Same path as pinch (vm.zoomBy),
-                            // so it exercises the whole zoom pipeline.
-                            val w = canvasSize.width.toFloat()
-                            val h = canvasSize.height.toFloat()
-                            if (w > 0 && h > 0) {
-                                val factor = if (cameraState.value.fovDeg <= 1.0) 0.4f else 2.5f
-                                vm.zoomBy(factor, w, h, firstPos.x, firstPos.y)
+                    // Tap or Long press: little movement.
+                    val duration = System.currentTimeMillis() - downTime
+                    if (totalMove < 24f) {
+                        if (duration < 300) {
+                            val now = System.currentTimeMillis()
+                            val isDouble = (now - lastTapTime < 320) &&
+                                (firstPos - lastTapPos).getDistance() < 48f
+                            if (isDouble) {
+                                // Double tap: standard image-viewer zoom.
+                                val w = canvasSize.width.toFloat()
+                                val h = canvasSize.height.toFloat()
+                                if (w > 0 && h > 0) {
+                                    val factor = if (cameraState.value.fovDeg <= 1.0) 0.4f else 2.5f
+                                    vm.zoomBy(factor, w, h, firstPos.x, firstPos.y)
+                                }
+                                lastTapTime = 0L
+                            } else {
+                                // Single tap (possible first of a double): identify/measure.
+                                lastTapTime = now
+                                lastTapPos = firstPos
+                                val w = canvasSize.width; val h = canvasSize.height
+                                val p = propsState.value
+                                if (w > 0 && h > 0 && p != null) {
+                                    val proj = cameraState.value.projection(w.toFloat(), h.toFloat())
+                                    val radec = proj.inverse(firstPos.x, firstPos.y)
+                                    val pos = SkyPosition(radec[0], radec[1])
+                                    if (measureModeState.value) vm.measureTap(pos)
+                                }
                             }
-                            lastTapTime = 0L
-                        } else {
-                            // Single tap (possible first of a double): identify/measure.
-                            lastTapTime = now
-                            lastTapPos = firstPos
+                        } else if (duration >= 400) {
+                            // Long press: identify catalog object
                             val w = canvasSize.width; val h = canvasSize.height
                             val p = propsState.value
                             if (w > 0 && h > 0 && p != null) {
                                 val proj = cameraState.value.projection(w.toFloat(), h.toFloat())
                                 val radec = proj.inverse(firstPos.x, firstPos.y)
                                 val pos = SkyPosition(radec[0], radec[1])
-                                // Single tap: only acts in measure mode. Tap
-                                // identification used Simbad, whose endpoint is
-                                // unresponsive -> removed to avoid showing a
-                                // misleading "no results". Measure mode works fine.
-                                if (measureModeState.value) vm.measureTap(pos)
+                                vm.longPressAt(pos)
                             }
                         }
                     }

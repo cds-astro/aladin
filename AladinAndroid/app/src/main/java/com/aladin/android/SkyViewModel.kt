@@ -242,6 +242,25 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
     fun clearSelected() = _state.update { it.copy(selected = null) }
 
     // --- VizieR Catalogs ---
+    fun longPressAt(pos: SkyPosition) {
+        val rows = _state.value.catalogRows
+        if (rows.isEmpty()) return
+        val closest = rows.minByOrNull { SkyPosition.separation(pos, SkyPosition(it.raDeg, it.decDeg)) }
+        if (closest != null) {
+            val dist = SkyPosition.separation(pos, SkyPosition(closest.raDeg, closest.decDeg))
+            if (dist < 0.5) {
+                val obj = com.aladin.android.data.simbad.SimbadObject(
+                    mainId = closest.id,
+                    otype = closest.columns["otype"] ?: "Catalog Source",
+                    position = SkyPosition(closest.raDeg, closest.decDeg),
+                    magV = closest.mag,
+                    raw = closest.columns
+                )
+                _state.update { it.copy(selected = obj) }
+            }
+        }
+    }
+
     fun loadCatalog(catalogId: String) {
         val s = _state.value
         val radius = (s.camera.fovDeg / 2.0).coerceIn(0.05, 60.0) * 60.0 // arcmin
