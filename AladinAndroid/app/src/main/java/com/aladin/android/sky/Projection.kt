@@ -42,22 +42,55 @@ data class Projection(
     private val cosDec0 = cos(dec0Rad)
 
     /** (raDeg, decDeg) -> (screenX, screenY) or null if at the antipode (undefined). */
-    fun forward(raDeg: Double, decDeg: Double): FloatArray? {
+    fun forward(raDeg: Double, decDeg: Double): FloatArray? = forwardInternal(raDeg, decDeg, clamp = false)
+
+    /**
+     * Same as [forward] but never returns null for points beyond the [forward] cutoff:
+     * instead it clamps z to the cutoff, projecting them onto the boundary circle.
+     *
+     * Used only for the tile mesh grid (see SkyRenderer.placementMesh). A HEALPix tile
+     * near the edge of the visible hemisphere straddles the z cutoff, so some of its mesh
+     * grid points fall outside it; with plain [forward] those points are null and the
+     * whole mesh cell touching them gets dropped, leaving a HEALPix-rhombus-shaped black
+     * gap right at the edge of the view. Clamping instead gives every grid point a
+     * (possibly distorted, but on-screen) position, so the tile's texture still covers
+     * the gap instead of leaving a hole. The tile is already being culled/leveled based
+     * on [forward]'s stricter cutoff, so this only affects a thin sliver of pixels right
+     * at the visible boundary — never the choice of which tiles to draw.
+     */
+    fun forwardClamped(raDeg: Double, decDeg: Double): FloatArray = forwardInternal(raDeg, decDeg, clamp = true)!!
+
+    private fun forwardInternal(raDeg: Double, decDeg: Double, clamp: Boolean): FloatArray? {
         val dec = Math.toRadians(decDeg)
         var dra = Math.toRadians(raDeg) - ra0Rad
         if (dra > PI) dra -= 2 * PI
         else if (dra < -PI) dra += 2 * PI
         val cosDec = cos(dec)
-        val x = cosDec * sin(dra)
-        val y = sin(dec) * cosDec0 - cosDec * sinDec0 * cos(dra)
-        val z = sin(dec) * sinDec0 + cosDec * cosDec0 * cos(dra)
-        
+        var x = cosDec * sin(dra)
+        var y = sin(dec) * cosDec0 - cosDec * sinDec0 * cos(dra)
+        var z = sin(dec) * sinDec0 + cosDec * cosDec0 * cos(dra)
+
         // ZEA can mathematically project the entire sphere (except the exact antipode),
         // but rendering flat parallelograms across the back hemisphere causes massive
         // distortion and overlapping polygons over the front view.
         // We restrict rendering to the front hemisphere + a margin for the screen corners.
         // z < -0.15 corresponds to an angle > ~98.6 degrees from the center.
-        if (z < -0.15) return null
+        if (z < -0.15) {
+            if (!clamp) return null
+            // Project onto the boundary circle along the radial vector in the xy-plane
+            // instead of modifying z alone (which mapped antipode points to the screen center).
+            val rCut = sqrt(1.0 - 0.15 * 0.15)
+            val r = sqrt(x * x + y * y)
+            if (r > 1e-9) {
+                val scale = rCut / r
+                x *= scale
+                y *= scale
+            } else {
+                x = rCut
+                y = 0.0
+            }
+            z = -0.15
+        }
 
         // ZEA (Zenithal Equal Area): w = sqrt((1+z)/2)
         val w = sqrt((1.0 + z) / 2.0)

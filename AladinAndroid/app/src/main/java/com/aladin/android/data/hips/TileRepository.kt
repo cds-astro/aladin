@@ -150,8 +150,17 @@ class TileRepository(
     /** Number of tiles currently pending download (for the loading indicator). */
     val activeDownloads: Int get() = inFlight.size
 
-    fun get(surveyId: String, order: Int, npix: Long, sampleSize: Int): Bitmap? =
-        memCache.get(key(surveyId, order, npix, sampleSize))
+    fun get(surveyId: String, order: Int, npix: Long, sampleSize: Int): Bitmap? {
+        val exact = memCache.get(key(surveyId, order, npix, sampleSize))
+        if (exact != null) return exact
+        for (s in intArrayOf(1, 2, 4)) {
+            if (s != sampleSize) {
+                val fallback = memCache.get(key(surveyId, order, npix, s))
+                if (fallback != null) return fallback
+            }
+        }
+        return null
+    }
 
     /**
      * `scalePx` = screen pixels per native tile pixel. Used to decide the
@@ -159,8 +168,10 @@ class TileRepository(
      */
     fun request(survey: HiPSSurvey, ext: String, order: Int, npix: Long, scalePx: Float) {
         val sample = sampleSizeFor(scalePx)
+        for (s in intArrayOf(1, 2, 4)) {
+            if (s <= sample && memCache.get(key(survey.id, order, npix, s)) != null) return
+        }
         val k = key(survey.id, order, npix, sample)
-        if (memCache.get(k) != null) return
         if (!inFlight.add(k)) return
         // We notify when QUEUING (not just on completion) so the loading indicator
         // appears as soon as tiles are requested, not ~80ms+fetch later.
@@ -190,13 +201,19 @@ class TileRepository(
             }
             val req = okhttp3.Request.Builder().url(url).build()
             client.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@withContext null
+                if (!resp.isSuccessful) {
+                    android.util.Log.w("TileRepository", "HTTP ${resp.code} for $url")
+                    return@withContext null
+                }
                 val body = resp.body ?: return@withContext null
-                BufferedInputStream(body.byteStream(), 32 * 1024).use { ins ->
+                val decoded = BufferedInputStream(body.byteStream(), 32 * 1024).use { ins ->
                     BitmapFactory.decodeStream(ins, null, opts)
                 }
+                if (decoded == null) android.util.Log.w("TileRepository", "decodeStream returned null for $url")
+                decoded
             }
         } catch (e: Exception) {
+            android.util.Log.w("TileRepository", "fetch failed for $url", e)
             null
         }
     }

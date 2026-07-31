@@ -187,21 +187,32 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
 
     private suspend fun fetchProperties(survey: HiPSSurvey): HiPSProperties? =
         withContext(Dispatchers.IO) {
+            val url = survey.propertiesUrl()
             try {
-                val url = survey.propertiesUrl()
                 val text = if (url.startsWith("file://")) {
                     val file = java.io.File(java.net.URI(url))
-                    if (file.exists()) file.readText() else return@withContext null
+                    if (file.exists()) {
+                        file.readText()
+                    } else {
+                        android.util.Log.w("SkyViewModel", "properties file missing: ${file.absolutePath}")
+                        return@withContext null
+                    }
                 } else {
                     val r = com.aladin.android.data.net.HttpClient.client
                         .newCall(okhttp3.Request.Builder().url(url).build()).execute()
                     r.use { resp ->
-                        if (!resp.isSuccessful) return@withContext null
+                        if (!resp.isSuccessful) {
+                            android.util.Log.w("SkyViewModel", "properties HTTP ${resp.code} for $url")
+                            return@withContext null
+                        }
                         resp.body?.string() ?: return@withContext null
                     }
                 }
                 HiPSPropertiesParser.parse(survey.baseUrl, text)
-            } catch (e: Exception) { null }
+            } catch (e: Exception) {
+                android.util.Log.w("SkyViewModel", "properties fetch failed for $url", e)
+                null
+            }
         }
 
     // --- Camera ---

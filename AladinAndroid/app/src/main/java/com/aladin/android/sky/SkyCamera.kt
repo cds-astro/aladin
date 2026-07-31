@@ -64,9 +64,8 @@ data class SkyCamera(
         // With ZEA projection (see Projection.kt) the projection radius is
         // bounded (w = sqrt((1+z)/2) never reaches 0 except exactly at the antipode),
         // so unlike gnomonic we can zoom out much more without giant parallelograms
-        // crossing the screen. Aladin desktop allows up to ~180° with ZEA (see
-        // Projection.getDefaultType); we leave a small margin under 180° so the
-        // antipode (where projection is undefined) stays off-screen.
-        const val MAX_FOV = 175.0
+        // crossing the screen. We limit MAX_FOV to 140.0° where tile grid distortion
+        // and edge projection artifacts remain completely controlled and clean on mobile.
+        const val MAX_FOV = 140.0
     }
 }

@@ -19,6 +19,9 @@ data class VisibleTile(
     val cornersRadec: Array<DoubleArray>,
     val centerRadec: DoubleArray,
     val scalePx: Float,
+    /** True if this tile stopped subdividing here: it's the correct resolution for its
+     * on-screen size, not just an intermediate progressive-refinement base layer. */
+    val isLeaf: Boolean = true,
 )
 
 /**
@@ -126,40 +129,58 @@ object SkyRenderer {
                 for (c in corners) proj.forward(c[0], c[1])?.let { pts.add(it) }
                 val centerPx = proj.forward(centerRadec[0], centerRadec[1])
 
-                // Culling: we only process tiles whose projected bbox intersects the
-                // screen (with a ~1 tile margin), to preload the immediate edge
-                // so panning doesn't show black.
+                // A tile with NO corner and no center passing the strict cutoff is
+                // genuinely fully on the far side and must be excluded outright.
+                // Using forwardClamped for those would still produce a (heavily
+                // distorted) on-screen position, pulling completely unrelated,
+                // wrong sky onto the view -- a second "layer" of stars overlapping
+                // the real one.
+                if (pts.isEmpty() && centerPx == null) continue
+
+                // For the tiles that DO have some part in the visible hemisphere,
+                // build the culling bbox from all 4 corners, substituting
+                // forwardClamped only for the ones that individually failed the
+                // strict cutoff. A coarse/large tile can have its center (and even
+                // most corners) fail while a real edge is still on screen; bbox-ing
+                // from `pts` alone (only the successful ones, possibly zero) used
+                // to drop those tiles entirely -- a whole-tile-shaped black gap at
+                // wide FoV, distinct from (and not fixed by) placementMesh's
+                // clamping of the draw mesh itself.
+                val boundsCorners = corners.map { c -> proj.forward(c[0], c[1]) ?: proj.forwardClamped(c[0], c[1]) }
                 val margin = CULL_MARGIN_PX
-                val bbox = bbox(pts)
-                val intersects = if (bbox != null) {
+                val bbox = bbox(boundsCorners)
+                val intersects = bbox != null &&
                     bbox[2] >= -margin && bbox[0] <= proj.widthPx + margin &&
-                        bbox[3] >= -margin && bbox[1] <= proj.heightPx + margin
-                } else {
-                    centerPx != null &&
-                        centerPx[0] >= -margin && centerPx[0] <= proj.widthPx + margin &&
-                        centerPx[1] >= -margin && centerPx[1] <= proj.heightPx + margin
-                }
+                    bbox[3] >= -margin && bbox[1] <= proj.heightPx + margin
                 if (!intersects) continue
 
-                // Representative scale (screen px per native tile px).
-                val scalePx = if (pts.size >= 2) {
-                    val len = hypot(pts[1][0] - pts[0][0], pts[1][1] - pts[0][1])
+                // Representative scale (screen px per native tile px). Using boundsCorners
+                // ensures a reliable scale even for tiles along the visible horizon where
+                // plain forward() returns null for some corners.
+                val scalePx = if (boundsCorners.size >= 2) {
+                    val len = hypot(boundsCorners[1][0] - boundsCorners[0][0], boundsCorners[1][1] - boundsCorners[0][1])
                     if (len > 0f) len / tileW else 1f
                 } else {
                     1f
                 }
 
+                // Leaf when the tile is at native resolution or finer (scalePx <= targetScale).
+                // Previously, tiles straddling the horizon (pts.size < 4) were forced to keep
+                // subdividing all the way down to maxOrder to mask distortion caused by a bug
+                // in forwardClamped. That endless horizon subdivision quickly exceeded MAX_TILES,
+                // aborting the level-by-level BFS mid-way and causing cmin (branchMax - 3) to
+                // discard coarse base layers, leaving solid-black holes across the sky. With
+                // forwardClamped projecting correctly to the perimeter, horizon tiles render
+                // smoothly at their proper resolution without forced subdivision.
+                val enoughDetail = scalePx <= targetScale
+                val willSubdivide = order < maxOrder && !enoughDetail
+                val isLeaf = !willSubdivide
+
                 // We emit ALL on-screen nodes (not just leaves): draw uses the
                 // coarse ancestor as a base for progressive refinement.
-                out.add(VisibleTile(order, ipix, corners, centerRadec, scalePx))
+                out.add(VisibleTile(order, ipix, corners, centerRadec, scalePx, isLeaf))
 
-                // Leaf when the tile is at native resolution or finer
-                // (scalePx <= targetScale) AND all 4 corners project. Tiles
-                // in the limb (pts<4) are subdivided instead of remaining as leaves:
-                // they go down to order max, where the off-screen ones are pruned
-                // and the on-screen ones are drawn at the correct resolution.
-                val enoughDetail = pts.size >= 2 && scalePx <= targetScale
-                if (order < maxOrder && !(enoughDetail && pts.size >= 4)) {
+                if (willSubdivide) {
                     survivors.add(ipix)
                 }
             }
@@ -203,13 +224,23 @@ object SkyRenderer {
             val cur = branchMaxOrder[branch]
             if (cur == null || t.order > cur) branchMaxOrder[branch] = t.order
         }
+        // Keep the top ~4 levels of each branch as progressive-refinement layers
+        // (coarse base -> fine top). BUT a leaf -- a tile that stopped subdividing
+        // because it already had enough on-screen detail (scalePx <= targetScale,
+        // all 4 corners project) -- is the *finest* content layer for ITS specific
+        // sub-area, and it has no descendants in `out` (it never subdivided). If a
+        // sibling sub-area of the same branch reached a much higher order, cmin =
+        // branchMax-3 would drop this leaf even though nothing finer covers its
+        // area -> that patch renders solid black with the bitmap already downloaded.
+        // So leaves are always kept, independent of cmin; cmin only prunes redundant
+        // coarse *non-leaf* ancestors below the kept window.
         val filtered = ArrayList<VisibleTile>(out.size)
         for (t in out) {
             val shift = 2 * (t.order - startOrder)
             val branch = if (shift >= 0) t.npix shr shift else t.npix
             val branchMax = branchMaxOrder[branch] ?: t.order
             val cmin = (branchMax - 3).coerceAtLeast(floorOrder)
-            if (t.order >= cmin) filtered.add(t)
+            if (t.isLeaf || t.order >= cmin) filtered.add(t)
         }
         // Ascending order: coarse (low order) first = base; fine (high order)
         // after = drawn on top. Without this, a coarse tile drawn after a fine
@@ -243,19 +274,22 @@ object SkyRenderer {
         val n = meshSubdivisions(proj, tile)
         val cw = bmpW / n
         val ch = bmpH / n
-        // grid[i][j] = projected point at (fy=i/n, fx=j/n) of the tile.
+        // grid[i][j] = projected point at (fy=i/n, fx=j/n) of the tile. Uses
+        // forwardClamped (never null) so tiles straddling the edge of the visible
+        // hemisphere still get a full mesh instead of dropping cells into a gap
+        // (see Projection.forwardClamped for why).
         val grid = Array(n + 1) { i ->
-            Array<FloatArray?>(n + 1) { j ->
+            Array(n + 1) { j ->
                 val ra = Healpix.radecAt(tile.order, tile.npix, j.toDouble() / n, i.toDouble() / n)
-                proj.forward(ra[0], ra[1])
+                proj.forwardClamped(ra[0], ra[1])
             }
         }
         val cells = ArrayList<MeshCell>(n * n)
         for (i in 0 until n) {
             for (j in 0 until n) {
-                val o = grid[i][j] ?: continue       // (fy=i/n,   fx=j/n)
-                val e1 = grid[i + 1][j] ?: continue  // +fy  -> bitmap X axis
-                val e3 = grid[i][j + 1] ?: continue  // +fx  -> bitmap Y axis
+                val o = grid[i][j]       // (fy=i/n,   fx=j/n)
+                val e1 = grid[i + 1][j]  // +fy  -> bitmap X axis
+                val e3 = grid[i][j + 1]  // +fx  -> bitmap Y axis
                 // Anti-limb safeguard: if the cell projects to a parallelogram
                 // MUCH larger than the screen, it's an edge/extreme artifact
                 // (tile near the gnomonic horizon that stretches brutally).
@@ -277,31 +311,48 @@ object SkyRenderer {
     }
 
     /**
-     * Decides how many subdivisions (per axis) the tile needs: 1 if all 4
-     * corners project and the 4th parallelogram vertex almost matches the
-     * true corner (low distortion -> 1 affine is enough), 4 if distortion is
-     * noticeable (tile near the FoV edge).
+     * Decides how many subdivisions (per axis) the tile needs.
+     *
+     * Two independent reasons to subdivide more:
+     * 1. Local flatness: does a single affine (parallelogram) already match the
+     *    tile's own 4 true corners closely? (predicted 4th vertex vs actual).
+     * 2. Screen size: ZEA is only LOCALLY close to affine. A coarse (low-order)
+     *    tile at a wide FoV can pass check 1 -- its own 4 corners fit a flat
+     *    parallelogram fine -- while still curving away from that parallelogram
+     *    *between* the corners enough to visibly diverge from a neighboring
+     *    tile's shared edge (which that neighbor computes independently along
+     *    the same true curve). That showed up as tiles looking "not joined"
+     *    specifically at wide FoV, where base HEALPix tiles span hundreds of
+     *    screen px: neither reported error nor a black gap, just a seam where
+     *    two flat approximations of the same curve don't quite meet. Forcing
+     *    more subdivisions once a tile's screen footprint is large enough keeps
+     *    both sides of a shared edge close enough to the true curve to visually
+     *    coincide, regardless of how "flat" the tile looks on its own.
      */
     private fun meshSubdivisions(proj: Projection, tile: VisibleTile): Int {
-        val p = Array<FloatArray?>(4) { i ->
+        // forwardClamped: never null, so the size/flatness estimate below always
+        // has all 4 corners even for a tile straddling the render cutoff.
+        val p = Array(4) { i ->
             val c = tile.cornersRadec[i]
-            proj.forward(c[0], c[1])
+            proj.forward(c[0], c[1]) ?: proj.forwardClamped(c[0], c[1])
         }
-        for (anchor in 0..3) {
-            val a = p[anchor]
-            val b = p[(anchor + 1) % 4]
-            val d = p[(anchor + 3) % 4]
-            val c2 = p[(anchor + 2) % 4]
-            if (a != null && b != null && d != null && c2 != null) {
-                // Parallelogram-predicted vertex vs true projected corner.
-                val predX = b[0] + d[0] - a[0]
-                val predY = b[1] + d[1] - a[1]
-                val err = hypot(predX - c2[0], predY - c2[1])
-                return if (err < 1.5f) 1 else 4
-            }
+        val a = p[0]; val b = p[1]; val c2 = p[2]; val d = p[3]
+        val predX = b[0] + d[0] - a[0]
+        val predY = b[1] + d[1] - a[1]
+        val flatnessErr = hypot(predX - c2[0], predY - c2[1])
+        val nFromFlatness = if (flatnessErr < 1.5f) 1 else 4
+
+        val maxSpan = maxOf(
+            hypot(b[0] - a[0], b[1] - a[1]),
+            hypot(d[0] - a[0], d[1] - a[1]),
+        )
+        val nFromSize = when {
+            maxSpan > 600f -> 8
+            maxSpan > 300f -> 6
+            maxSpan > 150f -> 4
+            else -> 1
         }
-        // Not all 4 corners projectable (limb): mesh it so we leave no gaps.
-        return 4
+        return maxOf(nFromFlatness, nFromSize)
     }
 
     private fun bbox(pts: List<FloatArray>): FloatArray? {
