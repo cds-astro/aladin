@@ -175,18 +175,22 @@ class TileRepository(
 
     private suspend fun fetch(url: String, sampleSize: Int): Bitmap? = withContext(Dispatchers.IO) {
         try {
+            val opts = BitmapFactory.Options().apply {
+                inPreferredConfig = Bitmap.Config.RGB_565
+                inMutable = false
+                inSampleSize = sampleSize
+            }
+            if (url.startsWith("file://")) {
+                val file = java.io.File(java.net.URI(url))
+                if (file.exists()) {
+                    return@withContext BitmapFactory.decodeFile(file.absolutePath, opts)
+                }
+                return@withContext null
+            }
             val req = okhttp3.Request.Builder().url(url).build()
             client.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@withContext null
                 val body = resp.body ?: return@withContext null
-                // Stream decoding (without materializing the body into a ByteArray)
-                // + inSampleSize to downsample based on zoom: in a single pass, the
-                // OkHttp disk cache is properly populated.
-                val opts = BitmapFactory.Options().apply {
-                    inPreferredConfig = Bitmap.Config.RGB_565
-                    inMutable = false
-                    inSampleSize = sampleSize
-                }
                 BufferedInputStream(body.byteStream(), 32 * 1024).use { ins ->
                     BitmapFactory.decodeStream(ins, null, opts)
                 }

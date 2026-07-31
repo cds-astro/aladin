@@ -76,8 +76,29 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
     private fun fetchSurveys() {
         _state.update { it.copy(surveysLoading = true) }
         viewModelScope.launch {
-            val list = com.aladin.android.data.hips.HiPSListService.fetchAvailableSurveys()
-            _state.update { it.copy(availableSurveys = list, surveysLoading = false) }
+            val localDir = java.io.File(app.getExternalFilesDir(null), "HiPS_Downloads")
+            val list = com.aladin.android.data.hips.HiPSListService.fetchAvailableSurveys(localDir)
+            
+            _state.update { 
+                // If offline and properties failed, auto-select local
+                var surveyToSet = it.survey
+                var loading = it.propsLoading
+                var msg = it.message
+                if (it.props == null && !it.propsLoading) {
+                    val firstLocal = list.firstOrNull { s -> s.id.endsWith("_local") }
+                    if (firstLocal != null && it.survey.id != firstLocal.id) {
+                        surveyToSet = firstLocal
+                        loading = true
+                        msg = "Offline: Using local dataset"
+                    }
+                }
+                it.copy(availableSurveys = list, surveysLoading = false, survey = surveyToSet, propsLoading = loading, message = msg)
+            }
+            
+            if (_state.value.propsLoading && _state.value.props == null) {
+                // We auto-switched to a local survey, so load it
+                loadSurveyProperties(_state.value.survey)
+            }
         }
     }
 
@@ -133,10 +154,20 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
                         ),
                     )
                 } else {
-                    // Failed fetch: we keep the old survey/props (not permanent
-                    // black) and notify.
-                    it.copy(propsLoading = false, message = "Could not load survey")
+                    // Failed fetch
+                    val firstLocal = it.availableSurveys.firstOrNull { s -> s.id.endsWith("_local") }
+                    if (firstLocal != null && survey.id != firstLocal.id) {
+                        // Switch to local dataset
+                        it.copy(propsLoading = false, message = "Offline: Switching to local dataset")
+                    } else {
+                        it.copy(propsLoading = false, message = "Could not load survey")
+                    }
                 }
+            }
+            
+            if (!_state.value.propsLoading && _state.value.props == null && _state.value.message == "Offline: Switching to local dataset") {
+                val local = _state.value.availableSurveys.firstOrNull { s -> s.id.endsWith("_local") }
+                if (local != null) setSurvey(local)
             }
         }
     }
@@ -144,13 +175,19 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
     private suspend fun fetchProperties(survey: HiPSSurvey): HiPSProperties? =
         withContext(Dispatchers.IO) {
             try {
-                val r = com.aladin.android.data.net.HttpClient.client
-                    .newCall(okhttp3.Request.Builder().url(survey.propertiesUrl()).build()).execute()
-                r.use { resp ->
-                    if (!resp.isSuccessful) return@withContext null
-                    val text = resp.body?.string() ?: return@withContext null
-                    HiPSPropertiesParser.parse(survey.baseUrl, text)
+                val url = survey.propertiesUrl()
+                val text = if (url.startsWith("file://")) {
+                    val file = java.io.File(java.net.URI(url))
+                    if (file.exists()) file.readText() else return@withContext null
+                } else {
+                    val r = com.aladin.android.data.net.HttpClient.client
+                        .newCall(okhttp3.Request.Builder().url(url).build()).execute()
+                    r.use { resp ->
+                        if (!resp.isSuccessful) return@withContext null
+                        resp.body?.string() ?: return@withContext null
+                    }
                 }
+                HiPSPropertiesParser.parse(survey.baseUrl, text)
             } catch (e: Exception) { null }
         }
 

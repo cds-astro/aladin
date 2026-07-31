@@ -40,6 +40,21 @@ class HiPSDownloader(private val context: Context) {
 
         downloadJob = scope.launch {
             _state.value = DownloadState(isRunning = true, datasetName = survey.title)
+            
+            val propertiesFile = File(baseDir, "properties")
+            if (!propertiesFile.exists()) {
+                val req = Request.Builder().url(survey.propertiesUrl()).build()
+                try {
+                    HttpClient.client.newCall(req).execute().use { resp ->
+                        if (resp.isSuccessful) {
+                            resp.body?.let { body ->
+                                propertiesFile.outputStream().use { out -> body.byteStream().copyTo(out) }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {}
+            }
+            
             val semaphore = Semaphore(8) // 8 threads
 
             data class TileTask(val order: Int, val npix: Long)
