@@ -34,13 +34,14 @@ class VizieRService {
         maxRows: Int = 500,
     ): List<CatalogRow> = withContext(Dispatchers.IO) {
         val c = URLEncoder.encode(String.format(java.util.Locale.US, "%.6f %+.6f", raDeg, decDeg), "UTF-8")
+        val maxParam = if (maxRows <= 0) "unlimited" else maxRows.toString()
         val url =
             "https://vizier.cds.unistra.fr/viz-bin/votable" +
                 "?-source=$catalogId" +
                 "&-c=$c" +
                 "&-c.rm=$radiusArcmin" +
                 "&-out.add=_RAJ,_DEJ" +
-                "&-out.max=$maxRows" +
+                "&-out.max=$maxParam" +
                 "&-out.meta=DhuL" +
                 "&-oc.form=dm"
         android.util.Log.d("VizieR", "Fetching: $url")

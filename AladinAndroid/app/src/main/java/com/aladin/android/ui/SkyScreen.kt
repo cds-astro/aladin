@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
@@ -217,13 +218,17 @@ fun SkyScreen(vm: SkyViewModel) {
                 Fab(Icons.Filled.Add, "Marker") {
                     vm.addMarker(state.camera.center)
                 }
-                if (state.catalogRows.isNotEmpty()) {
-                    Fab(
-                        icon = if (state.catalogVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                        desc = "Toggle catalog",
-                        highlighted = !state.catalogVisible
-                    ) {
-                        vm.toggleCatalogVisibility()
+                Fab(
+                    icon = if (state.catalogVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                    desc = "Toggle catalog",
+                    highlighted = !state.catalogVisible
+                ) {
+                    vm.toggleCatalogVisibility()
+                }
+                if (state.activeCatalogId != null) {
+                    Fab(Icons.Filled.Refresh, "Reload catalog") {
+                        val limit = maxRowsInput.toIntOrNull() ?: 500
+                        vm.loadCatalog(state.activeCatalogId, limit)
                     }
                 }
                 if (state.markers.isNotEmpty()) {

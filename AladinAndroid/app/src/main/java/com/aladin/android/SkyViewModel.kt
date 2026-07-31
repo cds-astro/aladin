@@ -45,6 +45,7 @@ data class SkyUiState(
     val settings: AppSettings = AppSettings(),
     val downloadingTiles: Int = 0,
     val catalogVisible: Boolean = true,
+    val activeCatalogId: String? = null,
 )
 
 class SkyViewModel(app: Application) : AndroidViewModel(app) {
@@ -266,7 +267,7 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
     fun loadCatalog(catalogId: String, maxRows: Int = 500) {
         val s = _state.value
         val radius = (s.camera.fovDeg / 2.0).coerceIn(0.05, 60.0) * 60.0 // arcmin
-        _state.update { it.copy(catalogLoading = true, message = null) }
+        _state.update { it.copy(catalogLoading = true, message = null, activeCatalogId = catalogId) }
         viewModelScope.launch {
             try {
                 val rows = vizier.coneSearch(
@@ -285,7 +286,7 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun clearCatalog() = _state.update { it.copy(catalogRows = emptyList(), catalogVisible = true) }
+    fun clearCatalog() = _state.update { it.copy(catalogRows = emptyList(), catalogVisible = true, activeCatalogId = null) }
 
     fun toggleCatalogVisibility() = _state.update { it.copy(catalogVisible = !it.catalogVisible) }
 
