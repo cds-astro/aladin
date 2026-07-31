@@ -1,0 +1,117 @@
+name: Desktop Continuous Build
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-continuous-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Ant
+        run: sudo apt-get update && sudo apt-get install -y ant
+
+      - name: Build JAR
+        run: ant
+
+      - name: Build DEB
+        run: |
+          jpackage --type deb \
+            --input . \
+            --main-jar Aladin.jar \
+            --name Aladin \
+            --main-class cds.aladin.Aladin \
+            --app-version 1.0.0 \
+            --linux-shortcut
+
+      - name: Compute build identifiers
+        id: meta
+        run: |
+          SHORT_SHA=$(git rev-parse --short=8 HEAD)
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "tag=continuous-$SHORT_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Rename DEB
+        run: |
+          mv aladin_1.0.0-1_amd64.deb Aladin-${{ steps.meta.outputs.short_sha }}-linux-amd64.deb || true
+          mv *.deb Aladin-${{ steps.meta.outputs.short_sha }}-linux.deb || true
+
+      - name: Publish pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: "Continuous build ${{ steps.meta.outputs.short_sha }}"
+          body: |
+            Automated debug build from commit ${{ github.sha }}.
+            Not a tagged release — installable DEB/MSI for testing.
+          prerelease: true
+          make_latest: true
+          files: "*.deb"
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Ant
+        run: choco install ant
+
+      - name: Build JAR
+        run: ant
+
+      - name: Build MSI
+        run: |
+          jpackage --type msi ^
+            --input . ^
+            --main-jar Aladin.jar ^
+            --name Aladin ^
+            --main-class cds.aladin.Aladin ^
+            --app-version 1.0.0 ^
+            --win-dir-chooser ^
+            --win-shortcut ^
+            --win-menu
+
+      - name: Compute build identifiers
+        id: meta
+        run: |
+          SHORT_SHA=$(git rev-parse --short=8 HEAD)
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "tag=continuous-$SHORT_SHA" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Rename MSI
+        run: |
+          mv Aladin-1.0.0.msi Aladin-${{ steps.meta.outputs.short_sha }}-windows.msi || true
+          mv *.msi Aladin-${{ steps.meta.outputs.short_sha }}-windows.msi || true
+        shell: bash
+
+      - name: Publish pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: "Continuous build ${{ steps.meta.outputs.short_sha }}"
+          prerelease: true
+          make_latest: true
+          files: "*.msi"
