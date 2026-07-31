@@ -53,7 +53,10 @@ public class CatalogDownloaderTest {
         File tempFile = File.createTempFile("test_cat", ".xml");
         tempFile.deleteOnExit();
 
-        CatalogDownloader.download("Vizier", "I/239/hip_main", 0, 0, 0, tempFile, new CatalogDownloader.DownloaderListener() {
+        // A small, stable catalog (~1.4MB) so the test stays fast and doesn't
+        // flake on slower connections; it still exercises the same radius=0 ->
+        // "-out.max=unlimited" code path as any other VizieR catalog.
+        CatalogDownloader.download("Vizier", "VII/1B/catalog", 0, 0, 0, tempFile, new CatalogDownloader.DownloaderListener() {
             @Override
             public void onProgress(long totalBytesDownloaded) {
             }

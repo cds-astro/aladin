@@ -85,13 +85,12 @@
        </junit>
    </target>
 
-   <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
-       <classpath>
-           <fileset dir="${qa.dir}" includes="**/*.jar"/>
-       </classpath>
-   </taskdef>
-
    <target name="jacoco" depends="test-compile" xmlns:jacoco="antlib:org.jacoco.ant">
+       <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+           <classpath>
+               <fileset dir="${qa.dir}" includes="**/*.jar"/>
+           </classpath>
+       </taskdef>
        <jacoco:coverage destfile="${report.dir}/jacoco.exec">
            <junit fork="true" printsummary="yes" haltonfailure="yes">
                <classpath refid="qa.classpath"/>
@@ -116,13 +115,12 @@
        </jacoco:report>
    </target>
 
-   <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties">
-        <classpath>
-            <fileset dir="${qa.dir}" includes="**/*.jar"/>
-        </classpath>
-   </taskdef>
-   
    <target name="checkstyle">
+       <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties">
+            <classpath>
+                <fileset dir="${qa.dir}" includes="**/*.jar"/>
+            </classpath>
+       </taskdef>
        <mkdir dir="${report.dir}"/>
        <checkstyle config="checkstyle.xml" failOnViolation="false">
            <fileset dir="${src}" includes="**/*.java"/>
@@ -131,9 +129,8 @@
        </checkstyle>
    </target>
 
-   <taskdef name="pitest" classname="org.pitest.ant.PitestTask" classpathref="qa.classpath" />
-
    <target name="pitest" depends="test-compile">
+       <taskdef name="pitest" classname="org.pitest.ant.PitestTask" classpathref="qa.classpath" />
        <mkdir dir="${report.dir}/pitest"/>
        <pitest classPath="qa.classpath" targetClasses="cds.aladin.*" targetTests="*Test" reportDir="${report.dir}/pitest" sourceDir="${src}" />
    </target>
