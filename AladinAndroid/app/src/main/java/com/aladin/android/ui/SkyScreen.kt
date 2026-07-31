@@ -356,7 +356,8 @@ fun SkyScreen(vm: SkyViewModel) {
             DownloadSheet(
                 downloader = vm.downloader,
                 currentSurvey = state.survey,
-                onDismiss = { showDownloadSheet = false }
+                onDismiss = { showDownloadSheet = false },
+                onAddCustomDir = { vm.addCustomHiPSDir(it) }
             )
         }
     }

@@ -36,6 +36,7 @@ data class AppSettings(
     val invert: Boolean = false,
     val brightness: Float = 0f,   // -0.5 .. 0.5
     val contrast: Float = 1f,     // 0.5 .. 2.0
+    val customHiPSDirs: Set<String> = emptySet(),
 ) {
     companion object {
         private const val PREFS = "aladin_settings"
@@ -59,6 +60,7 @@ data class AppSettings(
                 invert = p.getBoolean(K_INV, false),
                 brightness = p.getFloat(K_BRIGHT, 0f).coerceIn(-0.5f, 0.5f),
                 contrast = p.getFloat(K_CONT, 1f).coerceIn(0.5f, 2f),
+                customHiPSDirs = p.getStringSet("custom_dirs", emptySet()) ?: emptySet()
             )
         }
 
@@ -72,6 +74,7 @@ data class AppSettings(
                 .putBoolean(K_INV, s.invert)
                 .putFloat(K_BRIGHT, s.brightness)
                 .putFloat(K_CONT, s.contrast)
+                .putStringSet("custom_dirs", s.customHiPSDirs)
                 .apply()
         }
     }

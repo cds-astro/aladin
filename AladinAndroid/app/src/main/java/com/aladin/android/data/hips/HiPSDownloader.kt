@@ -31,11 +31,15 @@ class HiPSDownloader(private val context: Context) {
     private var downloadJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun startDownload(survey: HiPSSurvey, maxOrder: Int, format: String = "jpg", fastCheck: Boolean = true, maxThreads: Int = 8) {
+    fun startDownload(survey: HiPSSurvey, maxOrder: Int, format: String = "jpg", fastCheck: Boolean = true, maxThreads: Int = 8, customPath: String? = null) {
         if (downloadJob?.isActive == true) return
 
         val datasetName = survey.id.replace(Regex("[^a-zA-Z0-9]"), "_")
-        val baseDir = File(context.getExternalFilesDir(null), "HiPS_Downloads/$datasetName")
+        val baseDir = if (customPath.isNullOrBlank()) {
+            File(context.getExternalFilesDir(null), "HiPS_Downloads/$datasetName")
+        } else {
+            File(customPath)
+        }
         baseDir.mkdirs()
 
         downloadJob = scope.launch {

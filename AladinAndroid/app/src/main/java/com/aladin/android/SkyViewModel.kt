@@ -73,11 +73,14 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
         fetchSurveys()
     }
 
-    private fun fetchSurveys() {
+    fun fetchSurveys() {
         _state.update { it.copy(surveysLoading = true) }
         viewModelScope.launch {
-            val localDir = java.io.File(app.getExternalFilesDir(null), "HiPS_Downloads")
-            val list = com.aladin.android.data.hips.HiPSListService.fetchAvailableSurveys(localDir)
+            val localDirs = mutableListOf<java.io.File>()
+            localDirs.add(java.io.File(app.getExternalFilesDir(null), "HiPS_Downloads"))
+            settings.customHiPSDirs.forEach { localDirs.add(java.io.File(it)) }
+            
+            val list = com.aladin.android.data.hips.HiPSListService.fetchAvailableSurveys(localDirs)
             
             _state.update { 
                 // If offline and properties failed, auto-select local
@@ -120,6 +123,12 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
     fun clearCache() {
         tileRepo.clearAll()
         _state.update { it.copy(tileVersion = it.tileVersion + 1) }
+    }
+
+    fun addCustomHiPSDir(path: String) {
+        val newDirs = settings.customHiPSDirs + path
+        setSettings(settings.copy(customHiPSDirs = newDirs))
+        fetchSurveys()
     }
 
     fun setSurvey(survey: HiPSSurvey) {

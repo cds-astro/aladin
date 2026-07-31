@@ -8,21 +8,37 @@ import org.json.JSONArray
 import java.io.File
 
 object HiPSListService {
-    suspend fun fetchAvailableSurveys(localDir: File): List<HiPSSurvey> = withContext(Dispatchers.IO) {
+    suspend fun fetchAvailableSurveys(localDirs: List<File>): List<HiPSSurvey> = withContext(Dispatchers.IO) {
         val list = mutableListOf<HiPSSurvey>()
         val builtInIds = SurveyRegistry.builtIn.map { it.id }.toSet()
         list.addAll(SurveyRegistry.builtIn)
         
         // Find local datasets
-        if (localDir.exists() && localDir.isDirectory) {
-            localDir.listFiles()?.forEach { dir ->
-                if (dir.isDirectory) {
-                    val propsFile = File(dir, "properties")
-                    if (propsFile.exists() && propsFile.length() > 0) {
-                        val id = dir.name
-                        val title = id.replace("_", " ") + " (local)"
-                        val baseUrl = "file://" + dir.absolutePath
+        val seenUrls = mutableSetOf<String>()
+        localDirs.forEach { localDir ->
+            if (localDir.exists() && localDir.isDirectory) {
+                // If it is a dataset itself
+                val selfProps = File(localDir, "properties")
+                if (selfProps.exists()) {
+                    val id = localDir.name
+                    val title = id.replace("_", " ") + " (local)"
+                    val baseUrl = "file://" + localDir.absolutePath
+                    if (seenUrls.add(baseUrl)) {
                         list.add(HiPSSurvey(id + "_local", title, baseUrl, true, "Local dataset"))
+                    }
+                } else {
+                    localDir.listFiles()?.forEach { dir ->
+                        if (dir.isDirectory) {
+                            val propsFile = File(dir, "properties")
+                            if (propsFile.exists() && propsFile.length() > 0) {
+                                val id = dir.name
+                                val title = id.replace("_", " ") + " (local)"
+                                val baseUrl = "file://" + dir.absolutePath
+                                if (seenUrls.add(baseUrl)) {
+                                    list.add(HiPSSurvey(id + "_local", title, baseUrl, true, "Local dataset"))
+                                }
+                            }
+                        }
                     }
                 }
             }

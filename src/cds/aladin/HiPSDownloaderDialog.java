@@ -11,6 +11,7 @@ public class HiPSDownloaderDialog extends JDialog implements HiPSDownloader.HiPS
     private JTextField dirField;
     private JCheckBox fastCheckCb;
     private JSpinner threadSpinner;
+    private JButton addBtn;
     private JButton startBtn;
     private JButton cancelBtn;
     private JLabel progressLabel;
@@ -88,13 +89,20 @@ public class HiPSDownloaderDialog extends JDialog implements HiPSDownloader.HiPS
         bottomPanel.add(progressLabel, BorderLayout.CENTER);
         
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        addBtn = new JButton("Add Folder Only");
         startBtn = new JButton("Start");
         cancelBtn = new JButton("Cancel");
         cancelBtn.setEnabled(false);
         
+        addBtn.addActionListener(e -> {
+            LocalHiPSManager.addLocalHiPS((String) urlCombo.getSelectedItem(), dirField.getText());
+            JOptionPane.showMessageDialog(this, "Folder added to local catalog!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        });
         startBtn.addActionListener(e -> startDownload());
         cancelBtn.addActionListener(e -> cancelDownload());
         
+        btnPanel.add(addBtn);
         btnPanel.add(startBtn);
         btnPanel.add(cancelBtn);
         bottomPanel.add(btnPanel, BorderLayout.EAST);

@@ -19,12 +19,14 @@ import com.aladin.android.data.hips.HiPSSurvey
 fun DownloadSheet(
     downloader: HiPSDownloader,
     currentSurvey: HiPSSurvey,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onAddCustomDir: (String) -> Unit = {}
 ) {
     val state by downloader.state.collectAsState()
     var selectedOrder by remember { mutableStateOf(3f) }
     var maxThreads by remember { mutableStateOf(8f) }
     var fastCheck by remember { mutableStateOf(true) }
+    var customPath by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -102,11 +104,33 @@ fun DownloadSheet(
             }
             
             Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = { downloader.startDownload(currentSurvey, selectedOrder.toInt(), "jpg", fastCheck, maxThreads.toInt()) },
+            OutlinedTextField(
+                value = customPath,
+                onValueChange = { customPath = it },
+                label = { Text("Custom Output/Input Directory (Optional)") },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Start Download")
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Button(
+                    onClick = {
+                        if (customPath.isNotBlank()) onAddCustomDir(customPath)
+                        onDismiss()
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Add Folder to Catalog")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = { 
+                        if (customPath.isNotBlank()) onAddCustomDir(customPath)
+                        downloader.startDownload(currentSurvey, selectedOrder.toInt(), "jpg", fastCheck, maxThreads.toInt(), customPath.ifBlank { null }) 
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Start Download")
+                }
             }
         }
     }
