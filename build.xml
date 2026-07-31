@@ -20,9 +20,8 @@
    <target name="compil" description="source compilation" >
      <mkdir dir="${bin}"/>
 
-     <javac srcdir="${basedir}" destdir="${bin}"
+     <javac srcdir="${src}" destdir="${bin}"
 	    encoding="Cp1252" source="1.8" target="1.8" deprecation="off" includeantruntime="false" >
-       <src path="${src}"/>
        <classpath>
           <pathelement path="${java.class.path}/"/>
           <pathelement path="${lib}/adql1.3.jar"/>

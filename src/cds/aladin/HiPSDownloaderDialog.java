@@ -20,7 +20,7 @@ public class HiPSDownloaderDialog extends JDialog implements HiPSDownloader.HiPS
     private long startTime;
 
     public HiPSDownloaderDialog(Window owner) {
-        super(owner, "HiPS Dataset Downloader", false);
+        super(owner, "HiPS Dataset Downloader", Dialog.ModalityType.MODELESS);
         setLayout(new BorderLayout(10, 10));
         
         JPanel inputPanel = new JPanel(new GridBagLayout());
