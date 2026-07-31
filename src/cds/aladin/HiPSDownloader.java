@@ -28,15 +28,20 @@ public class HiPSDownloader {
         void onError(String message);
     }
 
-    public HiPSDownloader(String baseUrl, File targetDir, int maxOrder, HiPSDownloaderListener listener) {
+    private boolean fastCheck;
+    private int maxThreads;
+
+    public HiPSDownloader(String baseUrl, File targetDir, int maxOrder, boolean fastCheck, int maxThreads, HiPSDownloaderListener listener) {
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
         this.baseUrl = baseUrl;
         this.targetDir = targetDir;
         this.maxOrder = maxOrder;
+        this.fastCheck = fastCheck;
+        this.maxThreads = maxThreads;
         this.listener = listener;
-        this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
+        this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
     }
 
     public void start() {
@@ -147,7 +152,7 @@ public class HiPSDownloader {
         
         boolean success = false;
         
-        if (tileFile.exists() && tileFile.length() > 0) {
+        if (fastCheck && tileFile.exists() && tileFile.length() > 0) {
             // Already exists, skip download
             success = true;
         } else {

@@ -31,7 +31,7 @@ class HiPSDownloader(private val context: Context) {
     private var downloadJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun startDownload(survey: HiPSSurvey, maxOrder: Int, format: String = "jpg") {
+    fun startDownload(survey: HiPSSurvey, maxOrder: Int, format: String = "jpg", fastCheck: Boolean = true, maxThreads: Int = 8) {
         if (downloadJob?.isActive == true) return
 
         val datasetName = survey.id.replace(Regex("[^a-zA-Z0-9]"), "_")
@@ -55,7 +55,7 @@ class HiPSDownloader(private val context: Context) {
                 } catch (e: Exception) {}
             }
             
-            val semaphore = Semaphore(8) // 8 threads
+            val semaphore = Semaphore(maxThreads)
 
             data class TileTask(val order: Int, val npix: Long)
             val queue = ConcurrentLinkedQueue<TileTask>()
@@ -81,7 +81,7 @@ class HiPSDownloader(private val context: Context) {
 
                     var success = false
 
-                    if (file.exists() && file.length() > 0) {
+                    if (fastCheck && file.exists() && file.length() > 0) {
                         success = true
                     } else {
                         val req = Request.Builder().url(url).build()
@@ -127,7 +127,7 @@ class HiPSDownloader(private val context: Context) {
                 }
             }
 
-            val workers = (1..8).map {
+            val workers = (1..maxThreads).map {
                 launch {
                     while (isActive) {
                         val task = queue.poll()

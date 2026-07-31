@@ -23,6 +23,8 @@ fun DownloadSheet(
 ) {
     val state by downloader.state.collectAsState()
     var selectedOrder by remember { mutableStateOf(3f) }
+    var maxThreads by remember { mutableStateOf(8f) }
+    var fastCheck by remember { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
@@ -84,8 +86,24 @@ fun DownloadSheet(
             )
             
             Spacer(modifier = Modifier.height(16.dp))
+            
+            Text("Max Threads: ${maxThreads.toInt()}")
+            Slider(
+                value = maxThreads,
+                onValueChange = { maxThreads = it },
+                valueRange = 1f..16f,
+                steps = 14,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = fastCheck, onCheckedChange = { fastCheck = it })
+                Text("Fast Check (skip existing files)")
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { downloader.startDownload(currentSurvey, selectedOrder.toInt()) },
+                onClick = { downloader.startDownload(currentSurvey, selectedOrder.toInt(), "jpg", fastCheck, maxThreads.toInt()) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Start Download")

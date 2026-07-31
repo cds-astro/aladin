@@ -9,6 +9,8 @@ public class HiPSDownloaderDialog extends JDialog implements HiPSDownloader.HiPS
     private JComboBox<String> urlCombo;
     private JSpinner orderSpinner;
     private JTextField dirField;
+    private JCheckBox fastCheckCb;
+    private JSpinner threadSpinner;
     private JButton startBtn;
     private JButton cancelBtn;
     private JLabel progressLabel;
@@ -61,6 +63,21 @@ public class HiPSDownloaderDialog extends JDialog implements HiPSDownloader.HiPS
         });
         inputPanel.add(browseBtn, gbc);
         
+        // Fast Check
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 1;
+        inputPanel.add(new JLabel("Fast Check:"), gbc);
+        gbc.gridx = 1;
+        fastCheckCb = new JCheckBox("Skip existing files");
+        fastCheckCb.setSelected(true);
+        inputPanel.add(fastCheckCb, gbc);
+        
+        // Threads
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1;
+        inputPanel.add(new JLabel("Max Threads:"), gbc);
+        gbc.gridx = 1;
+        threadSpinner = new JSpinner(new SpinnerNumberModel(8, 1, 32, 1));
+        inputPanel.add(threadSpinner, gbc);
+        
         add(inputPanel, BorderLayout.CENTER);
         
         // Progress & Buttons
@@ -102,8 +119,11 @@ public class HiPSDownloaderDialog extends JDialog implements HiPSDownloader.HiPS
         cancelBtn.setEnabled(true);
         progressLabel.setText("Starting...");
         
+        boolean fastCheck = fastCheckCb.isSelected();
+        int threads = (Integer) threadSpinner.getValue();
+        
         startTime = System.currentTimeMillis();
-        downloader = new HiPSDownloader(url.trim(), dir, maxOrder, this);
+        downloader = new HiPSDownloader(url.trim(), dir, maxOrder, fastCheck, threads, this);
         downloader.start();
     }
     
