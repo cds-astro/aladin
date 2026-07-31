@@ -54,6 +54,7 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
     // start with the saved values.
     private var settings = AppSettings.load(app)
     val tileRepo = TileRepository(app, settings.memCacheMb, settings.concurrency)
+    val downloader = com.aladin.android.data.hips.HiPSDownloader(app)
 
     private val _state = MutableStateFlow(SkyUiState())
     val state: StateFlow<SkyUiState> = _state.asStateFlow()

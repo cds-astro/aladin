@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,6 +77,7 @@ fun SkyScreen(vm: SkyViewModel) {
     val scope = rememberCoroutineScope()
     var showCatalogSheet by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
+    var showDownloadSheet by remember { mutableStateOf(false) }
 
     val catalogList = remember { VizieRService().catalogs }
 
@@ -190,6 +192,9 @@ fun SkyScreen(vm: SkyViewModel) {
                     Spacer(Modifier.weight(1f))
                     IconButton(onClick = { showSettingsSheet = true }) {
                         Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = androidx.compose.ui.graphics.Color.White)
+                    }
+                    IconButton(onClick = { showDownloadSheet = true }) {
+                        Icon(Icons.Filled.CloudDownload, contentDescription = "Download HiPS", tint = androidx.compose.ui.graphics.Color.White)
                     }
                     IconButton(onClick = { showCatalogSheet = true }) {
                         Icon(Icons.Filled.TableChart, contentDescription = stringResource(R.string.catalogs), tint = androidx.compose.ui.graphics.Color.White)
@@ -338,6 +343,20 @@ fun SkyScreen(vm: SkyViewModel) {
                 settings = state.settings,
                 onSave = { vm.setSettings(it) },
                 onClearCache = { vm.clearCache() },
+            )
+        }
+    }
+
+    if (showDownloadSheet) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showDownloadSheet = false },
+            sheetState = sheetState,
+        ) {
+            DownloadSheet(
+                downloader = vm.downloader,
+                currentSurvey = state.survey,
+                onDismiss = { showDownloadSheet = false }
             )
         }
     }
