@@ -262,7 +262,7 @@ object SkyRenderer {
                 // We skip it; its valid neighbor cells cover the actual area.
                 val spanW = hypot(e1[0] - o[0], e1[1] - o[1])
                 val spanH = hypot(e3[0] - o[0], e3[1] - o[1])
-                val maxSpan = 3f * maxOf(proj.widthPx, proj.heightPx)
+                val maxSpan = 1.5f * maxOf(proj.widthPx, proj.heightPx)
                 if (spanW > maxSpan || spanH > maxSpan) continue
                 cells.add(
                     MeshCell(

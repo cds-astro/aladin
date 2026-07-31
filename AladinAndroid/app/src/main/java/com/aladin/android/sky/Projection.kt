@@ -50,10 +50,15 @@ data class Projection(
         val x = cosDec * sin(dra)
         val y = sin(dec) * cosDec0 - cosDec * sinDec0 * cos(dra)
         val z = sin(dec) * sinDec0 + cosDec * cosDec0 * cos(dra)
-        // ZEA (Zenithal Equal Area): w = sqrt((1+z)/2), bounded and without
-        // divergence except exactly at the antipode (z=-1, w=0). Unlike
-        // TAN (xi=x/z), here we DO NOT discard the far hemisphere: we can
-        // project (almost) the entire sky, just like Aladin desktop.
+        
+        // ZEA can mathematically project the entire sphere (except the exact antipode),
+        // but rendering flat parallelograms across the back hemisphere causes massive
+        // distortion and overlapping polygons over the front view.
+        // We restrict rendering to the front hemisphere + a margin for the screen corners.
+        // z < -0.15 corresponds to an angle > ~98.6 degrees from the center.
+        if (z < -0.15) return null
+
+        // ZEA (Zenithal Equal Area): w = sqrt((1+z)/2)
         val w = sqrt((1.0 + z) / 2.0)
         if (w < 1e-9) return null // exact antipode: undefined
         val xi = x / w

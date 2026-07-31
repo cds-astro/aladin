@@ -185,14 +185,14 @@ fun SkyScreen(vm: SkyViewModel) {
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                        Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.surveys))
+                        Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.surveys), tint = androidx.compose.ui.graphics.Color.White)
                     }
                     Spacer(Modifier.weight(1f))
                     IconButton(onClick = { showSettingsSheet = true }) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = androidx.compose.ui.graphics.Color.White)
                     }
                     IconButton(onClick = { showCatalogSheet = true }) {
-                        Icon(Icons.Filled.TableChart, contentDescription = stringResource(R.string.catalogs))
+                        Icon(Icons.Filled.TableChart, contentDescription = stringResource(R.string.catalogs), tint = androidx.compose.ui.graphics.Color.White)
                     }
                 }
             }
