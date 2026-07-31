@@ -11,6 +11,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import okhttp3.Request
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -25,14 +26,17 @@ data class DownloadState(
 )
 
 class HiPSDownloader(private val context: Context) {
-    private val _state = MutableStateFlow(DownloadState())
-    val state: StateFlow<DownloadState> = _state.asStateFlow()
+    private val _states = ConcurrentHashMap<String, MutableStateFlow<DownloadState>>()
+    private val jobs = ConcurrentHashMap<String, Job>()
 
-    private var downloadJob: Job? = null
+    fun getState(surveyId: String): StateFlow<DownloadState> {
+        return _states.getOrPut(surveyId) { MutableStateFlow(DownloadState()) }.asStateFlow()
+    }
+
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun startDownload(survey: HiPSSurvey, maxOrder: Int, format: String = "jpg", fastCheck: Boolean = true, maxThreads: Int = 8, customPath: String? = null) {
-        if (downloadJob?.isActive == true) return
+        if (jobs[survey.id]?.isActive == true) return
 
         val datasetName = survey.id.replace(Regex("[^a-zA-Z0-9]"), "_")
         val baseDir = if (customPath.isNullOrBlank()) {
@@ -42,7 +46,9 @@ class HiPSDownloader(private val context: Context) {
         }
         baseDir.mkdirs()
 
-        downloadJob = scope.launch {
+        val _state = _states.getOrPut(survey.id) { MutableStateFlow(DownloadState()) }
+
+        jobs[survey.id] = scope.launch {
             _state.value = DownloadState(isRunning = true, datasetName = survey.title)
             
             val propertiesFile = File(baseDir, "properties")
@@ -87,6 +93,7 @@ class HiPSDownloader(private val context: Context) {
 
                     if (fastCheck && file.exists() && file.length() > 0) {
                         success = true
+                        _state.update { it.copy(tilesDownloaded = it.tilesDownloaded + 1) }
                     } else {
                         val req = Request.Builder().url(url).build()
                         try {
@@ -155,8 +162,8 @@ class HiPSDownloader(private val context: Context) {
         }
     }
 
-    fun stopDownload() {
-        downloadJob?.cancel()
-        _state.update { it.copy(isRunning = false, activeThreads = 0) }
+    fun stopDownload(surveyId: String) {
+        jobs[surveyId]?.cancel()
+        _states[surveyId]?.update { it.copy(isRunning = false, activeThreads = 0) }
     }
 }

@@ -22,7 +22,7 @@ fun DownloadSheet(
     onDismiss: () -> Unit,
     onAddCustomDir: (String) -> Unit = {}
 ) {
-    val state by downloader.state.collectAsState()
+    val state by downloader.getState(currentSurvey.id).collectAsState()
     var selectedOrder by remember { mutableStateOf(3f) }
     var maxThreads by remember { mutableStateOf(8f) }
     var fastCheck by remember { mutableStateOf(true) }
@@ -58,13 +58,13 @@ fun DownloadSheet(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text("Tiles scanned: ${state.tilesScanned} / ${state.totalTilesQueued}")
-            Text("Tiles downloaded: ${state.tilesDownloaded}")
+            Text("Tiles ready (downloaded + skipped): ${state.tilesDownloaded}")
             Text("Data downloaded: ${formatBytes(state.bytesDownloaded)}")
             Text("Active threads: ${state.activeThreads}")
             
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { downloader.stopDownload() },
+                onClick = { downloader.stopDownload(currentSurvey.id) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
