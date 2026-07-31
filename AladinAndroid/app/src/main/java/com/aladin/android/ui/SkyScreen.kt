@@ -79,18 +79,40 @@ fun SkyScreen(vm: SkyViewModel) {
 
     val catalogList = remember { VizieRService().catalogs }
 
+    var surveySearch by remember { mutableStateOf("") }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
                 Text(
-                    "HiPS Surveys",
+                    "Available Data",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(16.dp),
                 )
-                HorizontalDivider()
-                LazyColumn {
-                    items(SurveyRegistry.builtIn) { survey ->
+                OutlinedTextField(
+                    value = surveySearch,
+                    onValueChange = { surveySearch = it },
+                    label = { Text("Search collections, e.g. PanSTARRS") },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    singleLine = true
+                )
+                if (state.surveysLoading) {
+                    androidx.compose.material3.LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+                }
+                HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+                
+                val filteredSurveys = remember(surveySearch, state.availableSurveys) {
+                    if (surveySearch.isBlank()) state.availableSurveys
+                    else state.availableSurveys.filter {
+                        it.title.contains(surveySearch, ignoreCase = true) ||
+                        it.id.contains(surveySearch, ignoreCase = true) ||
+                        it.description.contains(surveySearch, ignoreCase = true)
+                    }
+                }
+                
+                LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                    items(filteredSurveys, key = { it.id }) { survey ->
                         NavigationDrawerItem(
                             label = { Text(survey.title) },
                             selected = survey.id == state.survey.id,

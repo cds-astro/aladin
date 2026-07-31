@@ -27,6 +27,8 @@ import kotlinx.coroutines.withContext
 data class SkyUiState(
     val camera: SkyCamera = SkyCamera(),
     val survey: HiPSSurvey = SurveyRegistry.builtIn.first(),
+    val availableSurveys: List<HiPSSurvey> = SurveyRegistry.builtIn,
+    val surveysLoading: Boolean = false,
     val props: HiPSProperties? = null,
     val propsLoading: Boolean = true,
     val catalogRows: List<CatalogRow> = emptyList(),
@@ -67,6 +69,15 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
         }
         _state.update { it.copy(settings = settings) }
         loadSurveyProperties(_state.value.survey)
+        fetchSurveys()
+    }
+
+    private fun fetchSurveys() {
+        _state.update { it.copy(surveysLoading = true) }
+        viewModelScope.launch {
+            val list = com.aladin.android.data.hips.HiPSListService.fetchAvailableSurveys()
+            _state.update { it.copy(availableSurveys = list, surveysLoading = false) }
+        }
     }
 
     // --- Settings ---
