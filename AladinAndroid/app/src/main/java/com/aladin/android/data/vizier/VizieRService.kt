@@ -24,6 +24,7 @@ class VizieRService {
         CatalogDescriptor("I/259/tyc2", "Tycho-2", "Tycho-2 astrometric catalog"),
         CatalogDescriptor("V/147/sdss16", "SDSS16", "Sloan Digital Sky Survey (DR16)"),
         CatalogDescriptor("I/322a", "Gaia DR1", "Gaia catalog (DR1)"),
+        CatalogDescriptor("SIMBAD", "Simbad", "Simbad Astronomical Database"),
     )
 
     suspend fun coneSearch(

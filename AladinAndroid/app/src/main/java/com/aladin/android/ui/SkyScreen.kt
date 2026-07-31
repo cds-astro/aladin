@@ -225,10 +225,11 @@ fun SkyScreen(vm: SkyViewModel) {
                 ) {
                     vm.toggleCatalogVisibility()
                 }
-                if (state.activeCatalogId != null) {
+                val activeCatId = state.activeCatalogId
+                if (activeCatId != null) {
                     Fab(Icons.Filled.Refresh, "Reload catalog") {
                         val limit = maxRowsInput.toIntOrNull() ?: 500
-                        vm.loadCatalog(state.activeCatalogId, limit)
+                        vm.loadCatalog(activeCatId, limit)
                     }
                 }
                 if (state.markers.isNotEmpty()) {
@@ -383,7 +384,9 @@ fun SkyScreen(vm: SkyViewModel) {
         ) {
             DownloadSheet(
                 downloader = vm.downloader,
+                catalogDownloader = vm.catalogDownloader,
                 currentSurvey = state.survey,
+                cameraCenter = state.camera.center,
                 onDismiss = { showDownloadSheet = false },
                 onAddCustomDir = { vm.addCustomHiPSDir(it) }
             )

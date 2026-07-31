@@ -57,6 +57,7 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
     private var settings = AppSettings.load(app)
     val tileRepo = TileRepository(app, settings.memCacheMb, settings.concurrency)
     val downloader = com.aladin.android.data.hips.HiPSDownloader(app)
+    val catalogDownloader = com.aladin.android.data.vizier.CatalogDownloader(app)
 
     private val _state = MutableStateFlow(SkyUiState())
     val state: StateFlow<SkyUiState> = _state.asStateFlow()
@@ -270,9 +271,12 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(catalogLoading = true, message = null, activeCatalogId = catalogId) }
         viewModelScope.launch {
             try {
-                val rows = vizier.coneSearch(
-                    catalogId, s.camera.center.raDeg, s.camera.center.decDeg, radius, maxRows
-                )
+                val rows = if (catalogId == "SIMBAD") {
+                    val simbad = com.aladin.android.data.simbad.SimbadService()
+                    simbad.search(String.format(java.util.Locale.US, "%.6f %+.6f", s.camera.center.raDeg, s.camera.center.decDeg), radius).map { simbad.toCatalogRow(it) }
+                } else {
+                    vizier.coneSearch(catalogId, s.camera.center.raDeg, s.camera.center.decDeg, radius, maxRows)
+                }
                 _state.update { 
                     it.copy(
                         catalogLoading = false, 
