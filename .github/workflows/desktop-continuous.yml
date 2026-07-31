@@ -36,6 +36,7 @@ jobs:
             --input . \
             --main-jar Aladin.jar \
             --name Aladin \
+            --icon src/Aladin.png \
             --main-class cds.aladin.Aladin \
             --app-version 1.0.0 \
             --linux-shortcut
@@ -81,12 +82,16 @@ jobs:
       - name: Build JAR
         run: ant
 
+      - name: Convert Icon
+        run: magick src/Aladin.png src/Aladin.ico
+
       - name: Build MSI
         run: |
           jpackage --type msi ^
             --input . ^
             --main-jar Aladin.jar ^
             --name Aladin ^
+            --icon src/Aladin.ico ^
             --main-class cds.aladin.Aladin ^
             --app-version 1.0.0 ^
             --win-dir-chooser ^
