@@ -1,0 +1,17 @@
+<ivy-module version="2.0">
+    <info organisation="cds.aladin" module="aladin-qa"/>
+    <dependencies>
+        <dependency org="junit" name="junit" rev="4.13.2" conf="default->default"/>
+        <dependency org="io.cucumber" name="cucumber-java" rev="7.14.0" conf="default->default"/>
+        <dependency org="io.cucumber" name="cucumber-junit" rev="7.14.0" conf="default->default"/>
+        
+        <dependency org="org.jacoco" name="org.jacoco.ant" rev="0.8.11" conf="default->default"/>
+        
+        <dependency org="com.puppycrawl.tools" name="checkstyle" rev="10.12.5" conf="default->default"/>
+        
+        <dependency org="org.pitest" name="pitest-ant" rev="1.15.3" conf="default->default"/>
+        <dependency org="org.pitest" name="pitest" rev="1.15.3" conf="default->default"/>
+        <dependency org="org.pitest" name="pitest-entry" rev="1.15.3" conf="default->default"/>
+        <dependency org="org.pitest" name="pitest-command-line" rev="1.15.3" conf="default->default"/>
+    </dependencies>
+</ivy-module>

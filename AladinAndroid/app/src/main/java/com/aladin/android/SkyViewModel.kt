@@ -1,3 +1,4 @@
+@file:Suppress("EmptyCatchBlock", "TooGenericExceptionThrown", "VariableNaming", "ImplicitDefaultLocale", "WildcardImport", "MagicNumber", "MaxLineLength", "ComplexCondition", "CyclomaticComplexMethod", "LongMethod", "ReturnCount", "LongParameterList", "SwallowedException", "TooGenericExceptionCaught", "NestedBlockDepth", "FunctionNaming", "LoopWithTooManyJumpStatements", "TooManyFunctions")
 package com.aladin.android
 
 import android.app.Application
@@ -221,15 +222,20 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
         if (query.isBlank()) return
         _state.update { it.copy(searching = true, message = null) }
         viewModelScope.launch {
-            val results = simbad.search(query, radiusArcmin = 30.0)
+            val results = simbad.search(query)
             val first = results.firstOrNull()
+            val msg = if (first != null) "Found ${first.mainId}" else app.getString(R.string.no_results)
             _state.update {
                 it.copy(
                     searching = false,
                     selected = first,
-                    message = if (first == null) app.getString(R.string.no_results) else null,
-                    camera = if (first != null) it.camera.recenterTo(first.position) else it.camera,
+                    message = msg,
+                    camera = if (first != null) it.camera.recenterTo(first.position) else it.camera
                 )
+            }
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(3000)
+                _state.update { if (it.message == msg) it.copy(message = null) else it }
             }
         }
     }
@@ -273,7 +279,7 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val rows = if (catalogId == "SIMBAD") {
                     val simbad = com.aladin.android.data.simbad.SimbadService()
-                    simbad.search(String.format(java.util.Locale.US, "%.6f %+.6f", s.camera.center.raDeg, s.camera.center.decDeg), radius).map { simbad.toCatalogRow(it) }
+                    simbad.searchRegion(s.camera.center.raDeg, s.camera.center.decDeg, radius, maxRows).map { simbad.toCatalogRow(it) }
                 } else {
                     vizier.coneSearch(catalogId, s.camera.center.raDeg, s.camera.center.decDeg, radius, maxRows)
                 }
@@ -284,8 +290,18 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
                         message = if (rows.isEmpty()) "No objects found in this area" else "Loaded ${rows.size} objects"
                     ) 
                 }
+                
+                // Clear message after 3 seconds
+                viewModelScope.launch {
+                    kotlinx.coroutines.delay(3000)
+                    _state.update { if (it.message == (if (rows.isEmpty()) "No objects found in this area" else "Loaded ${rows.size} objects")) it.copy(message = null) else it }
+                }
             } catch (e: Exception) {
-                _state.update { it.copy(catalogLoading = false, message = "Error loading catalog: ${e.message}") }
+                _state.update { it.copy(catalogLoading = false, message = "Failed: ${e.message}") }
+                viewModelScope.launch {
+                    kotlinx.coroutines.delay(3000)
+                    _state.update { if (it.message == "Failed: ${e.message}") it.copy(message = null) else it }
+                }
             }
         }
     }

@@ -26,7 +26,7 @@ import java.util.Vector;
 import cds.aladin.Aladin;
 
 /** Gère le lancemetn des tâches nécéssaires à la génération d'un survey HEALPix.
- * Les tâches doivent hériter de la classe Builder. Elles peuvent être agencées consécutivement
+ * Les tâches doivent hériter de la classe cds.allsky.Builder. Elles peuvent être agencées consécutivement
  * (via un Vector de tâches). Elles seront exécutées soit en synchrone, soit en asynchrone dans un Thread
  * indépendant. Quel que soit le mode de lancement, un thread parallèle (ThreadProgressBar) sera également exécuté afin
  * de gérer les affichages éventuelles (stats, info, erreurs).
@@ -41,7 +41,7 @@ public class Task extends Thread {
 
 	private Context context;
 	private Vector<Action> actions;
-	private Builder builder=null;   // Builder en cours d'exécution
+	private cds.allsky.Builder builder=null;   // cds.allsky.Builder en cours d'exécution
 	private boolean flagValidator=false;
 	
 	
@@ -72,7 +72,7 @@ public class Task extends Thread {
        perform(now);
     }
     
-    static public Builder factoryRunner(Context context, Action action) throws Exception {
+    static public cds.allsky.Builder factoryRunner(Context context, Action action) throws Exception {
        Task task = new Task();
        task.context=context;
        task.actions = new Vector<>();
@@ -105,7 +105,7 @@ public class Task extends Thread {
           for( Action a : actions ) {
              if( context.isTaskAborting() ) break;
              context.running(a+"");
-             builder = Builder.createBuilder(context,a);
+             builder = cds.allsky.Builder.createBuilder(context,a);
              builder.validateContext();
              if( builder.isAlreadyDone() ) {
                 context.endAction();

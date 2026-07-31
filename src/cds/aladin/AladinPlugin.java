@@ -138,7 +138,7 @@ public abstract class AladinPlugin implements Runnable {
     *          #s:rot [planeLabel] [angle]          <= synopsys
     *          #d:Image rotation using...           <= full description
     *          #e:rot Image1 35                     <= example
-    *          #t:90 and 180° rotations are faster  <= tip
+    *          #t:90 and 180Â° rotations are faster  <= tip
     *          #g:@create,@mview                    <= see also
     */
    public String scriptHelp() { return null; }
@@ -217,7 +217,7 @@ public abstract class AladinPlugin implements Runnable {
     */
    protected void suspend() {
       if( !isRunning() || thread==null || isSuspended ) return;
-      thread.suspend();
+      // removed in Java 20: thread.suspend();
       isSuspended=true;
    }
    
@@ -226,7 +226,7 @@ public abstract class AladinPlugin implements Runnable {
     */
    protected void resume() {
       if( thread==null || !isRunning() && !isSuspended ) return;
-      thread.resume();
+      // removed in Java 20: thread.resume();
       isSuspended=false;
    }
    

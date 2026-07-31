@@ -33,7 +33,7 @@ import cds.tools.pixtools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 - Decembre 2022
  */
-public class BuilderValidator extends Builder {
+public class BuilderValidator extends cds.allsky.Builder {
    static private int SUFFIXE = 0;
    
    static private boolean ALLTEST=true;
@@ -59,8 +59,8 @@ public class BuilderValidator extends Builder {
 
    public Action getAction() { return Action.VALIDATOR; }
    
-   private Builder execute(Action a) throws Exception {
-      Builder b=Task.factoryRunner(context,a);
+   private cds.allsky.Builder execute(Action a) throws Exception {
+      cds.allsky.Builder b=Task.factoryRunner(context,a);
       if( context.isTaskAborting() ) throw new Exception("Aborting");
       return b;
    }
@@ -201,13 +201,13 @@ public class BuilderValidator extends Builder {
 
       context.valid("TILES in "+output+"....");
       context.setBitpix(flagColor?0:OUTPUTBITPIX);
-      Builder b1 = execute(Action.TILES);
+      cds.allsky.Builder b1 = execute(Action.TILES);
       timetimeFitsTiles = b1.getExecTime();
       
       context.valid("TILES redo (KEEPTILE) after deleting Norder0 in "+output+"....");
       cds.tools.Util.deleteDir(new File(output+Util.FS+"Norder0"));
       context.setModeMerge(ModeMerge.mergeKeepTile);
-      Builder b2 = execute(Action.TILES);
+      cds.allsky.Builder b2 = execute(Action.TILES);
       context.info("time1="+timetimeFitsTiles+" time2="+b2.getExecTime());
 
       // Ajout d'images a posteriori (en ayant nettoyer le HpxFinder à chaque fois)

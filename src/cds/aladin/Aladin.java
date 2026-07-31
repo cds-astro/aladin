@@ -1453,7 +1453,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                   "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
                   "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
                   "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
-                  {},{FOVEDITOR}, {"HiPS Downloader..."},
+                  {},{FOVEDITOR}, {"HiPS Downloader..."}, {"VizieR / Simbad Downloader..."},
 
                   {JUNIT},*/
                   
@@ -1469,7 +1469,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                      "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
                      "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
                      "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
-                     {},{FOVEDITOR}, {"HiPS Downloader..."},
+                     {},{FOVEDITOR}, {"HiPS Downloader..."}, {"VizieR / Simbad Downloader..."},
 
                      {JUNIT},{BETAPREFIX+JOBCONTROLLER}
             },
@@ -1530,7 +1530,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //                "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
 //                "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
 //                "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
-//                {},{FOVEDITOR}, {"HiPS Downloader..."},
+//                {},{FOVEDITOR}, {"HiPS Downloader..."}, {"VizieR / Simbad Downloader..."},
 //
 //                {JUNIT},{"TAP", ACCESSTAP, BETAPREFIX+SHOWASYNCJOBS}
 //         };
@@ -3652,6 +3652,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,HPXGENRGB)){ buildHiPSRGB();
       } else if( isMenu(s,FOVEDITOR))  { buildFoV();
       } else if( isMenu(s,"HiPS Downloader...")) { new HiPSDownloaderDialog(javax.swing.SwingUtilities.getWindowAncestor(this)).setVisible(true);
+      } else if( isMenu(s,"VizieR / Simbad Downloader...")) { new CatalogDownloaderDialog(javax.swing.SwingUtilities.getWindowAncestor(this)).setVisible(true);
       } else if( isMenu(s,TOPBOTTOM) )  { flip(0);
       } else if( isMenu(s,RIGHTLEFT) )  { flip(1);
       } else if( isMenu(s,REGISTER) ) { getMessagingMgr().register(false, true);
@@ -7971,11 +7972,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       ActionExecutor.interruptAction = true;
       Thread t = MyRobot.ae != null ? MyRobot.ae.runme : null;
 
-      if( MyRobot.ae!=null ) t.suspend();
+      // if( MyRobot.ae!=null ) t.suspend();
       boolean stop = (Message.showConfirme(c, chaine.getString("STOPDEMO")))
             == Message.OUI;
       if( !stop ) {
-         if( t!=null ) t.resume();
+         // if( t!=null ) t.resume();
          ActionExecutor.interruptAction = false;
          return;
       }

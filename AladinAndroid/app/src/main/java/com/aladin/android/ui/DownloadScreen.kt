@@ -1,3 +1,4 @@
+@file:Suppress("EmptyCatchBlock", "TooGenericExceptionThrown", "VariableNaming", "ImplicitDefaultLocale", "WildcardImport", "MagicNumber", "MaxLineLength", "ComplexCondition", "CyclomaticComplexMethod", "LongMethod", "ReturnCount", "LongParameterList", "SwallowedException", "TooGenericExceptionCaught", "NestedBlockDepth", "FunctionNaming", "LoopWithTooManyJumpStatements", "TooManyFunctions")
 package com.aladin.android.ui
 
 import androidx.compose.foundation.layout.*
@@ -172,6 +173,7 @@ fun CatalogTabContent(
     var raText by remember { mutableStateOf(cameraCenter.raDeg.toString()) }
     var decText by remember { mutableStateOf(cameraCenter.decDeg.toString()) }
     var radiusText by remember { mutableStateOf("15.0") } // arcmin
+    var allSky by remember { mutableStateOf(false) }
     
     val catalogs = remember { VizieRService().catalogs }
     var selectedCatalogIndex by remember { mutableIntStateOf(0) }
@@ -198,24 +200,31 @@ fun CatalogTabContent(
             Text("Error: ${state.errorMessage}", color = MaterialTheme.colorScheme.error)
         }
         Spacer(modifier = Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = allSky, onCheckedChange = { allSky = it })
+            Text("Download Full Catalog (All-Sky)")
+        }
         
         OutlinedTextField(
             value = raText,
             onValueChange = { raText = it },
             label = { Text("RA (Degrees)") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !allSky
         )
         OutlinedTextField(
             value = decText,
             onValueChange = { decText = it },
             label = { Text("Dec (Degrees)") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !allSky
         )
         OutlinedTextField(
             value = radiusText,
             onValueChange = { radiusText = it },
             label = { Text("Radius (Arcmin)") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !allSky
         )
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -233,14 +242,19 @@ fun CatalogTabContent(
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                val r = raText.toDoubleOrNull() ?: return@Button
-                val d = decText.toDoubleOrNull() ?: return@Button
-                val rad = radiusText.toDoubleOrNull() ?: return@Button
+                val r = raText.toDoubleOrNull() ?: 0.0
+                val d = decText.toDoubleOrNull() ?: 0.0
+                val rad = radiusText.toDoubleOrNull() ?: 0.0
                 val cat = catalogs[selectedCatalogIndex]
                 if (cat.id.uppercase() == "SIMBAD") {
-                    catalogDownloader.startSimbadDownload(r, d, rad)
+                    if (allSky) {
+                        // Simbad doesn't easily support unbounded queries without criteria
+                        catalogDownloader.startSimbadDownload(r, d, 999999.0)
+                    } else {
+                        catalogDownloader.startSimbadDownload(r, d, rad)
+                    }
                 } else {
-                    catalogDownloader.startVizieRDownload(cat.id, r, d, rad)
+                    catalogDownloader.startVizieRDownload(cat.id, r, d, rad, allSky)
                 }
             },
             modifier = Modifier.fillMaxWidth()

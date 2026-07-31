@@ -21,7 +21,7 @@
      <mkdir dir="${bin}"/>
 
      <javac srcdir="${src}" destdir="${bin}"
-	    encoding="Cp1252" source="1.8" target="1.8" deprecation="off" includeantruntime="false" >
+	    encoding="Cp1252" source="1.8" target="1.8" deprecation="off" includeantruntime="false" debug="true">
        <classpath>
           <pathelement path="${java.class.path}/"/>
           <pathelement path="${lib}/adql1.3.jar"/>
@@ -52,6 +52,90 @@
       <delete includeEmptyDirs="true" quiet="true">
 	     <fileset dir="${bin}" />
       </delete>
+   </target>
+   
+   <property name="qa.dir" value="${basedir}/qa-lib"/>
+   <property name="test.dir" value="${basedir}/test"/>
+   <property name="test.bin" value="${basedir}/test-bin"/>
+   <property name="report.dir" value="${basedir}/reports"/>
+
+   <path id="qa.classpath">
+       <pathelement path="${bin}"/>
+       <pathelement path="${test.bin}"/>
+       <fileset dir="${lib}" includes="**/*.jar" erroronmissingdir="false"/>
+       <fileset dir="${qa.dir}" includes="**/*.jar" erroronmissingdir="false"/>
+   </path>
+   
+   <target name="test-compile" depends="compil">
+       <mkdir dir="${test.bin}"/>
+       <javac srcdir="${test.dir}" destdir="${test.bin}"
+              encoding="UTF-8" source="1.8" target="1.8" includeantruntime="false" debug="true">
+           <classpath refid="qa.classpath"/>
+       </javac>
+   </target>
+
+   <target name="test" depends="test-compile">
+       <mkdir dir="${report.dir}/junit"/>
+       <junit printsummary="yes" haltonfailure="yes" fork="true">
+           <classpath refid="qa.classpath"/>
+           <formatter type="xml"/>
+           <batchtest todir="${report.dir}/junit">
+               <fileset dir="${test.bin}" includes="**/*Test.class"/>
+           </batchtest>
+       </junit>
+   </target>
+
+   <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+       <classpath>
+           <fileset dir="${qa.dir}" includes="**/*.jar"/>
+       </classpath>
+   </taskdef>
+
+   <target name="jacoco" depends="test-compile" xmlns:jacoco="antlib:org.jacoco.ant">
+       <jacoco:coverage destfile="${report.dir}/jacoco.exec">
+           <junit fork="true" printsummary="yes" haltonfailure="yes">
+               <classpath refid="qa.classpath"/>
+               <batchtest todir="${report.dir}">
+                   <fileset dir="${test.bin}" includes="**/*Test.class"/>
+               </batchtest>
+           </junit>
+       </jacoco:coverage>
+       <jacoco:report>
+           <executiondata>
+               <file file="${report.dir}/jacoco.exec"/>
+           </executiondata>
+           <structure name="Aladin">
+               <classfiles>
+                   <fileset dir="${bin}"/>
+               </classfiles>
+               <sourcefiles encoding="UTF-8">
+                   <fileset dir="${src}"/>
+               </sourcefiles>
+           </structure>
+           <html destdir="${report.dir}/jacoco-html"/>
+       </jacoco:report>
+   </target>
+
+   <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties">
+        <classpath>
+            <fileset dir="${qa.dir}" includes="**/*.jar"/>
+        </classpath>
+   </taskdef>
+   
+   <target name="checkstyle">
+       <mkdir dir="${report.dir}"/>
+       <checkstyle config="checkstyle.xml" failOnViolation="false">
+           <fileset dir="${src}" includes="**/*.java"/>
+           <formatter type="plain"/>
+           <formatter type="xml" toFile="${report.dir}/checkstyle_errors.xml"/>
+       </checkstyle>
+   </target>
+
+   <taskdef name="pitest" classname="org.pitest.ant.PitestTask" classpathref="qa.classpath" />
+
+   <target name="pitest" depends="test-compile">
+       <mkdir dir="${report.dir}/pitest"/>
+       <pitest classPath="qa.classpath" targetClasses="cds.aladin.*" targetTests="*Test" reportDir="${report.dir}/pitest" sourceDir="${src}" />
    </target>
    
 </project>

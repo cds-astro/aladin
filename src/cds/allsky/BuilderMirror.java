@@ -382,7 +382,7 @@ public class BuilderMirror extends BuilderRunner {
    public void validateCheckCode() {
       try {
          context.setCheckForce(false);
-         Builder b=Task.factoryRunner(context,Action.CHECKCODE);
+         cds.allsky.Builder b=Task.factoryRunner(context,Action.CHECKCODE);
          if( context.isTaskAborting() ) throw new Exception("Aborting");
       } catch( Exception e ) {
          e.printStackTrace();

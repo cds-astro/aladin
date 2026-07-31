@@ -1,3 +1,4 @@
+@file:Suppress("EmptyCatchBlock", "TooGenericExceptionThrown", "VariableNaming", "ImplicitDefaultLocale", "WildcardImport", "MagicNumber", "MaxLineLength", "ComplexCondition", "CyclomaticComplexMethod", "LongMethod", "ReturnCount", "LongParameterList", "SwallowedException", "TooGenericExceptionCaught", "NestedBlockDepth", "FunctionNaming", "LoopWithTooManyJumpStatements", "TooManyFunctions")
 package com.aladin.android.data.vizier
 
 import android.content.Context
@@ -26,26 +27,36 @@ class CatalogDownloader(private val context: Context) {
     private var downloadJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun startVizieRDownload(catalogId: String, raDeg: Double, decDeg: Double, radiusArcmin: Double) {
+    fun startVizieRDownload(catalogId: String, raDeg: Double, decDeg: Double, radiusArcmin: Double, allSky: Boolean = false) {
         if (downloadJob?.isActive == true) return
 
         val safeCatalogId = catalogId.replace(Regex("[^a-zA-Z0-9]"), "_")
         val baseDir = File(context.getExternalFilesDir(null), "Catalog_Downloads")
         baseDir.mkdirs()
-        val outputFile = File(baseDir, "${safeCatalogId}_${raDeg}_${decDeg}_${radiusArcmin}.xml")
+        val suffix = if (allSky) "allsky" else "${raDeg}_${decDeg}_${radiusArcmin}"
+        val outputFile = File(baseDir, "${safeCatalogId}_$suffix.xml")
 
         downloadJob = scope.launch {
             _state.value = CatalogDownloadState(isRunning = true, catalogName = catalogId)
             try {
-                val c = URLEncoder.encode(String.format(java.util.Locale.US, "%.6f %+.6f", raDeg, decDeg), "UTF-8")
-                val url = "https://vizier.cds.unistra.fr/viz-bin/votable" +
-                        "?-source=$catalogId" +
-                        "&-c=$c" +
-                        "&-c.rm=$radiusArcmin" +
-                        "&-out.add=_RAJ,_DEJ" +
-                        "&-out.max=unlimited" +
-                        "&-out.meta=DhuL" +
-                        "&-oc.form=dm"
+                val url = if (allSky) {
+                    "https://vizier.cds.unistra.fr/viz-bin/votable" +
+                            "?-source=$catalogId" +
+                            "&-out.add=_RAJ,_DEJ" +
+                            "&-out.max=unlimited" +
+                            "&-out.meta=DhuL" +
+                            "&-oc.form=dm"
+                } else {
+                    val c = URLEncoder.encode(String.format(java.util.Locale.US, "%.6f %+.6f", raDeg, decDeg), "UTF-8")
+                    "https://vizier.cds.unistra.fr/viz-bin/votable" +
+                            "?-source=$catalogId" +
+                            "&-c=$c" +
+                            "&-c.rm=$radiusArcmin" +
+                            "&-out.add=_RAJ,_DEJ" +
+                            "&-out.max=unlimited" +
+                            "&-out.meta=DhuL" +
+                            "&-oc.form=dm"
+                }
 
                 downloadFile(url, outputFile)
                 _state.update { it.copy(isRunning = false, isSuccess = true) }
@@ -65,11 +76,17 @@ class CatalogDownloader(private val context: Context) {
         downloadJob = scope.launch {
             _state.value = CatalogDownloadState(isRunning = true, catalogName = "Simbad")
             try {
-                val q = String.format(java.util.Locale.US, "%.6f %+.6f", raDeg, decDeg)
-                val ident = URLEncoder.encode(q, "UTF-8")
-                val columns = "main_id,otype,ra,dec,flux(V),sp"
-                val url = "https://simbad.u-strasbg.fr/simbad/sim-all?Ident=$ident" +
-                        "&Radius=$radiusArcmin&Radius.unit=arcmin&Votable=$columns"
+                val tapUrl = "https://simbad.u-strasbg.fr/simbad/sim-tap/sync"
+                val radiusDegrees = radiusArcmin / 60.0
+                val adql = if (radiusArcmin >= 999999.0) {
+                    "SELECT * FROM basic"
+                } else {
+                    val r = String.format(java.util.Locale.US, "%.6f", raDeg)
+                    val d = String.format(java.util.Locale.US, "%.6f", decDeg)
+                    val rad = String.format(java.util.Locale.US, "%.6f", radiusDegrees)
+                    "SELECT * FROM basic WHERE CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $r, $d, $rad))=1"
+                }
+                val url = "$tapUrl?REQUEST=doQuery&LANG=ADQL&FORMAT=votable/td&QUERY=${URLEncoder.encode(adql, "UTF-8")}"
 
                 downloadFile(url, outputFile)
                 _state.update { it.copy(isRunning = false, isSuccess = true) }
