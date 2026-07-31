@@ -33,7 +33,7 @@ class VizieRService {
         radiusArcmin: Double,
         maxRows: Int = 500,
     ): List<CatalogRow> = withContext(Dispatchers.IO) {
-        val c = URLEncoder.encode("%.6f %.6f".format(raDeg, decDeg), "UTF-8")
+        val c = URLEncoder.encode(String.format(java.util.Locale.US, "%.6f %+.6f", raDeg, decDeg), "UTF-8")
         val url =
             "https://vizier.cds.unistra.fr/viz-bin/votable" +
                 "?-source=$catalogId" +

@@ -40,7 +40,7 @@ class SimbadService {
 
     /** Búsqueda de cono por coordenadas para identificar un objeto al tocar. */
     suspend fun coneSearch(raDeg: Double, decDeg: Double, radiusArcmin: Double = 1.0): SimbadObject? {
-        val q = "%.6f %.6f".format(raDeg, decDeg)
+        val q = String.format(java.util.Locale.US, "%.6f %+.6f", raDeg, decDeg)
         val list = search(q, radiusArcmin)
         return list.minByOrNull {
             SkyPosition.separation(it.position, SkyPosition(raDeg, decDeg))
