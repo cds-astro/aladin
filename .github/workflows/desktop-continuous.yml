@@ -86,6 +86,7 @@ jobs:
         run: magick src/Aladin.png src/Aladin.ico
 
       - name: Build MSI
+        shell: cmd
         run: |
           jpackage --type msi ^
             --input . ^
