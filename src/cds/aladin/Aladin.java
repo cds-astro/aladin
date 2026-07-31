@@ -1453,7 +1453,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                   "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
                   "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
                   "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
-                  {},{FOVEDITOR},
+                  {},{FOVEDITOR}, {"HiPS Downloader..."},
 
                   {JUNIT},*/
                   
@@ -1469,7 +1469,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                      "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
                      "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
                      "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
-                     {},{FOVEDITOR},
+                     {},{FOVEDITOR}, {"HiPS Downloader..."},
 
                      {JUNIT},{BETAPREFIX+JOBCONTROLLER}
             },
@@ -1530,7 +1530,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //                "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
 //                "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
 //                "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
-//                {},{FOVEDITOR},
+//                {},{FOVEDITOR}, {"HiPS Downloader..."},
 //
 //                {JUNIT},{"TAP", ACCESSTAP, BETAPREFIX+SHOWASYNCJOBS}
 //         };
@@ -3651,6 +3651,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,HPXGENMAP)){ buildHiPS();
       } else if( isMenu(s,HPXGENRGB)){ buildHiPSRGB();
       } else if( isMenu(s,FOVEDITOR))  { buildFoV();
+      } else if( isMenu(s,"HiPS Downloader...")) { new HiPSDownloaderDialog(javax.swing.SwingUtilities.getWindowAncestor(this)).setVisible(true);
       } else if( isMenu(s,TOPBOTTOM) )  { flip(0);
       } else if( isMenu(s,RIGHTLEFT) )  { flip(1);
       } else if( isMenu(s,REGISTER) ) { getMessagingMgr().register(false, true);
