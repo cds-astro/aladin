@@ -263,15 +263,25 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun loadCatalog(catalogId: String) {
+    fun loadCatalog(catalogId: String, maxRows: Int = 500) {
         val s = _state.value
         val radius = (s.camera.fovDeg / 2.0).coerceIn(0.05, 60.0) * 60.0 // arcmin
         _state.update { it.copy(catalogLoading = true, message = null) }
         viewModelScope.launch {
-            val rows = vizier.coneSearch(
-                catalogId, s.camera.center.raDeg, s.camera.center.decDeg, radius
-            )
-            _state.update { it.copy(catalogLoading = false, catalogRows = rows) }
+            try {
+                val rows = vizier.coneSearch(
+                    catalogId, s.camera.center.raDeg, s.camera.center.decDeg, radius, maxRows
+                )
+                _state.update { 
+                    it.copy(
+                        catalogLoading = false, 
+                        catalogRows = rows,
+                        message = if (rows.isEmpty()) "No objects found in this area" else "Loaded ${rows.size} objects"
+                    ) 
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(catalogLoading = false, message = "Error loading catalog: ${e.message}") }
+            }
         }
     }
 

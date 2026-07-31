@@ -43,8 +43,15 @@ class VizieRService {
                 "&-out.max=$maxRows" +
                 "&-out.meta=DhuL" +
                 "&-oc.form=dm"
-        val text = fetchText(url) ?: return@withContext emptyList()
-        VotableParser.parse(text).mapNotNull { row -> row.toCatalogRow() }
+        android.util.Log.d("VizieR", "Fetching: $url")
+        val text = fetchText(url)
+        if (text == null) {
+            android.util.Log.e("VizieR", "Fetch failed (null text)")
+            return@withContext emptyList()
+        }
+        val rows = VotableParser.parse(text).mapNotNull { row -> row.toCatalogRow() }
+        android.util.Log.d("VizieR", "Parsed ${rows.size} rows")
+        rows
     }
 
     private val raKeys = listOf("_RAJ", "RAJ2000", "RA_ICRS", "RA(ICRS)", "RA", "RAJ2000")

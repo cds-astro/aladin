@@ -82,6 +82,7 @@ fun SkyScreen(vm: SkyViewModel) {
     var showDownloadSheet by remember { mutableStateOf(false) }
 
     val catalogList = remember { VizieRService().catalogs }
+    var maxRowsInput by remember { mutableStateOf("500") }
 
     var surveySearch by remember { mutableStateOf("") }
 
@@ -316,13 +317,24 @@ fun SkyScreen(vm: SkyViewModel) {
             Column(Modifier.padding(16.dp)) {
                 Text("VizieR Catalogs", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = maxRowsInput,
+                    onValueChange = { maxRowsInput = it.filter { ch -> ch.isDigit() }.take(5) },
+                    label = { Text("Max rows (e.g. 500)") },
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    ),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                )
                 LazyColumn {
                     items(catalogList) { cat ->
                         NavigationDrawerItem(
                             label = { Text(cat.name) },
                             selected = false,
                             onClick = {
-                                vm.loadCatalog(cat.id)
+                                val limit = maxRowsInput.toIntOrNull() ?: 500
+                                vm.loadCatalog(cat.id, limit)
                                 showCatalogSheet = false
                             },
                             modifier = Modifier.padding(vertical = 2.dp),
