@@ -44,6 +44,7 @@ data class SkyUiState(
     val pendingMeasureFrom: SkyPosition? = null,
     val settings: AppSettings = AppSettings(),
     val downloadingTiles: Int = 0,
+    val catalogVisible: Boolean = true,
 )
 
 class SkyViewModel(app: Application) : AndroidViewModel(app) {
@@ -243,6 +244,7 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
 
     // --- VizieR Catalogs ---
     fun longPressAt(pos: SkyPosition) {
+        if (!_state.value.catalogVisible) return
         val rows = _state.value.catalogRows
         if (rows.isEmpty()) return
         val closest = rows.minByOrNull { SkyPosition.separation(pos, SkyPosition(it.raDeg, it.decDeg)) }
@@ -273,7 +275,9 @@ class SkyViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun clearCatalog() = _state.update { it.copy(catalogRows = emptyList()) }
+    fun clearCatalog() = _state.update { it.copy(catalogRows = emptyList(), catalogVisible = true) }
+
+    fun toggleCatalogVisibility() = _state.update { it.copy(catalogVisible = !it.catalogVisible) }
 
     // --- Markers and Measurements ---
     fun addMarker(pos: SkyPosition, label: String = "M${state.value.markers.size + 1}") {

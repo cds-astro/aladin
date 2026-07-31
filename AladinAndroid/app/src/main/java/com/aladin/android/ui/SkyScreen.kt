@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
@@ -213,6 +215,15 @@ fun SkyScreen(vm: SkyViewModel) {
                 Fab(Icons.Filled.Straighten, "Measure", state.measureMode) { vm.toggleMeasureMode() }
                 Fab(Icons.Filled.Add, "Marker") {
                     vm.addMarker(state.camera.center)
+                }
+                if (state.catalogRows.isNotEmpty()) {
+                    Fab(
+                        icon = if (state.catalogVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        desc = "Toggle catalog",
+                        highlighted = !state.catalogVisible
+                    ) {
+                        vm.toggleCatalogVisibility()
+                    }
                 }
                 if (state.markers.isNotEmpty()) {
                     Fab(Icons.Filled.Delete, "Clear markers") { vm.clearMarkers() }
