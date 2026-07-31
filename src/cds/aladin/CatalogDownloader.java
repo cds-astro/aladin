@@ -4,8 +4,36 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CatalogDownloader {
+
+    // VizieR's ASU service reports invalid catalog names (and similar errors) as an
+    // HTTP 200 response whose VOTable body carries an <INFO name="Error" .../> tag,
+    // instead of a non-2xx status. Detect that so we don't report success with a
+    // garbage file. Errors always appear near the top of the document, so peeking
+    // at the first few KB is enough even for multi-megabyte catalog downloads.
+    private static final Pattern VOTABLE_ERROR = Pattern.compile("name=\"Error\"\\s+value=\"([^\"]*)\"");
+
+    static String detectVotableError(File file) {
+        byte[] buf = new byte[8192];
+        int len;
+        try (FileInputStream fis = new FileInputStream(file)) {
+            len = fis.read(buf);
+        } catch (IOException e) {
+            return null;
+        }
+        if (len <= 0) return null;
+        String head = new String(buf, 0, len, StandardCharsets.UTF_8);
+        Matcher m = VOTABLE_ERROR.matcher(head);
+        if (m.find()) {
+            String msg = m.group(1).trim();
+            return msg.isEmpty() ? "Unknown VizieR/Simbad error" : msg;
+        }
+        return null;
+    }
 
     public interface DownloaderListener {
         void onProgress(long totalBytesDownloaded);
@@ -58,7 +86,13 @@ public class CatalogDownloader {
                             javax.swing.SwingUtilities.invokeLater(() -> listener.onProgress(finalDownloaded));
                         }
                     }
-                    javax.swing.SwingUtilities.invokeLater(() -> listener.onComplete());
+                    String votableError = detectVotableError(targetFile);
+                    if (votableError != null) {
+                        targetFile.delete();
+                        javax.swing.SwingUtilities.invokeLater(() -> listener.onError(votableError));
+                    } else {
+                        javax.swing.SwingUtilities.invokeLater(() -> listener.onComplete());
+                    }
                 } else {
                     String error = "HTTP " + conn.getResponseCode() + " " + conn.getResponseMessage();
                     javax.swing.SwingUtilities.invokeLater(() -> listener.onError(error));

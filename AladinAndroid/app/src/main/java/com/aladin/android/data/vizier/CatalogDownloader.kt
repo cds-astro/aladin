@@ -115,6 +115,30 @@ class CatalogDownloader(private val context: Context) {
                 }
             }
         }
+        detectVotableError(outputFile)?.let { error ->
+            outputFile.delete()
+            throw Exception(error)
+        }
+    }
+
+    companion object {
+        private val VOTABLE_ERROR = Regex("name=\"Error\"\\s+value=\"([^\"]*)\"")
+
+        // VizieR's ASU service reports invalid catalog names (and similar errors) as an
+        // HTTP 200 response whose VOTable body carries an <INFO name="Error" .../> tag,
+        // instead of a non-2xx status. Detect that so we don't report success with a
+        // garbage file. Errors always appear near the top of the document, so peeking
+        // at the first few KB is enough even for multi-megabyte catalog downloads.
+        internal fun detectVotableError(file: File): String? {
+            val head = file.inputStream().use { input ->
+                val buf = ByteArray(8192)
+                val n = input.read(buf)
+                if (n <= 0) return null
+                String(buf, 0, n, Charsets.UTF_8)
+            }
+            val msg = VOTABLE_ERROR.find(head)?.groupValues?.get(1)?.trim() ?: return null
+            return "VizieR/Simbad error: ${msg.ifEmpty { "unknown error" }}"
+        }
     }
 
     fun stopDownload() {
