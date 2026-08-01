@@ -1,6 +1,6 @@
-# Aladin Desktop
+# Aladin Desktop / Android
 
-**The Desktop application of the CDS Aladin Sky Atlas project**  
+**The Desktop / Android application of the CDS Aladin Sky Atlas project**  
 
 <img src="src/Logo.png" alt="Aladin logo" width="220">
 
